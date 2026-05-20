@@ -1,0 +1,7 @@
+﻿     proname     
+-----------------
+ gen_random_uuid
+ gen_random_uuid
+ set_updated_at
+(3 rows)
+

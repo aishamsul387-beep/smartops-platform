@@ -1,0 +1,33 @@
+﻿                     List of tables
+ Schema |            Name            | Type  |  Owner   
+--------+----------------------------+-------+----------
+ public | audit_logs                 | table | postgres
+ public | businesses                 | table | postgres
+ public | goods_received_note_items  | table | postgres
+ public | goods_received_notes       | table | postgres
+ public | inventory_adjustment_items | table | postgres
+ public | inventory_adjustments      | table | postgres
+ public | inventory_batches          | table | postgres
+ public | inventory_write_off_items  | table | postgres
+ public | inventory_write_offs       | table | postgres
+ public | product_categories         | table | postgres
+ public | product_uom_conversions    | table | postgres
+ public | products                   | table | postgres
+ public | purchase_order_items       | table | postgres
+ public | purchase_orders            | table | postgres
+ public | return_items               | table | postgres
+ public | returns                    | table | postgres
+ public | staff                      | table | postgres
+ public | stock_movements            | table | postgres
+ public | storage_locations          | table | postgres
+ public | supplier_credit_note_items | table | postgres
+ public | supplier_credit_notes      | table | postgres
+ public | supplier_invoice_items     | table | postgres
+ public | supplier_invoices          | table | postgres
+ public | supplier_quotation_items   | table | postgres
+ public | supplier_quotations        | table | postgres
+ public | supplier_return_policies   | table | postgres
+ public | suppliers                  | table | postgres
+ public | uom                        | table | postgres
+(28 rows)
+
