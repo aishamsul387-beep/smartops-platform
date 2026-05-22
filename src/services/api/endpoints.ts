@@ -24,9 +24,14 @@ export const ENDPOINTS = {
     updateStatus: (id: string) => `/tasks/${id}/status`
   },
   orders: {
+    summary: '/orders/summary',
     quotations: '/orders/quotations',
     purchaseOrders: '/orders/purchase-orders',
+    purchaseOrderDetail: (id: string) => `/orders/purchase-orders/${id}`,
+    createPurchaseOrder: '/orders/purchase-orders',
     goodsReceivedNotes: '/orders/goods-received-notes',
+    goodsReceivedNoteDetail: (id: string) => `/orders/goods-received-notes/${id}`,
+    createGoodsReceivedNote: '/orders/goods-received-notes',
     supplierInvoices: '/orders/supplier-invoices',
     supplierCreditNotes: '/orders/supplier-credit-notes',
     returns: '/orders/returns'
