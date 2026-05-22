@@ -68,8 +68,8 @@ export function InventoryListScreen() {
               Inventory
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Sprint 2 inventory foundation is ready. This screen uses feature-owned mock data
-              until the real inventory backend endpoint is added.
+              Inventory master now includes richer operational fields like barcode, UOM policy,
+              tracking flags, and stock thresholds.
             </div>
           </div>
 
@@ -128,38 +128,17 @@ export function InventoryListScreen() {
           marginBottom: '24px'
         }}
       >
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            padding: '20px'
-          }}
-        >
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Total items</div>
           <div style={{ fontSize: '28px', fontWeight: 700 }}>{totalItems}</div>
         </div>
 
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            padding: '20px'
-          }}
-        >
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Low stock</div>
           <div style={{ fontSize: '28px', fontWeight: 700 }}>{lowStockCount}</div>
         </div>
 
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            padding: '20px'
-          }}
-        >
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Out of stock</div>
           <div style={{ fontSize: '28px', fontWeight: 700 }}>{outOfStockCount}</div>
         </div>
@@ -182,10 +161,7 @@ export function InventoryListScreen() {
           }}
         >
           <div>
-            <label
-              htmlFor="inventory-search"
-              style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}
-            >
+            <label htmlFor="inventory-search" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
               Search
             </label>
             <input
@@ -193,7 +169,7 @@ export function InventoryListScreen() {
               type="text"
               value={filters.search || ''}
               onChange={(event) => updateSearch(event.target.value)}
-              placeholder="Search by SKU, name, or category"
+              placeholder="Search by SKU, barcode, name or category"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -204,10 +180,7 @@ export function InventoryListScreen() {
           </div>
 
           <div>
-            <label
-              htmlFor="inventory-status"
-              style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}
-            >
+            <label htmlFor="inventory-status" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
               Status
             </label>
             <select
@@ -253,34 +226,42 @@ export function InventoryListScreen() {
               <thead>
                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>SKU</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Barcode</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Name</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Category</th>
-                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Qty / Reorder</th>
-                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Unit</th>
-                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Location</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Qty / Min / Max</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Base UOM</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Tracking</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Active</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
-                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Updated</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item) => (
                   <tr key={item.id}>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.sku}</td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>{item.sku}</td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.barcode || '-'}</td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      <Link
-                        href={`/inventory/${item.id}`}
-                        style={{ color: '#2563eb', fontWeight: 600 }}
-                      >
+                      <Link href={`/inventory/${item.id}`} style={{ color: '#2563eb', fontWeight: 600 }}>
                         {item.name}
                       </Link>
                     </td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.category}</td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {item.quantity} / {item.reorderLevel}
+                      {item.quantity} / {item.minimumStockLevel} / {item.maximumStockLevel}
                     </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.unit}</td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.baseUomCode || '-'}</td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {item.warehouseLocation}
+                      {[
+                        item.isBatchTracked ? 'Batch' : null,
+                        item.isExpiryTracked ? 'Expiry' : null,
+                        item.isSerialTracked ? 'Serial' : null
+                      ]
+                        .filter(Boolean)
+                        .join(', ') || 'None'}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {item.isActive ? 'Yes' : 'No'}
                     </td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                       <span
@@ -295,9 +276,6 @@ export function InventoryListScreen() {
                       >
                         {item.statusLabel}
                       </span>
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {new Date(item.updatedAt).toLocaleString()}
                     </td>
                   </tr>
                 ))}
