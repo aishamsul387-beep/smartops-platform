@@ -1,4 +1,4 @@
-﻿export const ENDPOINTS = {
+export const ENDPOINTS = {
   auth: {
     login: '/auth/login',
     logout: '/auth/logout',
@@ -14,9 +14,14 @@
     create: '/inventory',
     update: (id: string) => `/inventory/${id}`
   },
+  warehouse: {
+    summary: '/warehouse/summary',
+    locations: '/warehouse/locations'
+  },
   tasks: {
     list: '/tasks',
-    detail: (id: string) => `/tasks/${id}`
+    detail: (id: string) => `/tasks/${id}`,
+    updateStatus: (id: string) => `/tasks/${id}/status`
   },
   orders: {
     quotations: '/orders/quotations',
