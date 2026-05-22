@@ -10,6 +10,7 @@ interface TopbarProps {
 
 function getPageTitle(pathname: string | null) {
   if (!pathname) return 'SmartOps WMS AI';
+  if (pathname.startsWith('/uom')) return 'UOM / Multi-UOM Conversion';
   if (pathname.startsWith('/inventory/create')) return 'Create Inventory Item';
   if (pathname.startsWith('/inventory/')) return 'Inventory Detail';
   if (pathname.startsWith('/inventory')) return 'Inventory';
@@ -58,7 +59,7 @@ export function Topbar({ user }: TopbarProps) {
           {getPageTitle(pathname)}
         </div>
         <div style={{ color: '#64748b' }}>
-          Signed in as <strong>{user.name}</strong> · {user.email}
+          Signed in as <strong>{user.name}</strong> Â· {user.email}
         </div>
       </div>
 
