@@ -36,6 +36,21 @@ export const ENDPOINTS = {
     supplierCreditNotes: '/orders/supplier-credit-notes',
     returns: '/orders/returns'
   },
+  uom: {
+    list: '/uom',
+    create: '/uom',
+    update: (id: string) => `/uom/${id}`,
+    toggleActive: (id: string) => `/uom/${id}/active`,
+    conversionGroups: '/uom/conversion-groups',
+    updateConversionGroup: (id: string) => `/uom/conversion-groups/${id}`,
+    toggleConversionGroupActive: (id: string) => `/uom/conversion-groups/${id}/active`,
+    conversionGroupLines: (id: string) => `/uom/conversion-groups/${id}/lines`,
+    createConversionLine: (groupId: string) => `/uom/conversion-groups/${groupId}/lines`,
+    updateConversionLine: (groupId: string, lineId: string) =>
+      `/uom/conversion-groups/${groupId}/lines/${lineId}`,
+    toggleConversionLineActive: (groupId: string, lineId: string) =>
+      `/uom/conversion-groups/${groupId}/lines/${lineId}/active`
+  },
   reports: {
     list: '/reports'
   },

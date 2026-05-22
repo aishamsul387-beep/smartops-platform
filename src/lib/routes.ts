@@ -27,5 +27,6 @@ export const ROUTES = {
   returns: '/orders/returns',
 
   reports: '/reports',
-  aiAssistant: '/ai-assistant'
+  aiAssistant: '/ai-assistant',
+  uom: '/uom'
 } as const;
