@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { ROUTES } from '@/lib/routes';
 import { useCreateInventory } from '../hooks/useCreateInventory';
+import { useInventoryMasterOptions } from '../hooks/useInventoryMasterOptions';
 import {
   initialInventoryFormValues,
   mapInventoryFormToCreateRequest,
@@ -16,6 +17,7 @@ import {
 export function InventoryCreateScreen() {
   const router = useRouter();
   const { createInventory, isSubmitting, error } = useCreateInventory();
+  const { uoms, conversionGroups, isLoading: isOptionsLoading } = useInventoryMasterOptions();
 
   const [values, setValues] = useState<InventoryFormValues>(initialInventoryFormValues);
   const [errors, setErrors] = useState<InventoryFormErrors>({});
@@ -70,8 +72,7 @@ export function InventoryCreateScreen() {
           Create Inventory Item
         </div>
         <div style={{ color: '#475569', lineHeight: 1.6 }}>
-          Inventory master now supports barcode, UOM assignments, tracking policies, stock thresholds,
-          and richer item-level control fields.
+          Inventory master now enforces valid UOM and conversion group selection from active UOM setup.
         </div>
       </div>
 
@@ -145,43 +146,105 @@ export function InventoryCreateScreen() {
 
           <div>
             <label htmlFor="unit" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Display Unit</label>
-            <input id="unit" value={values.unit} onChange={(e) => updateField('unit', e.target.value)} placeholder="PCS" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <input id="unit" value={values.unit} onChange={(e) => updateField('unit', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
             {errors.unit ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.unit}</div> : null}
           </div>
 
           <div>
             <label htmlFor="warehouseLocation" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Warehouse Location</label>
-            <input id="warehouseLocation" value={values.warehouseLocation} onChange={(e) => updateField('warehouseLocation', e.target.value)} placeholder="A-01-01" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <input id="warehouseLocation" value={values.warehouseLocation} onChange={(e) => updateField('warehouseLocation', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
             {errors.warehouseLocation ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.warehouseLocation}</div> : null}
           </div>
 
           <div>
             <label htmlFor="baseUomCode" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Base UOM</label>
-            <input id="baseUomCode" value={values.baseUomCode} onChange={(e) => updateField('baseUomCode', e.target.value)} placeholder="PCS" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <select
+              id="baseUomCode"
+              value={values.baseUomCode}
+              onChange={(e) => updateField('baseUomCode', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="">{isOptionsLoading ? 'Loading UOM...' : 'Select base UOM'}</option>
+              {uoms.map((item) => (
+                <option key={item.id} value={item.uomCode}>
+                  {item.uomCode} - {item.uomName}
+                </option>
+              ))}
+            </select>
             {errors.baseUomCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.baseUomCode}</div> : null}
           </div>
 
           <div>
             <label htmlFor="purchaseUomCode" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Purchase UOM</label>
-            <input id="purchaseUomCode" value={values.purchaseUomCode} onChange={(e) => updateField('purchaseUomCode', e.target.value)} placeholder="CTN" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <select
+              id="purchaseUomCode"
+              value={values.purchaseUomCode}
+              onChange={(e) => updateField('purchaseUomCode', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="">{isOptionsLoading ? 'Loading UOM...' : 'Select purchase UOM'}</option>
+              {uoms.map((item) => (
+                <option key={item.id} value={item.uomCode}>
+                  {item.uomCode} - {item.uomName}
+                </option>
+              ))}
+            </select>
             {errors.purchaseUomCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.purchaseUomCode}</div> : null}
           </div>
 
           <div>
             <label htmlFor="salesUomCode" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Sales UOM</label>
-            <input id="salesUomCode" value={values.salesUomCode} onChange={(e) => updateField('salesUomCode', e.target.value)} placeholder="PCS" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <select
+              id="salesUomCode"
+              value={values.salesUomCode}
+              onChange={(e) => updateField('salesUomCode', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="">{isOptionsLoading ? 'Loading UOM...' : 'Select sales UOM'}</option>
+              {uoms.map((item) => (
+                <option key={item.id} value={item.uomCode}>
+                  {item.uomCode} - {item.uomName}
+                </option>
+              ))}
+            </select>
             {errors.salesUomCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.salesUomCode}</div> : null}
           </div>
 
           <div>
             <label htmlFor="issueUomCode" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Issue UOM</label>
-            <input id="issueUomCode" value={values.issueUomCode} onChange={(e) => updateField('issueUomCode', e.target.value)} placeholder="PCS" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <select
+              id="issueUomCode"
+              value={values.issueUomCode}
+              onChange={(e) => updateField('issueUomCode', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="">{isOptionsLoading ? 'Loading UOM...' : 'Select issue UOM'}</option>
+              {uoms.map((item) => (
+                <option key={item.id} value={item.uomCode}>
+                  {item.uomCode} - {item.uomName}
+                </option>
+              ))}
+            </select>
             {errors.issueUomCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.issueUomCode}</div> : null}
           </div>
 
           <div>
             <label htmlFor="uomConversionGroupCode" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>UOM Conversion Group</label>
-            <input id="uomConversionGroupCode" value={values.uomConversionGroupCode} onChange={(e) => updateField('uomConversionGroupCode', e.target.value)} placeholder="PK_STD_001" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <select
+              id="uomConversionGroupCode"
+              value={values.uomConversionGroupCode}
+              onChange={(e) => updateField('uomConversionGroupCode', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="">
+                {isOptionsLoading ? 'Loading groups...' : 'Select conversion group (optional)'}
+              </option>
+              {conversionGroups.map((item) => (
+                <option key={item.id} value={item.groupCode}>
+                  {item.groupCode} - {item.groupName}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
