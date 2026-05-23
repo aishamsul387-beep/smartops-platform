@@ -57,6 +57,11 @@ export function useBatchList(initialFilters?: BatchListFilters) {
         ...current,
         status: value
       })),
+    updateInventoryItemId: (value: string) =>
+      setFilters((current) => ({
+        ...current,
+        inventoryItemId: value
+      })),
     refresh: () => load(filters)
   };
 }

@@ -1,6 +1,11 @@
 import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
-import type { BatchListFilters, BatchListResponse, BatchRecord } from './types';
+import type {
+  BatchListFilters,
+  BatchListResponse,
+  BatchRecord,
+  CreateBatchRequest
+} from './types';
 
 interface BatchListApiPayload {
   items: BatchRecord[];
@@ -30,5 +35,10 @@ export const batchesApi = {
   async getBatchById(id: string): Promise<BatchRecord | null> {
     const response = await apiClient.get<BatchRecord>(ENDPOINTS.batches.detail(id));
     return response.data || null;
+  },
+
+  async createBatch(payload: CreateBatchRequest): Promise<BatchRecord> {
+    const response = await apiClient.post<BatchRecord>(ENDPOINTS.batches.create, payload);
+    return response.data;
   }
 };
