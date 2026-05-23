@@ -14,6 +14,11 @@ export const ENDPOINTS = {
     create: '/inventory',
     update: (id: string) => `/inventory/${id}`
   },
+  batches: {
+    list: '/batches',
+    detail: (id: string) => `/batches/${id}`,
+    create: '/batches'
+  },
   warehouse: {
     summary: '/warehouse/summary',
     locations: '/warehouse/locations'

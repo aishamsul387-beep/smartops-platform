@@ -10,6 +10,7 @@ interface TopbarProps {
 
 function getPageTitle(pathname: string | null) {
   if (!pathname) return 'SmartOps WMS AI';
+  if (pathname.startsWith('/batches')) return 'Batch / Expiry Control';
   if (pathname.startsWith('/uom')) return 'UOM / Multi-UOM Conversion';
   if (pathname.startsWith('/inventory/create')) return 'Create Inventory Item';
   if (pathname.startsWith('/inventory/')) return 'Inventory Detail';
