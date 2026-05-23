@@ -5,7 +5,8 @@ import type {
   InventoryDetailResponse,
   InventoryItemDto,
   InventoryListFilters,
-  InventoryListResponse
+  InventoryListResponse,
+  UpdateInventoryRequest
 } from './types';
 import { mapInventoryItem } from './mapper';
 
@@ -45,6 +46,24 @@ export const inventoryApi = {
     const response = await apiClient.post<InventoryItemDto>(
       ENDPOINTS.inventory.create,
       payload
+    );
+
+    return mapInventoryItem(response.data);
+  },
+
+  async updateInventory(payload: UpdateInventoryRequest) {
+    const response = await apiClient.put<InventoryItemDto>(
+      ENDPOINTS.inventory.update(payload.id),
+      payload
+    );
+
+    return mapInventoryItem(response.data);
+  },
+
+  async setInventoryActive(id: string, isActive: boolean) {
+    const response = await apiClient.patch<InventoryItemDto>(
+      ENDPOINTS.inventory.toggleActive(id),
+      { isActive }
     );
 
     return mapInventoryItem(response.data);

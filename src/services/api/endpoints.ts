@@ -12,7 +12,8 @@ export const ENDPOINTS = {
     list: '/inventory',
     detail: (id: string) => `/inventory/${id}`,
     create: '/inventory',
-    update: (id: string) => `/inventory/${id}`
+    update: (id: string) => `/inventory/${id}`,
+    toggleActive: (id: string) => `/inventory/${id}/active`
   },
   batches: {
     list: '/batches',

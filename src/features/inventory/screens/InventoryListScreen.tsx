@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { ROUTES } from '@/lib/routes';
 import { useInventoryList } from '../hooks/useInventoryList';
+import { useInventoryActiveToggle } from '../hooks/useInventoryActiveToggle';
+import type { InventoryItem } from '../types';
 
 function getStatusColor(status: string) {
   if (status === 'in_stock') {
@@ -28,6 +31,22 @@ function getStatusColor(status: string) {
   };
 }
 
+function getActiveStyle(isActive: boolean) {
+  if (isActive) {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
 export function InventoryListScreen() {
   const {
     items,
@@ -41,6 +60,19 @@ export function InventoryListScreen() {
     updateStatus,
     refresh
   } = useInventoryList();
+
+  const { toggleInventory } = useInventoryActiveToggle();
+  const [rowActionError, setRowActionError] = useState<string | null>(null);
+
+  async function handleToggle(item: InventoryItem) {
+    try {
+      setRowActionError(null);
+      await toggleInventory(item);
+      await refresh();
+    } catch (err: any) {
+      setRowActionError(err?.message || 'Failed to update item active status');
+    }
+  }
 
   return (
     <div className="container">
@@ -68,8 +100,7 @@ export function InventoryListScreen() {
               Inventory
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Inventory master now includes richer operational fields like barcode, UOM policy,
-              tracking flags, and stock thresholds.
+              Inventory master now supports governance actions such as edit and activate/deactivate.
             </div>
           </div>
 
@@ -119,6 +150,21 @@ export function InventoryListScreen() {
           </div>
         </div>
       </div>
+
+      {rowActionError ? (
+        <div
+          style={{
+            marginBottom: '16px',
+            padding: '12px',
+            borderRadius: '10px',
+            background: '#fef2f2',
+            color: '#b91c1c',
+            border: '1px solid #fecaca'
+          }}
+        >
+          {rowActionError}
+        </div>
+      ) : null}
 
       <div
         style={{
@@ -234,6 +280,7 @@ export function InventoryListScreen() {
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Tracking</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Active</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -261,7 +308,18 @@ export function InventoryListScreen() {
                         .join(', ') || 'None'}
                     </td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {item.isActive ? 'Yes' : 'No'}
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '6px 10px',
+                          borderRadius: '999px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          ...getActiveStyle(item.isActive)
+                        }}
+                      >
+                        {item.isActive ? 'Active' : 'Inactive'}
+                      </span>
                     </td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                       <span
@@ -276,6 +334,38 @@ export function InventoryListScreen() {
                       >
                         {item.statusLabel}
                       </span>
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <Link
+                          href={`/inventory/${item.id}/edit`}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: '8px',
+                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            fontWeight: 600
+                          }}
+                        >
+                          Edit
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() => void handleToggle(item)}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: item.isActive ? '#991b1b' : '#166534',
+                            color: '#ffffff',
+                            cursor: 'pointer',
+                            fontWeight: 600
+                          }}
+                        >
+                          {item.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

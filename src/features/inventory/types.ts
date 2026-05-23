@@ -93,6 +93,10 @@ export interface CreateInventoryRequest {
   notes: string;
 }
 
+export interface UpdateInventoryRequest extends CreateInventoryRequest {
+  id: string;
+}
+
 export interface InventoryDetailResponse {
   item: InventoryItem | null;
 }
