@@ -9,20 +9,27 @@ import type {
 } from './types';
 import { mapInventoryItem } from './mapper';
 
+interface InventoryListApiPayload {
+  items: InventoryItemDto[];
+  total: number;
+  persistenceMode?: string;
+}
+
 export const inventoryApi = {
   async getInventoryList(filters?: InventoryListFilters): Promise<InventoryListResponse> {
-    const response = await apiClient.get<InventoryItemDto[]>(ENDPOINTS.inventory.list, {
+    const response = await apiClient.get<InventoryListApiPayload>(ENDPOINTS.inventory.list, {
       query: {
         search: filters?.search || '',
         status: filters?.status || 'all'
       }
     });
 
-    const items = (response.data || []).map(mapInventoryItem);
+    const payload = response.data;
+    const items = (payload?.items || []).map(mapInventoryItem);
 
     return {
       items,
-      total: items.length
+      total: Number(payload?.total ?? items.length)
     };
   },
 
