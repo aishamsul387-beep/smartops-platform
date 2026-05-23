@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -36,6 +36,9 @@ export function LoginScreen() {
 
   const [values, setValues] = useState<LoginFormValues>(initialValues);
   const [errors, setErrors] = useState<LoginFormErrors>({});
+
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api';
 
   const nextPath = useMemo(() => {
     return getSafeNextPath(searchParams.get('next'));
@@ -92,8 +95,7 @@ export function LoginScreen() {
             SmartOps WMS AI
           </div>
           <div style={{ color: '#475569', lineHeight: 1.5 }}>
-            Sign in to continue. Backend auth is not initialized yet, so API login
-            will start working after backend setup.
+            Sign in to continue to your warehouse operations workspace.
           </div>
         </div>
 
@@ -199,6 +201,23 @@ export function LoginScreen() {
 
         <div style={{ marginTop: '16px', color: '#64748b', fontSize: '14px' }}>
           Redirect after login: <strong>{nextPath}</strong>
+        </div>
+
+        <div
+          style={{
+            marginTop: '16px',
+            padding: '12px',
+            borderRadius: '10px',
+            background: '#f8fafc',
+            color: '#475569',
+            border: '1px solid #e2e8f0',
+            fontSize: '13px'
+          }}
+        >
+          Active API base:
+          <div style={{ marginTop: '6px', fontWeight: 700, wordBreak: 'break-all' }}>
+            {apiBaseUrl}
+          </div>
         </div>
       </div>
     </div>

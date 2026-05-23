@@ -14,6 +14,7 @@ function getPageTitle(pathname: string | null) {
   if (pathname.startsWith('/batches')) return 'Batch / Expiry Control';
   if (pathname.startsWith('/uom')) return 'UOM / Multi-UOM Conversion';
   if (pathname.startsWith('/inventory/create')) return 'Create Inventory Item';
+  if (pathname.startsWith('/inventory/') && pathname.endsWith('/edit')) return 'Edit Inventory Item';
   if (pathname.startsWith('/inventory/')) return 'Inventory Detail';
   if (pathname.startsWith('/inventory')) return 'Inventory';
   if (pathname.startsWith('/warehouse/locations')) return 'Warehouse Locations';

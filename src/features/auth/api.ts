@@ -1,4 +1,4 @@
-﻿import { apiClient } from '@/services/api/client';
+import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
 import type {
   AuthSession,
@@ -30,7 +30,7 @@ export const authApi = {
 
   async logout(): Promise<void> {
     try {
-      await apiClient.post<void>(ENDPOINTS.auth.logout, {}, { requiresAuth: false });
+      await apiClient.post<void>(ENDPOINTS.auth.logout, {});
     } catch {
       // fail-safe local logout still proceeds
     }

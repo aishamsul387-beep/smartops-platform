@@ -7,6 +7,8 @@ export type StockAlertType =
 
 export type StockAlertSeverity = 'high' | 'medium' | 'low';
 export type ReorderPriority = 'critical' | 'high' | 'medium' | 'low';
+export type DemandTrend = 'rising' | 'stable' | 'falling';
+export type ProcurementAction = 'order_now' | 'order_this_week' | 'monitor';
 
 export interface StockControlSummary {
   totalItems: number;
@@ -20,6 +22,9 @@ export interface StockControlSummary {
   criticalReorderCount: number;
   highReorderCount: number;
   mediumReorderCount: number;
+  risingDemandItems: number;
+  stableDemandItems: number;
+  fallingDemandItems: number;
 }
 
 export interface StockControlAlert {
@@ -51,7 +56,14 @@ export interface ReorderSuggestion {
   priority: ReorderPriority;
   reason: string;
   preferredSupplierName: string;
+  supplierScore: number;
   leadTimeDays: number;
   reorderByDate: string;
   riskNote: string;
+  demandTrend: DemandTrend;
+  monthlyUsageEstimate: number;
+  forecastDemand30d: number;
+  forecastDemand60d: number;
+  forecastDemand90d: number;
+  procurementAction: ProcurementAction;
 }

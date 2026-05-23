@@ -1,6 +1,7 @@
-﻿import type { Metadata } from 'next';
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import '@/styles/globals.css';
+import { AuthSessionBootstrap } from '@/components/auth/AuthSessionBootstrap';
 
 export const metadata: Metadata = {
   title: 'SmartOps WMS AI',
@@ -14,7 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthSessionBootstrap />
+        {children}
+      </body>
     </html>
   );
 }

@@ -54,6 +54,18 @@ function getPriorityStyle(priority: string) {
   };
 }
 
+function getTrendStyle(trend: string) {
+  if (trend === 'rising') {
+    return { color: '#dc2626', fontWeight: 700 };
+  }
+
+  if (trend === 'falling') {
+    return { color: '#2563eb', fontWeight: 700 };
+  }
+
+  return { color: '#166534', fontWeight: 700 };
+}
+
 export function StockControlScreen() {
   const { summary, alerts, reorderSuggestions, isLoading, error, refresh } =
     useStockControl();
@@ -84,8 +96,8 @@ export function StockControlScreen() {
               Stock Control / Forecasting
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Planning intelligence layer with alerts, reorder priorities, estimated days of cover,
-              and supplier-aware reorder guidance.
+              Advanced planning layer with demand trend, reorder-by date, supplier preference,
+              and risk-aware procurement guidance.
             </div>
           </div>
 
@@ -152,6 +164,21 @@ export function StockControlScreen() {
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Rising Demand</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.risingDemandItems}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Stable Demand</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.stableDemandItems}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Falling Demand</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.fallingDemandItems}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
               <div style={{ color: '#64748b', marginBottom: '8px' }}>Expiring Soon</div>
               <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.expiringSoonBatches}</div>
             </div>
@@ -183,13 +210,14 @@ export function StockControlScreen() {
                   <thead>
                     <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Item</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Trend</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Current Qty</th>
-                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reorder / Min / Max</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Suggested Order</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>30/60/90 Forecast</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Supplier</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Lead Time</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reorder By</th>
-                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Days Cover</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Action</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Priority</th>
                     </tr>
                   </thead>
@@ -199,15 +227,20 @@ export function StockControlScreen() {
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
                           {item.itemCode} - {item.itemName}
                         </td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.currentQty}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                          {item.reorderLevel} / {item.minimumStockLevel} / {item.maximumStockLevel}
+                          <span style={getTrendStyle(item.demandTrend)}>{item.demandTrend}</span>
                         </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.currentQty}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.suggestedOrderQty}</td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.preferredSupplierName}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          {item.forecastDemand30d} / {item.forecastDemand60d} / {item.forecastDemand90d}
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          {item.preferredSupplierName} ({item.supplierScore})
+                        </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.leadTimeDays}d</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.reorderByDate}</td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.estimatedDaysOfCover}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.procurementAction}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                           <span
                             style={{
@@ -259,7 +292,10 @@ export function StockControlScreen() {
                     <div style={{ fontWeight: 700, marginBottom: '6px' }}>
                       {item.itemCode} - {item.itemName}
                     </div>
-                    <div style={{ color: '#475569' }}>{item.riskNote}</div>
+                    <div style={{ color: '#475569', marginBottom: '6px' }}>{item.riskNote}</div>
+                    <div style={{ color: '#64748b', fontSize: '14px' }}>
+                      Monthly usage est.: <strong>{item.monthlyUsageEstimate}</strong> Â· Days of cover: <strong>{item.estimatedDaysOfCover}</strong>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -19,7 +19,10 @@ const initialSummary: StockControlSummary = {
   reorderCandidates: 0,
   criticalReorderCount: 0,
   highReorderCount: 0,
-  mediumReorderCount: 0
+  mediumReorderCount: 0,
+  risingDemandItems: 0,
+  stableDemandItems: 0,
+  fallingDemandItems: 0
 };
 
 export function useStockControl() {
