@@ -19,6 +19,10 @@ export const ENDPOINTS = {
     detail: (id: string) => `/batches/${id}`,
     create: '/batches'
   },
+  stockControl: {
+    summary: '/stock-control/summary',
+    alerts: '/stock-control/alerts'
+  },
   warehouse: {
     summary: '/warehouse/summary',
     locations: '/warehouse/locations'

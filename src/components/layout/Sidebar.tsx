@@ -34,6 +34,11 @@ const NAV_ITEMS: NavItem[] = [
     permissions: [PERMISSIONS.INVENTORY_VIEW]
   },
   {
+    label: 'Stock Control',
+    href: ROUTES.stockControl,
+    permissions: [PERMISSIONS.INVENTORY_VIEW]
+  },
+  {
     label: 'UOM',
     href: ROUTES.uom,
     permissions: [PERMISSIONS.INVENTORY_VIEW]

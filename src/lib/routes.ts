@@ -7,6 +7,7 @@ export const ROUTES = {
   inventory: '/inventory',
   inventoryCreate: '/inventory/create',
   batches: '/batches',
+  stockControl: '/stock-control',
 
   warehouse: '/warehouse',
   warehouseLocations: '/warehouse/locations',
