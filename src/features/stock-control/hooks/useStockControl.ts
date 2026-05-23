@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { stockControlApi } from '../api';
 import type {
+  ProcurementQueueItem,
   ReorderSuggestion,
   StockControlAlert,
   StockControlSummary
@@ -22,13 +23,16 @@ const initialSummary: StockControlSummary = {
   mediumReorderCount: 0,
   risingDemandItems: 0,
   stableDemandItems: 0,
-  fallingDemandItems: 0
+  fallingDemandItems: 0,
+  procurementDueToday: 0,
+  procurementDueThisWeek: 0
 };
 
 export function useStockControl() {
   const [summary, setSummary] = useState<StockControlSummary>(initialSummary);
   const [alerts, setAlerts] = useState<StockControlAlert[]>([]);
   const [reorderSuggestions, setReorderSuggestions] = useState<ReorderSuggestion[]>([]);
+  const [procurementActions, setProcurementActions] = useState<ProcurementQueueItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,20 +41,23 @@ export function useStockControl() {
       setIsLoading(true);
       setError(null);
 
-      const [summaryData, alertData, reorderData] = await Promise.all([
+      const [summaryData, alertData, reorderData, procurementData] = await Promise.all([
         stockControlApi.getSummary(),
         stockControlApi.getAlerts(),
-        stockControlApi.getReorderSuggestions()
+        stockControlApi.getReorderSuggestions(),
+        stockControlApi.getProcurementActions()
       ]);
 
       setSummary(summaryData);
       setAlerts(alertData);
       setReorderSuggestions(reorderData);
+      setProcurementActions(procurementData);
     } catch (err: any) {
       setError(err?.message || 'Failed to load stock control data');
       setSummary(initialSummary);
       setAlerts([]);
       setReorderSuggestions([]);
+      setProcurementActions([]);
     } finally {
       setIsLoading(false);
     }
@@ -64,6 +71,7 @@ export function useStockControl() {
     summary,
     alerts,
     reorderSuggestions,
+    procurementActions,
     isLoading,
     error,
     refresh: load

@@ -1,6 +1,7 @@
 import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
 import type {
+  ProcurementQueueItem,
   ReorderSuggestion,
   StockControlAlert,
   StockControlSummary
@@ -20,6 +21,14 @@ export const stockControlApi = {
   async getReorderSuggestions(): Promise<ReorderSuggestion[]> {
     const response = await apiClient.get<ReorderSuggestion[]>(
       ENDPOINTS.stockControl.reorderSuggestions
+    );
+
+    return response.data || [];
+  },
+
+  async getProcurementActions(): Promise<ProcurementQueueItem[]> {
+    const response = await apiClient.get<ProcurementQueueItem[]>(
+      ENDPOINTS.stockControl.procurementActions
     );
 
     return response.data || [];

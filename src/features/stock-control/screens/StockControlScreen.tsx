@@ -66,8 +66,29 @@ function getTrendStyle(trend: string) {
   return { color: '#166534', fontWeight: 700 };
 }
 
+function getQueueStatusStyle(status: string) {
+  if (status === 'immediate') {
+    return {
+      background: '#991b1b',
+      color: '#ffffff'
+    };
+  }
+
+  if (status === 'this_week') {
+    return {
+      background: '#f59e0b',
+      color: '#111827'
+    };
+  }
+
+  return {
+    background: '#10b981',
+    color: '#ffffff'
+  };
+}
+
 export function StockControlScreen() {
-  const { summary, alerts, reorderSuggestions, isLoading, error, refresh } =
+  const { summary, alerts, reorderSuggestions, procurementActions, isLoading, error, refresh } =
     useStockControl();
 
   return (
@@ -97,7 +118,7 @@ export function StockControlScreen() {
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
               Advanced planning layer with demand trend, reorder-by date, supplier preference,
-              and risk-aware procurement guidance.
+              queue status, and procurement guidance.
             </div>
           </div>
 
@@ -144,8 +165,13 @@ export function StockControlScreen() {
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ color: '#64748b', marginBottom: '8px' }}>Reorder Candidates</div>
-              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.reorderCandidates}</div>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Due Today</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.procurementDueToday}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Due This Week</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.procurementDueThisWeek}</div>
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
@@ -159,34 +185,78 @@ export function StockControlScreen() {
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ color: '#64748b', marginBottom: '8px' }}>Medium Reorders</div>
-              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.mediumReorderCount}</div>
-            </div>
-
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
               <div style={{ color: '#64748b', marginBottom: '8px' }}>Rising Demand</div>
               <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.risingDemandItems}</div>
-            </div>
-
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ color: '#64748b', marginBottom: '8px' }}>Stable Demand</div>
-              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.stableDemandItems}</div>
-            </div>
-
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ color: '#64748b', marginBottom: '8px' }}>Falling Demand</div>
-              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.fallingDemandItems}</div>
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
               <div style={{ color: '#64748b', marginBottom: '8px' }}>Expiring Soon</div>
               <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.expiringSoonBatches}</div>
             </div>
+          </div>
 
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ color: '#64748b', marginBottom: '8px' }}>Expired Batches</div>
-              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.expiredBatches}</div>
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ padding: '20px', fontSize: '22px', fontWeight: 700 }}>
+              Procurement Action Queue
             </div>
+
+            {procurementActions.length === 0 ? (
+              <div style={{ padding: '24px', color: '#64748b' }}>No procurement actions found.</div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Item</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Supplier</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Suggested Qty</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reorder By</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Lead Time</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Queue Status</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {procurementActions.map((item) => (
+                      <tr key={item.id}>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                          {item.itemCode} - {item.itemName}
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          {item.preferredSupplierName} ({item.supplierScore})
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.suggestedOrderQty}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.reorderByDate}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.leadTimeDays}d</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              padding: '6px 10px',
+                              borderRadius: '999px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              ...getQueueStatusStyle(item.queueStatus)
+                            }}
+                          >
+                            {item.queueStatus}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.procurementAction}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div
