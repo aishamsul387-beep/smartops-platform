@@ -16,7 +16,10 @@ const initialSummary: StockControlSummary = {
   overstockItems: 0,
   expiringSoonBatches: 0,
   expiredBatches: 0,
-  reorderCandidates: 0
+  reorderCandidates: 0,
+  criticalReorderCount: 0,
+  highReorderCount: 0,
+  mediumReorderCount: 0
 };
 
 export function useStockControl() {

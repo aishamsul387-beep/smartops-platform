@@ -17,6 +17,9 @@ export interface StockControlSummary {
   expiringSoonBatches: number;
   expiredBatches: number;
   reorderCandidates: number;
+  criticalReorderCount: number;
+  highReorderCount: number;
+  mediumReorderCount: number;
 }
 
 export interface StockControlAlert {
@@ -47,4 +50,8 @@ export interface ReorderSuggestion {
   estimatedDaysOfCover: number;
   priority: ReorderPriority;
   reason: string;
+  preferredSupplierName: string;
+  leadTimeDays: number;
+  reorderByDate: string;
+  riskNote: string;
 }

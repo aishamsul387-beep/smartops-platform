@@ -84,7 +84,8 @@ export function StockControlScreen() {
               Stock Control / Forecasting
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Rule-based planning intelligence for stock alerts, reorder candidates, and early forecasting visibility.
+              Planning intelligence layer with alerts, reorder priorities, estimated days of cover,
+              and supplier-aware reorder guidance.
             </div>
           </div>
 
@@ -131,23 +132,23 @@ export function StockControlScreen() {
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ color: '#64748b', marginBottom: '8px' }}>Low Stock</div>
-              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.lowStockItems}</div>
-            </div>
-
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ color: '#64748b', marginBottom: '8px' }}>Out of Stock</div>
-              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.outOfStockItems}</div>
-            </div>
-
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ color: '#64748b', marginBottom: '8px' }}>Overstock</div>
-              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.overstockItems}</div>
-            </div>
-
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
               <div style={{ color: '#64748b', marginBottom: '8px' }}>Reorder Candidates</div>
               <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.reorderCandidates}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Critical Reorders</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.criticalReorderCount}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>High Reorders</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.highReorderCount}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Medium Reorders</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.mediumReorderCount}</div>
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
@@ -185,10 +186,11 @@ export function StockControlScreen() {
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Current Qty</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reorder / Min / Max</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Suggested Order</th>
-                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Daily Usage</th>
-                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Days of Cover</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Supplier</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Lead Time</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reorder By</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Days Cover</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Priority</th>
-                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reason</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -202,7 +204,9 @@ export function StockControlScreen() {
                           {item.reorderLevel} / {item.minimumStockLevel} / {item.maximumStockLevel}
                         </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.suggestedOrderQty}</td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.estimatedDailyUsage}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.preferredSupplierName}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.leadTimeDays}d</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.reorderByDate}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.estimatedDaysOfCover}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                           <span
@@ -218,11 +222,46 @@ export function StockControlScreen() {
                             {item.priority}
                           </span>
                         </td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.reason}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px' }}>
+              Reorder Risk Notes
+            </div>
+
+            {reorderSuggestions.length === 0 ? (
+              <div style={{ color: '#64748b' }}>No reorder notes available.</div>
+            ) : (
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {reorderSuggestions.map((item) => (
+                  <div
+                    key={`${item.id}-note`}
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      padding: '14px'
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, marginBottom: '6px' }}>
+                      {item.itemCode} - {item.itemName}
+                    </div>
+                    <div style={{ color: '#475569' }}>{item.riskNote}</div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
