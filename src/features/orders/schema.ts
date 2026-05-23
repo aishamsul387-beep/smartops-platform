@@ -19,10 +19,22 @@ export const initialPurchaseOrderFormValues: PurchaseOrderFormValues = {
 
 export const initialGRNFormValues: GRNFormValues = {
   poNo: '',
+  inventoryItemId: '',
   supplierName: '',
+  batchNumber: '',
+  lotNumber: '',
+  supplierLotNumber: '',
+  manufactureDate: '',
+  expiryDate: '',
+  receivedDate: '',
   receivedLines: '',
   receivedQty: '',
-  status: 'draft'
+  status: 'draft',
+  warehouseLocation: '',
+  zone: '',
+  aisle: '',
+  levelCode: '',
+  bin: ''
 };
 
 export function validatePurchaseOrderForm(values: PurchaseOrderFormValues) {
@@ -83,8 +95,16 @@ export function validateGRNForm(values: GRNFormValues) {
     errors.poNo = 'PO number is required';
   }
 
+  if (!values.inventoryItemId.trim()) {
+    errors.inventoryItemId = 'Inventory item is required';
+  }
+
   if (!values.supplierName.trim()) {
     errors.supplierName = 'Supplier name is required';
+  }
+
+  if (!values.batchNumber.trim()) {
+    errors.batchNumber = 'Batch number is required';
   }
 
   if (!values.receivedLines.trim()) {
@@ -112,9 +132,21 @@ export function validateGRNForm(values: GRNFormValues) {
 export function mapGRNFormToRequest(values: GRNFormValues): CreateGRNRequest {
   return {
     poNo: values.poNo.trim(),
+    inventoryItemId: values.inventoryItemId.trim(),
     supplierName: values.supplierName.trim(),
+    batchNumber: values.batchNumber.trim(),
+    lotNumber: values.lotNumber.trim(),
+    supplierLotNumber: values.supplierLotNumber.trim(),
+    manufactureDate: values.manufactureDate.trim() || null,
+    expiryDate: values.expiryDate.trim() || null,
+    receivedDate: values.receivedDate.trim() || null,
     receivedLines: Number(values.receivedLines),
     receivedQty: Number(values.receivedQty),
-    status: values.status
+    status: values.status,
+    warehouseLocation: values.warehouseLocation.trim(),
+    zone: values.zone.trim(),
+    aisle: values.aisle.trim(),
+    levelCode: values.levelCode.trim(),
+    bin: values.bin.trim()
   };
 }
