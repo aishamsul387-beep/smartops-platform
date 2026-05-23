@@ -21,7 +21,8 @@ export const ENDPOINTS = {
   },
   stockControl: {
     summary: '/stock-control/summary',
-    alerts: '/stock-control/alerts'
+    alerts: '/stock-control/alerts',
+    reorderSuggestions: '/stock-control/reorder-suggestions'
   },
   warehouse: {
     summary: '/warehouse/summary',

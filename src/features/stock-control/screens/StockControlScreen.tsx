@@ -26,8 +26,37 @@ function getSeverityStyle(severity: string) {
   };
 }
 
+function getPriorityStyle(priority: string) {
+  if (priority === 'critical') {
+    return {
+      background: '#991b1b',
+      color: '#ffffff'
+    };
+  }
+
+  if (priority === 'high') {
+    return {
+      background: '#dc2626',
+      color: '#ffffff'
+    };
+  }
+
+  if (priority === 'medium') {
+    return {
+      background: '#f59e0b',
+      color: '#111827'
+    };
+  }
+
+  return {
+    background: '#10b981',
+    color: '#ffffff'
+  };
+}
+
 export function StockControlScreen() {
-  const { summary, alerts, isLoading, error, refresh } = useStockControl();
+  const { summary, alerts, reorderSuggestions, isLoading, error, refresh } =
+    useStockControl();
 
   return (
     <div className="container">
@@ -55,7 +84,7 @@ export function StockControlScreen() {
               Stock Control / Forecasting
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              First planning intelligence layer for low stock, overstock, expiring soon, and expired alerts.
+              Rule-based planning intelligence for stock alerts, reorder candidates, and early forecasting visibility.
             </div>
           </div>
 
@@ -97,6 +126,11 @@ export function StockControlScreen() {
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>On Hand Qty</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.totalOnHandQty}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
               <div style={{ color: '#64748b', marginBottom: '8px' }}>Low Stock</div>
               <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.lowStockItems}</div>
             </div>
@@ -112,6 +146,11 @@ export function StockControlScreen() {
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Reorder Candidates</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.reorderCandidates}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
               <div style={{ color: '#64748b', marginBottom: '8px' }}>Expiring Soon</div>
               <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.expiringSoonBatches}</div>
             </div>
@@ -120,6 +159,72 @@ export function StockControlScreen() {
               <div style={{ color: '#64748b', marginBottom: '8px' }}>Expired Batches</div>
               <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.expiredBatches}</div>
             </div>
+          </div>
+
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ padding: '20px', fontSize: '22px', fontWeight: 700 }}>
+              Reorder Suggestions
+            </div>
+
+            {reorderSuggestions.length === 0 ? (
+              <div style={{ padding: '24px', color: '#64748b' }}>No reorder suggestions found.</div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Item</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Current Qty</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reorder / Min / Max</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Suggested Order</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Daily Usage</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Days of Cover</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Priority</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reorderSuggestions.map((item) => (
+                      <tr key={item.id}>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                          {item.itemCode} - {item.itemName}
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.currentQty}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          {item.reorderLevel} / {item.minimumStockLevel} / {item.maximumStockLevel}
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.suggestedOrderQty}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.estimatedDailyUsage}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.estimatedDaysOfCover}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              padding: '6px 10px',
+                              borderRadius: '999px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              ...getPriorityStyle(item.priority)
+                            }}
+                          >
+                            {item.priority}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.reason}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div
