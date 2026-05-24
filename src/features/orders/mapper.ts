@@ -1,87 +1,128 @@
 import type {
-  GRN,
-  GRNDto,
-  GRNStatus,
-  PurchaseOrder,
-  PurchaseOrderDto,
+  GRNRecord,
+  OrdersDashboardSummary,
+  PurchaseOrderPlanningContext,
+  PurchaseOrderRecord,
   PurchaseOrderStatus,
-  Quotation,
-  QuotationDto,
-  QuotationStatus
+  QuotationRecord,
+  QuotationStatus,
+  SupplierSource
 } from './types';
 
-const QUOTATION_STATUS_LABELS: Record<QuotationStatus, string> = {
-  draft: 'Draft',
-  sent: 'Sent',
-  approved: 'Approved',
-  rejected: 'Rejected'
-};
+function asText(value: unknown, fallback = '') {
+  return String(value ?? fallback);
+}
 
-const PURCHASE_ORDER_STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
-  draft: 'Draft',
-  issued: 'Issued',
-  partially_received: 'Partially received',
-  received: 'Received'
-};
+function asNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
 
-const GRN_STATUS_LABELS: Record<GRNStatus, string> = {
-  draft: 'Draft',
-  posted: 'Posted'
-};
+function getQuotationStatusLabel(status: QuotationStatus) {
+  if (status === 'sent') return 'Sent';
+  if (status === 'approved') return 'Approved';
+  if (status === 'rejected') return 'Rejected';
+  return 'Draft';
+}
 
-export function mapQuotation(dto: QuotationDto): Quotation {
+function getPurchaseOrderStatusLabel(status: PurchaseOrderStatus) {
+  if (status === 'issued') return 'Issued';
+  if (status === 'partially_received') return 'Partially Received';
+  if (status === 'received') return 'Received';
+  return 'Draft';
+}
+
+function getGRNStatusLabel(status: GRNRecord['status']) {
+  if (status === 'posted') return 'Posted';
+  return 'Draft';
+}
+
+function mapPlanningContext(payload: any): PurchaseOrderPlanningContext | null {
+  if (!payload) {
+    return null;
+  }
+
   return {
-    id: dto.id,
-    quotationNo: dto.quotationNo,
-    supplierName: dto.supplierName,
-    itemCount: dto.itemCount,
-    totalAmount: dto.totalAmount,
-    currency: dto.currency,
-    status: dto.status,
-    statusLabel: QUOTATION_STATUS_LABELS[dto.status],
-    createdAt: dto.createdAt
+    planningSource: 'stock_control',
+    inventoryItemId: asText(payload.inventoryItemId),
+    itemCode: asText(payload.itemCode),
+    itemName: asText(payload.itemName),
+    suggestedOrderQty: asNumber(payload.suggestedOrderQty, 0),
+    supplierSource: asText(payload.supplierSource, 'unassigned') as SupplierSource,
+    estimatedReorderValue: asNumber(payload.estimatedReorderValue, 0),
+    reorderByDate: asText(payload.reorderByDate)
   };
 }
 
-export function mapPurchaseOrder(dto: PurchaseOrderDto): PurchaseOrder {
+export function mapQuotation(payload: any): QuotationRecord {
+  const status = asText(payload?.status, 'draft') as QuotationStatus;
+
   return {
-    id: dto.id,
-    poNo: dto.poNo,
-    supplierName: dto.supplierName,
-    quotationNo: dto.quotationNo,
-    itemCount: dto.itemCount,
-    totalAmount: dto.totalAmount,
-    currency: dto.currency,
-    status: dto.status,
-    statusLabel: PURCHASE_ORDER_STATUS_LABELS[dto.status],
-    expectedDate: dto.expectedDate,
-    createdAt: dto.createdAt
+    id: asText(payload?.id),
+    quotationNo: asText(payload?.quotationNo),
+    supplierName: asText(payload?.supplierName),
+    itemCount: asNumber(payload?.itemCount, 0),
+    totalAmount: asNumber(payload?.totalAmount, 0),
+    currency: asText(payload?.currency, 'USD'),
+    status,
+    statusLabel: getQuotationStatusLabel(status),
+    createdAt: asText(payload?.createdAt)
   };
 }
 
-export function mapGRN(dto: GRNDto): GRN {
+export function mapPurchaseOrder(payload: any): PurchaseOrderRecord {
+  const status = asText(payload?.status, 'draft') as PurchaseOrderStatus;
+
   return {
-    id: dto.id,
-    grnNo: dto.grnNo,
-    poNo: dto.poNo,
-    inventoryItemId: dto.inventoryItemId,
-    supplierName: dto.supplierName,
-    batchNumber: dto.batchNumber,
-    lotNumber: dto.lotNumber,
-    supplierLotNumber: dto.supplierLotNumber,
-    manufactureDate: dto.manufactureDate,
-    expiryDate: dto.expiryDate,
-    receivedDate: dto.receivedDate,
-    receivedLines: dto.receivedLines,
-    receivedQty: dto.receivedQty,
-    status: dto.status,
-    statusLabel: GRN_STATUS_LABELS[dto.status],
-    warehouseLocation: dto.warehouseLocation,
-    zone: dto.zone,
-    aisle: dto.aisle,
-    levelCode: dto.levelCode,
-    bin: dto.bin,
-    linkedBatchId: dto.linkedBatchId,
-    postedAt: dto.postedAt
+    id: asText(payload?.id),
+    poNo: asText(payload?.poNo),
+    supplierName: asText(payload?.supplierName),
+    quotationNo: payload?.quotationNo ? asText(payload?.quotationNo) : undefined,
+    itemCount: asNumber(payload?.itemCount, 0),
+    totalAmount: asNumber(payload?.totalAmount, 0),
+    currency: asText(payload?.currency, 'USD'),
+    status,
+    statusLabel: getPurchaseOrderStatusLabel(status),
+    expectedDate: asText(payload?.expectedDate),
+    createdAt: asText(payload?.createdAt),
+    planningContext: mapPlanningContext(payload?.planningContext)
+  };
+}
+
+export function mapGRN(payload: any): GRNRecord {
+  const status = asText(payload?.status, 'draft') as GRNRecord['status'];
+
+  return {
+    id: asText(payload?.id),
+    grnNo: asText(payload?.grnNo),
+    poNo: asText(payload?.poNo),
+    inventoryItemId: asText(payload?.inventoryItemId),
+    supplierName: asText(payload?.supplierName),
+    batchNumber: asText(payload?.batchNumber),
+    lotNumber: asText(payload?.lotNumber),
+    supplierLotNumber: asText(payload?.supplierLotNumber),
+    manufactureDate: payload?.manufactureDate ? asText(payload?.manufactureDate) : null,
+    expiryDate: payload?.expiryDate ? asText(payload?.expiryDate) : null,
+    receivedDate: payload?.receivedDate ? asText(payload?.receivedDate) : null,
+    receivedLines: asNumber(payload?.receivedLines, 0),
+    receivedQty: asNumber(payload?.receivedQty, 0),
+    status,
+    statusLabel: getGRNStatusLabel(status),
+    warehouseLocation: asText(payload?.warehouseLocation),
+    zone: asText(payload?.zone),
+    aisle: asText(payload?.aisle),
+    levelCode: asText(payload?.levelCode),
+    bin: asText(payload?.bin),
+    linkedBatchId: payload?.linkedBatchId ? asText(payload?.linkedBatchId) : null,
+    postedAt: asText(payload?.postedAt)
+  };
+}
+
+export function mapOrdersSummary(payload: any): OrdersDashboardSummary {
+  return {
+    quotations: asNumber(payload?.quotations, 0),
+    purchaseOrders: asNumber(payload?.purchaseOrders, 0),
+    goodsReceivedNotes: asNumber(payload?.goodsReceivedNotes, 0),
+    pendingReceipts: asNumber(payload?.pendingReceipts, 0)
   };
 }

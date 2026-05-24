@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ordersApi } from '../api';
 import type { PurchaseOrder } from '../types';
 
@@ -9,23 +9,24 @@ export function usePurchaseOrderDetail(id: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  async function load() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await ordersApi.getPurchaseOrderById(id);
-      setItem(response.item);
+
+      const response = await ordersApi.getPurchaseOrderDetail(id);
+      setItem(response);
     } catch (err: any) {
-      setError(err?.message || 'Failed to load purchase order');
       setItem(null);
+      setError(err?.message || 'Failed to load purchase order');
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [id]);
 
   return {
     item,

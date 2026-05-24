@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ordersApi } from '../api';
 import type { GRN } from '../types';
 
@@ -9,23 +9,24 @@ export function useGRNDetail(id: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  async function load() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await ordersApi.getGRNById(id);
-      setItem(response.item);
+
+      const response = await ordersApi.getGRNDetail(id);
+      setItem(response);
     } catch (err: any) {
-      setError(err?.message || 'Failed to load goods received note');
       setItem(null);
+      setError(err?.message || 'Failed to load goods received note');
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [id]);
 
   return {
     item,

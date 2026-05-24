@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
+import { mapGRN, mapOrdersSummary, mapPurchaseOrder, mapQuotation } from './mapper';
 import type {
   CreateGRNRequest,
   CreatePurchaseOrderRequest,
@@ -14,78 +15,74 @@ import type {
   Quotation,
   QuotationDto
 } from './types';
-import { mapGRN, mapPurchaseOrder, mapQuotation } from './mapper';
+
+function buildListUrl(basePath: string, filters?: OrdersListFilters) {
+  const query = new URLSearchParams();
+
+  if (filters?.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters?.status && filters.status.trim() && filters.status !== 'all') {
+    query.set('status', filters.status.trim());
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${basePath}?${queryString}` : basePath;
+}
 
 export const ordersApi = {
   async getOrdersDashboardSummary(): Promise<OrdersDashboardSummary> {
-    const response = await apiClient.get<OrdersDashboardSummary>(ENDPOINTS.orders.summary);
-    return response.data;
+    const response = await apiClient.get<any>(ENDPOINTS.orders.summary);
+    return mapOrdersSummary(response.data);
   },
 
   async getQuotations(filters?: OrdersListFilters): Promise<Quotation[]> {
-    const response = await apiClient.get<QuotationDto[]>(ENDPOINTS.orders.quotations, {
-      query: {
-        search: filters?.search || '',
-        status: filters?.status || 'all'
-      }
-    });
+    const response = await apiClient.get<any[]>(
+      buildListUrl(ENDPOINTS.orders.quotations, filters)
+    );
 
-    return (response.data || []).map(mapQuotation);
+    const items = Array.isArray(response.data) ? response.data : [];
+    return items.map((item) => mapQuotation(item) as QuotationDto);
   },
 
   async getPurchaseOrders(filters?: OrdersListFilters): Promise<PurchaseOrder[]> {
-    const response = await apiClient.get<PurchaseOrderDto[]>(ENDPOINTS.orders.purchaseOrders, {
-      query: {
-        search: filters?.search || '',
-        status: filters?.status || 'all'
-      }
-    });
-
-    return (response.data || []).map(mapPurchaseOrder);
-  },
-
-  async getPurchaseOrderById(id: string): Promise<PurchaseOrderDetailResponse> {
-    const response = await apiClient.get<PurchaseOrderDto>(ENDPOINTS.orders.purchaseOrderDetail(id));
-
-    return {
-      item: response.data ? mapPurchaseOrder(response.data) : null
-    };
-  },
-
-  async createPurchaseOrder(payload: CreatePurchaseOrderRequest): Promise<PurchaseOrder> {
-    const response = await apiClient.post<PurchaseOrderDto>(
-      ENDPOINTS.orders.createPurchaseOrder,
-      payload
+    const response = await apiClient.get<any[]>(
+      buildListUrl(ENDPOINTS.orders.purchaseOrders, filters)
     );
 
+    const items = Array.isArray(response.data) ? response.data : [];
+    return items.map((item) => mapPurchaseOrder(item) as PurchaseOrderDto);
+  },
+
+  async getPurchaseOrderDetail(id: string): Promise<PurchaseOrderDetailResponse> {
+    const response = await apiClient.get<any>(ENDPOINTS.orders.purchaseOrderDetail(id));
+    return mapPurchaseOrder(response.data);
+  },
+
+  async createPurchaseOrder(
+    payload: CreatePurchaseOrderRequest
+  ): Promise<PurchaseOrder> {
+    const response = await apiClient.post<any>(ENDPOINTS.orders.createPurchaseOrder, payload);
     return mapPurchaseOrder(response.data);
   },
 
   async getGoodsReceivedNotes(filters?: OrdersListFilters): Promise<GRN[]> {
-    const response = await apiClient.get<GRNDto[]>(ENDPOINTS.orders.goodsReceivedNotes, {
-      query: {
-        search: filters?.search || '',
-        status: filters?.status || 'all'
-      }
-    });
+    const response = await apiClient.get<any[]>(
+      buildListUrl(ENDPOINTS.orders.goodsReceivedNotes, filters)
+    );
 
-    return (response.data || []).map(mapGRN);
+    const items = Array.isArray(response.data) ? response.data : [];
+    return items.map((item) => mapGRN(item) as GRNDto);
   },
 
-  async getGRNById(id: string): Promise<GRNDetailResponse> {
-    const response = await apiClient.get<GRNDto>(ENDPOINTS.orders.goodsReceivedNoteDetail(id));
-
-    return {
-      item: response.data ? mapGRN(response.data) : null
-    };
+  async getGRNDetail(id: string): Promise<GRNDetailResponse> {
+    const response = await apiClient.get<any>(ENDPOINTS.orders.goodsReceivedNoteDetail(id));
+    return mapGRN(response.data);
   },
 
   async createGRN(payload: CreateGRNRequest): Promise<GRN> {
-    const response = await apiClient.post<GRNDto>(
-      ENDPOINTS.orders.createGoodsReceivedNote,
-      payload
-    );
-
+    const response = await apiClient.post<any>(ENDPOINTS.orders.createGoodsReceivedNote, payload);
     return mapGRN(response.data);
   }
 };
