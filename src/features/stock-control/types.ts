@@ -10,6 +10,7 @@ export type ReorderPriority = 'critical' | 'high' | 'medium' | 'low';
 export type DemandTrend = 'rising' | 'stable' | 'falling';
 export type ProcurementAction = 'order_now' | 'order_this_week' | 'monitor';
 export type ProcurementQueueStatus = 'immediate' | 'this_week' | 'monitor';
+export type SupplierSource = 'inventory_master' | 'batch_history' | 'unassigned';
 
 export interface StockControlSummary {
   totalItems: number;
@@ -28,6 +29,9 @@ export interface StockControlSummary {
   fallingDemandItems: number;
   procurementDueToday: number;
   procurementDueThisWeek: number;
+  plannedProcurementValue: number;
+  urgentProcurementValue: number;
+  planningCurrency: string;
 }
 
 export interface StockControlAlert {
@@ -49,6 +53,7 @@ export interface ReorderSuggestion {
   itemCode: string;
   itemName: string;
   category: string;
+  itemType: string;
   currentQty: number;
   reorderLevel: number;
   minimumStockLevel: number;
@@ -59,6 +64,7 @@ export interface ReorderSuggestion {
   priority: ReorderPriority;
   reason: string;
   preferredSupplierName: string;
+  supplierSource: SupplierSource;
   supplierScore: number;
   leadTimeDays: number;
   reorderByDate: string;
@@ -69,6 +75,9 @@ export interface ReorderSuggestion {
   forecastDemand60d: number;
   forecastDemand90d: number;
   procurementAction: ProcurementAction;
+  standardCost: number;
+  currency: string;
+  estimatedReorderValue: number;
 }
 
 export interface ProcurementQueueItem {
@@ -76,7 +85,9 @@ export interface ProcurementQueueItem {
   inventoryItemId: string;
   itemCode: string;
   itemName: string;
+  itemType: string;
   preferredSupplierName: string;
+  supplierSource: SupplierSource;
   suggestedOrderQty: number;
   reorderByDate: string;
   leadTimeDays: number;
@@ -85,4 +96,7 @@ export interface ProcurementQueueItem {
   procurementAction: ProcurementAction;
   queueStatus: ProcurementQueueStatus;
   riskNote: string;
+  standardCost: number;
+  currency: string;
+  estimatedOrderValue: number;
 }

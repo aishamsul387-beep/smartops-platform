@@ -87,6 +87,25 @@ function getQueueStatusStyle(status: string) {
   };
 }
 
+function getSupplierSourceLabel(source: string) {
+  if (source === 'inventory_master') return 'Inventory Master';
+  if (source === 'batch_history') return 'Batch History';
+  return 'Unassigned';
+}
+
+function getItemTypeLabel(value: string) {
+  if (value === 'raw_material') return 'Raw Material';
+  if (value === 'finished_goods') return 'Finished Goods';
+  if (value === 'packaging') return 'Packaging';
+  if (value === 'spare_part') return 'Spare Part';
+  if (value === 'consumable') return 'Consumable';
+  return value || '-';
+}
+
+function formatMoney(value: number, currency: string) {
+  return `${currency || 'USD'} ${Number(value || 0).toFixed(2)}`;
+}
+
 export function StockControlScreen() {
   const { summary, alerts, reorderSuggestions, procurementActions, isLoading, error, refresh } =
     useStockControl();
@@ -117,8 +136,8 @@ export function StockControlScreen() {
               Stock Control / Forecasting
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Advanced planning layer with demand trend, reorder-by date, supplier preference,
-              queue status, and procurement guidance.
+              Planning now uses Inventory Master supplier and cost profile to produce more useful
+              procurement actions and reorder value estimates.
             </div>
           </div>
 
@@ -175,6 +194,20 @@ export function StockControlScreen() {
             </div>
 
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Planned Procurement Value</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>
+                {formatMoney(summary.plannedProcurementValue, summary.planningCurrency)}
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Urgent Procurement Value</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>
+                {formatMoney(summary.urgentProcurementValue, summary.planningCurrency)}
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
               <div style={{ color: '#64748b', marginBottom: '8px' }}>Critical Reorders</div>
               <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.criticalReorderCount}</div>
             </div>
@@ -217,9 +250,10 @@ export function StockControlScreen() {
                     <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Item</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Supplier</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Cost Basis</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Suggested Qty</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Est. Value</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reorder By</th>
-                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Lead Time</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Queue Status</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Action</th>
                     </tr>
@@ -229,13 +263,27 @@ export function StockControlScreen() {
                       <tr key={item.id}>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
                           {item.itemCode} - {item.itemName}
+                          <div style={{ color: '#64748b', fontSize: '12px', fontWeight: 500 }}>
+                            {getItemTypeLabel(item.itemType)}
+                          </div>
                         </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                          {item.preferredSupplierName} ({item.supplierScore})
+                          <div>{item.preferredSupplierName}</div>
+                          <div style={{ color: '#64748b', fontSize: '12px' }}>
+                            Source: {getSupplierSourceLabel(item.supplierSource)} Â· Score {item.supplierScore}
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          {formatMoney(item.standardCost, item.currency)}
                         </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.suggestedOrderQty}</td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.reorderByDate}</td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.leadTimeDays}d</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          {formatMoney(item.estimatedOrderValue, item.currency)}
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          {item.reorderByDate}
+                          <div style={{ color: '#64748b', fontSize: '12px' }}>{item.leadTimeDays}d lead time</div>
+                        </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                           <span
                             style={{
@@ -250,7 +298,9 @@ export function StockControlScreen() {
                             {item.queueStatus}
                           </span>
                         </td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.procurementAction}</td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          {item.procurementAction}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -280,12 +330,12 @@ export function StockControlScreen() {
                   <thead>
                     <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Item</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Supplier</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Trend</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Current Qty</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Suggested Order</th>
+                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Cost / Value</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>30/60/90 Forecast</th>
-                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Supplier</th>
-                      <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Lead Time</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Reorder By</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Action</th>
                       <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Priority</th>
@@ -296,6 +346,15 @@ export function StockControlScreen() {
                       <tr key={item.id}>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
                           {item.itemCode} - {item.itemName}
+                          <div style={{ color: '#64748b', fontSize: '12px', fontWeight: 500 }}>
+                            {getItemTypeLabel(item.itemType)}
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          <div>{item.preferredSupplierName}</div>
+                          <div style={{ color: '#64748b', fontSize: '12px' }}>
+                            Source: {getSupplierSourceLabel(item.supplierSource)} Â· Score {item.supplierScore}
+                          </div>
                         </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                           <span style={getTrendStyle(item.demandTrend)}>{item.demandTrend}</span>
@@ -303,13 +362,18 @@ export function StockControlScreen() {
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.currentQty}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.suggestedOrderQty}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                          <div>{formatMoney(item.standardCost, item.currency)}</div>
+                          <div style={{ color: '#64748b', fontSize: '12px' }}>
+                            Est: {formatMoney(item.estimatedReorderValue, item.currency)}
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                           {item.forecastDemand30d} / {item.forecastDemand60d} / {item.forecastDemand90d}
                         </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                          {item.preferredSupplierName} ({item.supplierScore})
+                          {item.reorderByDate}
+                          <div style={{ color: '#64748b', fontSize: '12px' }}>{item.leadTimeDays}d lead time</div>
                         </td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.leadTimeDays}d</td>
-                        <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.reorderByDate}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.procurementAction}</td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                           <span
@@ -364,7 +428,10 @@ export function StockControlScreen() {
                     </div>
                     <div style={{ color: '#475569', marginBottom: '6px' }}>{item.riskNote}</div>
                     <div style={{ color: '#64748b', fontSize: '14px' }}>
-                      Monthly usage est.: <strong>{item.monthlyUsageEstimate}</strong> Â· Days of cover: <strong>{item.estimatedDaysOfCover}</strong>
+                      Supplier: <strong>{item.preferredSupplierName}</strong> ({getSupplierSourceLabel(item.supplierSource)}) Â·
+                      Monthly usage est.: <strong>{item.monthlyUsageEstimate}</strong> Â·
+                      Days of cover: <strong>{item.estimatedDaysOfCover}</strong> Â·
+                      Estimated reorder value: <strong>{formatMoney(item.estimatedReorderValue, item.currency)}</strong>
                     </div>
                   </div>
                 ))}

@@ -25,7 +25,10 @@ const initialSummary: StockControlSummary = {
   stableDemandItems: 0,
   fallingDemandItems: 0,
   procurementDueToday: 0,
-  procurementDueThisWeek: 0
+  procurementDueThisWeek: 0,
+  plannedProcurementValue: 0,
+  urgentProcurementValue: 0,
+  planningCurrency: 'USD'
 };
 
 export function useStockControl() {
