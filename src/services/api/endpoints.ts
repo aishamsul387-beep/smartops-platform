@@ -24,7 +24,9 @@ export const ENDPOINTS = {
     summary: '/stock-control/summary',
     alerts: '/stock-control/alerts',
     reorderSuggestions: '/stock-control/reorder-suggestions',
-    procurementActions: '/stock-control/procurement-actions'
+    procurementActions: '/stock-control/procurement-actions',
+    createDraftPurchaseOrderFromSuggestion: (inventoryItemId: string) =>
+      `/stock-control/reorder-suggestions/${inventoryItemId}/create-po-draft`
   },
   warehouse: {
     summary: '/warehouse/summary',

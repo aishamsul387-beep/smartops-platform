@@ -100,3 +100,29 @@ export interface ProcurementQueueItem {
   currency: string;
   estimatedOrderValue: number;
 }
+
+export interface DraftPurchaseOrderResult {
+  purchaseOrder: {
+    id: string;
+    poNo: string;
+    supplierName: string;
+    itemCount: number;
+    totalAmount: number;
+    currency: string;
+    status: string;
+    expectedDate: string;
+    createdAt: string;
+  };
+  sourceSuggestion: {
+    inventoryItemId: string;
+    itemCode: string;
+    itemName: string;
+    suggestedOrderQty: number;
+    estimatedReorderValue: number;
+    preferredSupplierName: string;
+    supplierSource: SupplierSource;
+    standardCost: number;
+    currency: string;
+    reorderByDate: string;
+  };
+}

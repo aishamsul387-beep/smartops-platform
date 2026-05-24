@@ -1,6 +1,7 @@
 import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
 import type {
+  DraftPurchaseOrderResult,
   ProcurementQueueItem,
   ReorderSuggestion,
   StockControlAlert,
@@ -32,5 +33,16 @@ export const stockControlApi = {
     );
 
     return response.data || [];
+  },
+
+  async createDraftPurchaseOrderFromSuggestion(
+    inventoryItemId: string
+  ): Promise<DraftPurchaseOrderResult> {
+    const response = await apiClient.post<DraftPurchaseOrderResult>(
+      ENDPOINTS.stockControl.createDraftPurchaseOrderFromSuggestion(inventoryItemId),
+      {}
+    );
+
+    return response.data;
   }
 };

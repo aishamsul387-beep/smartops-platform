@@ -1,5 +1,8 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { stockControlApi } from '../api';
 import { useStockControl } from '../hooks/useStockControl';
 
 function getSeverityStyle(severity: string) {
@@ -107,8 +110,27 @@ function formatMoney(value: number, currency: string) {
 }
 
 export function StockControlScreen() {
+  const router = useRouter();
   const { summary, alerts, reorderSuggestions, procurementActions, isLoading, error, refresh } =
     useStockControl();
+
+  const [creatingPoFor, setCreatingPoFor] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function handleCreateDraftPo(inventoryItemId: string) {
+    try {
+      setCreatingPoFor(inventoryItemId);
+      setActionError(null);
+
+      const result = await stockControlApi.createDraftPurchaseOrderFromSuggestion(inventoryItemId);
+      router.push(`/orders/purchase-orders/${result.purchaseOrder.id}`);
+      router.refresh();
+    } catch (err: any) {
+      setActionError(err?.message || 'Failed to create draft purchase order');
+    } finally {
+      setCreatingPoFor(null);
+    }
+  }
 
   return (
     <div className="container">
@@ -136,8 +158,8 @@ export function StockControlScreen() {
               Stock Control / Forecasting
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Planning now uses Inventory Master supplier and cost profile to produce more useful
-              procurement actions and reorder value estimates.
+              Planning now supports draft PO creation directly from procurement actions using
+              supplier, quantity, and cost data from Inventory Master and planning logic.
             </div>
           </div>
 
@@ -241,6 +263,21 @@ export function StockControlScreen() {
               Procurement Action Queue
             </div>
 
+            {actionError ? (
+              <div
+                style={{
+                  margin: '0 20px 16px 20px',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  background: '#fef2f2',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca'
+                }}
+              >
+                {actionError}
+              </div>
+            ) : null}
+
             {procurementActions.length === 0 ? (
               <div style={{ padding: '24px', color: '#64748b' }}>No procurement actions found.</div>
             ) : (
@@ -299,7 +336,25 @@ export function StockControlScreen() {
                           </span>
                         </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                          {item.procurementAction}
+                          <div style={{ display: 'grid', gap: '8px' }}>
+                            <div style={{ fontSize: '12px', color: '#64748b' }}>{item.procurementAction}</div>
+                            <button
+                              type="button"
+                              disabled={creatingPoFor === item.inventoryItemId}
+                              onClick={() => void handleCreateDraftPo(item.inventoryItemId)}
+                              style={{
+                                padding: '8px 10px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: creatingPoFor === item.inventoryItemId ? '#94a3b8' : '#0f172a',
+                                color: '#ffffff',
+                                fontWeight: 600,
+                                cursor: creatingPoFor === item.inventoryItemId ? 'not-allowed' : 'pointer'
+                              }}
+                            >
+                              {creatingPoFor === item.inventoryItemId ? 'Creating...' : 'Create Draft PO'}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
