@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ordersApi } from '../api';
-import { mapPurchaseOrder } from '../mapper';
-import type { PurchaseOrderRecord } from '../types';
+import { usePurchaseOrderDetail } from '../hooks/usePurchaseOrderDetail';
 
 function getStatusStyle(status: string) {
   if (status === 'draft') {
@@ -68,28 +67,26 @@ function DetailRow({
 }
 
 export function PurchaseOrderDetailScreen({ id }: { id: string }) {
-  const [item, setItem] = useState<PurchaseOrderRecord | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { item, isLoading, error, refresh } = usePurchaseOrderDetail(id);
+  const [isIssuing, setIsIssuing] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  async function load() {
+  async function handleIssue() {
+    if (!item) {
+      return;
+    }
+
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await ordersApi.getPurchaseOrderDetail(id);
-      setItem(mapPurchaseOrder(response));
+      setIsIssuing(true);
+      setActionError(null);
+      await ordersApi.issuePurchaseOrder(item.id);
+      await refresh();
     } catch (err: any) {
-      setError(err?.message || 'Failed to load purchase order');
-      setItem(null);
+      setActionError(err?.message || 'Failed to issue purchase order');
     } finally {
-      setIsLoading(false);
+      setIsIssuing(false);
     }
   }
-
-  useEffect(() => {
-    void load();
-  }, [id]);
 
   if (isLoading) {
     return (
@@ -116,7 +113,7 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
           </div>
           <button
             type="button"
-            onClick={() => void load()}
+            onClick={() => void refresh()}
             style={{
               padding: '10px 14px',
               borderRadius: '10px',
@@ -175,8 +172,27 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
                 ...getStatusStyle(item.status)
               }}
             >
-              {item.status}
+              {item.statusLabel}
             </span>
+
+            {item.status === 'draft' ? (
+              <button
+                type="button"
+                disabled={isIssuing}
+                onClick={() => void handleIssue()}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: isIssuing ? '#94a3b8' : '#0f172a',
+                  color: '#ffffff',
+                  cursor: isIssuing ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {isIssuing ? 'Issuing...' : 'Issue PO'}
+              </button>
+            ) : null}
 
             <Link
               href="/orders/purchase-orders"
@@ -192,6 +208,21 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
             </Link>
           </div>
         </div>
+
+        {actionError ? (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#fef2f2',
+              color: '#b91c1c',
+              border: '1px solid #fecaca'
+            }}
+          >
+            {actionError}
+          </div>
+        ) : null}
       </div>
 
       {item.planningContext ? (
@@ -235,7 +266,7 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
           </div>
           <DetailRow label="PO No" value={item.poNo} />
           <DetailRow label="Supplier" value={item.supplierName} />
-          <DetailRow label="Item Count" value={item.itemCount} />
+          <DetailRow label="Line Count" value={item.lines.length} />
           <DetailRow label="Total Amount" value={`${item.currency} ${Number(item.totalAmount).toFixed(2)}`} />
           <DetailRow label="Expected Date" value={item.expectedDate} />
           <DetailRow label="Created At" value={item.createdAt} />
@@ -263,6 +294,63 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
             <DetailRow label="Reorder By Date" value={item.planningContext.reorderByDate} />
           </div>
         ) : null}
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          overflow: 'hidden'
+        }}
+      >
+        <div style={{ padding: '20px', fontSize: '22px', fontWeight: 700 }}>
+          Purchase Order Lines
+        </div>
+
+        {item.lines.length === 0 ? (
+          <div style={{ padding: '24px', color: '#64748b' }}>No line items found.</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Line</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Item</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Qty</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Unit Cost</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Line Total</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {item.lines.map((line) => (
+                  <tr key={line.id}>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                      {line.lineNo}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ fontWeight: 700 }}>{line.itemCode}</div>
+                      <div>{line.itemName}</div>
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {line.orderedQty}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {line.currency} {Number(line.unitCost).toFixed(2)}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {line.currency} {Number(line.lineTotal).toFixed(2)}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {line.notes || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

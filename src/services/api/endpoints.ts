@@ -43,6 +43,7 @@ export const ENDPOINTS = {
     purchaseOrders: '/orders/purchase-orders',
     purchaseOrderDetail: (id: string) => `/orders/purchase-orders/${id}`,
     createPurchaseOrder: '/orders/purchase-orders',
+    issuePurchaseOrder: (id: string) => `/orders/purchase-orders/${id}/issue`,
     goodsReceivedNotes: '/orders/goods-received-notes',
     goodsReceivedNoteDetail: (id: string) => `/orders/goods-received-notes/${id}`,
     createGoodsReceivedNote: '/orders/goods-received-notes',

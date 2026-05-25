@@ -1,6 +1,7 @@
 import type {
   GRNRecord,
   OrdersDashboardSummary,
+  PurchaseOrderLineRecord,
   PurchaseOrderPlanningContext,
   PurchaseOrderRecord,
   PurchaseOrderStatus,
@@ -54,6 +55,21 @@ function mapPlanningContext(payload: any): PurchaseOrderPlanningContext | null {
   };
 }
 
+function mapPurchaseOrderLine(payload: any): PurchaseOrderLineRecord {
+  return {
+    id: asText(payload?.id),
+    lineNo: asNumber(payload?.lineNo, 0),
+    inventoryItemId: asText(payload?.inventoryItemId),
+    itemCode: asText(payload?.itemCode),
+    itemName: asText(payload?.itemName),
+    orderedQty: asNumber(payload?.orderedQty, 0),
+    unitCost: asNumber(payload?.unitCost, 0),
+    currency: asText(payload?.currency, 'USD'),
+    lineTotal: asNumber(payload?.lineTotal, 0),
+    notes: asText(payload?.notes)
+  };
+}
+
 export function mapQuotation(payload: any): QuotationRecord {
   const status = asText(payload?.status, 'draft') as QuotationStatus;
 
@@ -85,7 +101,8 @@ export function mapPurchaseOrder(payload: any): PurchaseOrderRecord {
     statusLabel: getPurchaseOrderStatusLabel(status),
     expectedDate: asText(payload?.expectedDate),
     createdAt: asText(payload?.createdAt),
-    planningContext: mapPlanningContext(payload?.planningContext)
+    planningContext: mapPlanningContext(payload?.planningContext),
+    lines: Array.isArray(payload?.lines) ? payload.lines.map(mapPurchaseOrderLine) : []
   };
 }
 

@@ -6,14 +6,11 @@ import type {
   CreatePurchaseOrderRequest,
   GRN,
   GRNDetailResponse,
-  GRNDto,
   OrdersDashboardSummary,
   OrdersListFilters,
   PurchaseOrder,
   PurchaseOrderDetailResponse,
-  PurchaseOrderDto,
-  Quotation,
-  QuotationDto
+  Quotation
 } from './types';
 
 function buildListUrl(basePath: string, filters?: OrdersListFilters) {
@@ -43,7 +40,7 @@ export const ordersApi = {
     );
 
     const items = Array.isArray(response.data) ? response.data : [];
-    return items.map((item) => mapQuotation(item) as QuotationDto);
+    return items.map(mapQuotation);
   },
 
   async getPurchaseOrders(filters?: OrdersListFilters): Promise<PurchaseOrder[]> {
@@ -52,7 +49,7 @@ export const ordersApi = {
     );
 
     const items = Array.isArray(response.data) ? response.data : [];
-    return items.map((item) => mapPurchaseOrder(item) as PurchaseOrderDto);
+    return items.map(mapPurchaseOrder);
   },
 
   async getPurchaseOrderDetail(id: string): Promise<PurchaseOrderDetailResponse> {
@@ -60,10 +57,13 @@ export const ordersApi = {
     return mapPurchaseOrder(response.data);
   },
 
-  async createPurchaseOrder(
-    payload: CreatePurchaseOrderRequest
-  ): Promise<PurchaseOrder> {
+  async createPurchaseOrder(payload: CreatePurchaseOrderRequest): Promise<PurchaseOrder> {
     const response = await apiClient.post<any>(ENDPOINTS.orders.createPurchaseOrder, payload);
+    return mapPurchaseOrder(response.data);
+  },
+
+  async issuePurchaseOrder(id: string): Promise<PurchaseOrder> {
+    const response = await apiClient.patch<any>(ENDPOINTS.orders.issuePurchaseOrder(id), {});
     return mapPurchaseOrder(response.data);
   },
 
@@ -73,7 +73,7 @@ export const ordersApi = {
     );
 
     const items = Array.isArray(response.data) ? response.data : [];
-    return items.map((item) => mapGRN(item) as GRNDto);
+    return items.map(mapGRN);
   },
 
   async getGRNDetail(id: string): Promise<GRNDetailResponse> {
