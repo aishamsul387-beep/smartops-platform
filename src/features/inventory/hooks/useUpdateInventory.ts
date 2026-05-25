@@ -13,9 +13,11 @@ export function useUpdateInventory() {
       setIsSubmitting(true);
       setError(null);
 
-      return await inventoryApi.updateInventory(payload);
+      const { id, ...body } = payload;
+      return await inventoryApi.updateInventory(id, body);
     } catch (err: any) {
-      setError(err?.message || 'Failed to update inventory item');
+      const message = err?.message || 'Failed to update inventory item';
+      setError(message);
       throw err;
     } finally {
       setIsSubmitting(false);
