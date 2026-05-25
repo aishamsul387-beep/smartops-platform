@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
+import { mapInventoryItem, mapInventoryListResponse } from './mapper';
 import type {
   CreateInventoryRequest,
   InventoryDetailResponse,
@@ -8,64 +9,59 @@ import type {
   InventoryListResponse,
   UpdateInventoryRequest
 } from './types';
-import { mapInventoryItem } from './mapper';
 
-interface InventoryListApiPayload {
-  items: InventoryItemDto[];
-  total: number;
-  persistenceMode?: string;
+function buildInventoryListUrl(filters: InventoryListFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${ENDPOINTS.inventory.list}?${queryString}` : ENDPOINTS.inventory.list;
 }
 
 export const inventoryApi = {
-  async getInventoryList(filters?: InventoryListFilters): Promise<InventoryListResponse> {
-    const response = await apiClient.get<InventoryListApiPayload>(ENDPOINTS.inventory.list, {
-      query: {
-        search: filters?.search || '',
-        status: filters?.status || 'all'
-      }
-    });
-
-    const payload = response.data;
-    const items = (payload?.items || []).map(mapInventoryItem);
-
-    return {
-      items,
-      total: Number(payload?.total ?? items.length)
-    };
+  async getInventoryList(filters: InventoryListFilters = {}): Promise<InventoryListResponse> {
+    const response = await apiClient.get<any>(buildInventoryListUrl(filters));
+    return mapInventoryListResponse(response.data);
   },
 
   async getInventoryById(id: string): Promise<InventoryDetailResponse> {
-    const response = await apiClient.get<InventoryItemDto>(ENDPOINTS.inventory.detail(id));
-
-    return {
-      item: response.data ? mapInventoryItem(response.data) : null
-    };
+    const response = await apiClient.get<any>(ENDPOINTS.inventory.detail(id));
+    return mapInventoryItem(response.data);
   },
 
-  async createInventory(payload: CreateInventoryRequest) {
-    const response = await apiClient.post<InventoryItemDto>(
-      ENDPOINTS.inventory.create,
-      payload
-    );
+  async getInventoryDetail(id: string): Promise<InventoryDetailResponse> {
+    return this.getInventoryById(id);
+  },
+
+  async createInventory(payload: CreateInventoryRequest): Promise<InventoryItemDto> {
+    const response = await apiClient.post<any>(ENDPOINTS.inventory.create, payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async updateInventory(
+    id: string,
+    payload: Omit<UpdateInventoryRequest, 'id'>
+  ): Promise<InventoryItemDto> {
+    const response = await apiClient.put<any>(ENDPOINTS.inventory.update(id), payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async toggleActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    const response = await apiClient.patch<any>(ENDPOINTS.inventory.toggleActive(id), {
+      isActive
+    });
 
     return mapInventoryItem(response.data);
   },
 
-  async updateInventory(payload: UpdateInventoryRequest) {
-    const response = await apiClient.put<InventoryItemDto>(
-      ENDPOINTS.inventory.update(payload.id),
-      payload
-    );
-
-    return mapInventoryItem(response.data);
-  },
-
-  async setInventoryActive(id: string, isActive: boolean) {
-    const response = await apiClient.patch<InventoryItemDto>(
-      ENDPOINTS.inventory.toggleActive(id),
-      { isActive }
-    );
-
-    return mapInventoryItem(response.data);
+  async setInventoryActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    return this.toggleActive(id, isActive);
   }
 };
