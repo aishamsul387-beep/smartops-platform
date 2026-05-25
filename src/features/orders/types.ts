@@ -32,6 +32,19 @@ export interface PurchaseOrderPlanningContext {
   reorderByDate: string;
 }
 
+export interface PurchaseOrderLineRecord {
+  id: string;
+  lineNo: number;
+  inventoryItemId: string;
+  itemCode: string;
+  itemName: string;
+  orderedQty: number;
+  unitCost: number;
+  currency: string;
+  lineTotal: number;
+  notes: string;
+}
+
 export interface PurchaseOrderRecord {
   id: string;
   poNo: string;
@@ -45,6 +58,7 @@ export interface PurchaseOrderRecord {
   expectedDate: string;
   createdAt: string;
   planningContext: PurchaseOrderPlanningContext | null;
+  lines: PurchaseOrderLineRecord[];
 }
 
 export interface GRNRecord {
@@ -79,6 +93,17 @@ export interface OrdersDashboardSummary {
   pendingReceipts: number;
 }
 
+export interface CreatePurchaseOrderLineRequest {
+  inventoryItemId: string;
+  itemCode: string;
+  itemName: string;
+  orderedQty: number;
+  unitCost: number;
+  currency: string;
+  lineTotal?: number;
+  notes?: string;
+}
+
 export interface CreatePurchaseOrderRequest {
   supplierName: string;
   quotationNo?: string;
@@ -87,6 +112,7 @@ export interface CreatePurchaseOrderRequest {
   currency: string;
   expectedDate: string;
   status: PurchaseOrderStatus;
+  lines?: CreatePurchaseOrderLineRequest[];
 }
 
 export interface CreateGRNRequest {
@@ -109,19 +135,27 @@ export interface CreateGRNRequest {
   bin: string;
 }
 
+export interface PurchaseOrderFormLineValues {
+  inventoryItemId: string;
+  orderedQty: string;
+  unitCost: string;
+  notes: string;
+}
+
 export interface PurchaseOrderFormValues {
   supplierName: string;
   quotationNo: string;
-  itemCount: string;
-  totalAmount: string;
   currency: string;
   expectedDate: string;
   status: PurchaseOrderStatus;
+  lines: PurchaseOrderFormLineValues[];
 }
 
-export type PurchaseOrderFormErrors = Partial<
-  Record<keyof PurchaseOrderFormValues, string>
->;
+export interface PurchaseOrderFormErrors
+  extends Partial<Record<Exclude<keyof PurchaseOrderFormValues, 'lines'>, string>> {
+  lines?: string;
+  lineErrors?: Array<Partial<Record<keyof PurchaseOrderFormLineValues, string>>>;
+}
 
 export interface GRNFormValues {
   poNo: string;
