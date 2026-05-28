@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
+
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { batchesApi } from '../api';
 import { useBatchList } from '../hooks/useBatchList';
 import {
@@ -52,7 +54,7 @@ function getBatchStatusStyle(status: string) {
   };
 }
 
-function validateBatchForm(values: BatchFormValues) {
+function validateBatchForm(values: BatchFormValues, selectedInventoryItem?: InventoryItem | null) {
   const errors: BatchFormErrors = {};
 
   if (!values.inventoryItemId.trim()) {
@@ -76,6 +78,11 @@ function validateBatchForm(values: BatchFormValues) {
   const availableQty = Number(values.availableQty);
   if (Number.isNaN(availableQty) || availableQty < 0) {
     errors.availableQty = 'Available quantity must be a valid number 0 or greater';
+  }
+
+  if (selectedInventoryItem?.isExpiryTracked && !values.expiryDate.trim()) {
+    errors.batchNumber =
+      errors.batchNumber || 'This item requires expiry tracking, so expiry date is required';
   }
 
   return {
@@ -121,6 +128,21 @@ export function BatchListScreen() {
     void loadInventoryItems();
   }, []);
 
+  const inventorySummaryById = useMemo(() => {
+    return inventoryItems.reduce<Record<string, InventoryItem>>((acc, item) => {
+      acc[item.id] = item;
+      return acc;
+    }, {});
+  }, [inventoryItems]);
+
+  const selectedInventoryItem = useMemo(
+    () => inventoryItems.find((item) => item.id === formValues.inventoryItemId) || null,
+    [inventoryItems, formValues.inventoryItemId]
+  );
+
+  const isBatchCreationBlocked =
+    !!selectedInventoryItem && !selectedInventoryItem.isBatchTracked;
+
   function updateField<K extends keyof BatchFormValues>(field: K, value: BatchFormValues[K]) {
     setFormValues((current) => ({
       ...current,
@@ -136,10 +158,20 @@ export function BatchListScreen() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const validation = validateBatchForm(formValues);
+    const validation = validateBatchForm(formValues, selectedInventoryItem);
     setFormErrors(validation.errors);
 
     if (!validation.isValid) {
+      return;
+    }
+
+    if (selectedInventoryItem && !selectedInventoryItem.isBatchTracked) {
+      setFormError('Selected inventory item is not batch-tracked, so batch creation is not allowed.');
+      return;
+    }
+
+    if (selectedInventoryItem?.isExpiryTracked && !formValues.expiryDate.trim()) {
+      setFormError('Selected inventory item requires expiry tracking, so expiry date is required.');
       return;
     }
 
@@ -245,6 +277,29 @@ export function BatchListScreen() {
           Create Batch
         </div>
 
+        {selectedInventoryItem ? (
+          <div
+            style={{
+              marginBottom: '16px',
+              padding: '12px',
+              borderRadius: '10px',
+              background: isBatchCreationBlocked ? '#fef2f2' : '#f8fafc',
+              color: isBatchCreationBlocked ? '#b91c1c' : '#475569',
+              border: isBatchCreationBlocked ? '1px solid #fecaca' : '1px solid #e2e8f0'
+            }}
+          >
+            <strong>{selectedInventoryItem.name}</strong><br />
+            SKU: <strong>{selectedInventoryItem.sku}</strong><br />
+            Barcode: <strong>{selectedInventoryItem.barcode || '-'}</strong><br />
+            Batch tracked: <strong>{selectedInventoryItem.isBatchTracked ? 'Yes' : 'No'}</strong><br />
+            Expiry tracked: <strong>{selectedInventoryItem.isExpiryTracked ? 'Yes' : 'No'}</strong><br />
+            Serial tracked: <strong>{selectedInventoryItem.isSerialTracked ? 'Yes' : 'No'}</strong><br />
+            {isBatchCreationBlocked
+              ? 'This item is not batch-tracked. Batch creation is blocked by policy.'
+              : 'This item can be used for batch creation.'}
+          </div>
+        ) : null}
+
         <form onSubmit={handleSubmit}>
           <div
             style={{
@@ -255,7 +310,7 @@ export function BatchListScreen() {
           >
             <div>
               <label htmlFor="inventoryItemId" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-                Inventory Item
+                Product Name
               </label>
               <select
                 id="inventoryItemId"
@@ -264,15 +319,49 @@ export function BatchListScreen() {
                 style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
               >
                 <option value="">
-                  {isInventoryLoading ? 'Loading inventory...' : 'Select inventory item'}
+                  {isInventoryLoading ? 'Loading inventory...' : 'Select product name'}
                 </option>
                 {inventoryItems.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.sku} - {item.name}
+                    {item.name}
                   </option>
                 ))}
               </select>
               {formErrors.inventoryItemId ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{formErrors.inventoryItemId}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                SKU
+              </label>
+              <div
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff'
+                }}
+              >
+                {selectedInventoryItem?.sku || '-'}
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Barcode
+              </label>
+              <div
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff'
+                }}
+              >
+                {selectedInventoryItem?.barcode || '-'}
+              </div>
             </div>
 
             <div>
@@ -543,12 +632,12 @@ export function BatchListScreen() {
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '20px' }}>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isBatchCreationBlocked}
               style={{
                 padding: '12px 16px',
                 borderRadius: '10px',
                 border: 'none',
-                background: isSubmitting ? '#94a3b8' : '#7c3aed',
+                background: isSubmitting || isBatchCreationBlocked ? '#94a3b8' : '#7c3aed',
                 color: '#ffffff',
                 fontWeight: 600
               }}
@@ -616,7 +705,7 @@ export function BatchListScreen() {
               id="batch-search"
               value={filters.search || ''}
               onChange={(event) => updateSearch(event.target.value)}
-              placeholder="Search batch, lot, supplier lot, supplier"
+              placeholder="Search SKU, barcode, product, batch, lot, supplier"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -628,7 +717,7 @@ export function BatchListScreen() {
 
           <div>
             <label htmlFor="batch-inventory" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-              Inventory Item
+              Product Name
             </label>
             <select
               id="batch-inventory"
@@ -642,10 +731,10 @@ export function BatchListScreen() {
                 background: '#ffffff'
               }}
             >
-              <option value="">All inventory items</option>
+              <option value="">All products</option>
               {inventoryItems.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.sku} - {item.name}
+                  {item.name}
                 </option>
               ))}
             </select>
@@ -701,6 +790,9 @@ export function BatchListScreen() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>SKU</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Barcode</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Product Name</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Batch</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Lot</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Supplier Lot</th>
@@ -713,40 +805,57 @@ export function BatchListScreen() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((item) => (
-                  <tr key={item.id}>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>{item.batchNumber}</td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.lotNumber || '-'}</td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.supplierLotNumber || '-'}</td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.supplierName || '-'}</td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {item.purchaseOrderNo || '-'} / {item.goodsReceivedNoteNo || '-'}
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      Rec {item.receivedQty} / Avl {item.availableQty} / Res {item.reservedQty}
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {item.expiryDate || '-'}
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '6px 10px',
-                          borderRadius: '999px',
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          ...getBatchStatusStyle(item.batchStatus)
-                        }}
-                      >
-                        {item.batchStatus}
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {item.zone}-{item.aisle}-{item.levelCode}-{item.bin}
-                    </td>
-                  </tr>
-                ))}
+                {items.map((item) => {
+                  const inventory = inventorySummaryById[item.inventoryItemId];
+
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                        {inventory?.sku || '-'}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {inventory?.barcode || '-'}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {inventory?.name || '-'}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                        <Link href={`/batches/${item.id}`} style={{ color: '#2563eb' }}>
+                          {item.batchNumber}
+                        </Link>
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.lotNumber || '-'}</td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.supplierLotNumber || '-'}</td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.supplierName || '-'}</td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {item.purchaseOrderNo || '-'} / {item.goodsReceivedNoteNo || '-'}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        Rec {item.receivedQty} / Avl {item.availableQty} / Res {item.reservedQty}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {item.expiryDate || '-'}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '6px 10px',
+                            borderRadius: '999px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            ...getBatchStatusStyle(item.batchStatus)
+                          }}
+                        >
+                          {item.batchStatus}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {item.zone}-{item.aisle}-{item.levelCode}-{item.bin}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
