@@ -5,7 +5,8 @@ import type {
   ProcurementQueueItem,
   ReorderSuggestion,
   StockControlAlert,
-  StockControlSummary
+  StockControlSummary,
+  StockMovementRecord
 } from './types';
 
 export const stockControlApi = {
@@ -44,5 +45,24 @@ export const stockControlApi = {
     );
 
     return response.data;
+  },
+
+  async getStockMovements(): Promise<StockMovementRecord[]> {
+    const response = await apiClient.get<StockMovementRecord[]>('/stock-control/movements');
+    return response.data || [];
+  },
+
+  async getInventoryStockMovements(inventoryItemId: string): Promise<StockMovementRecord[]> {
+    const response = await apiClient.get<StockMovementRecord[]>(
+      `/stock-control/movements/inventory/${inventoryItemId}`
+    );
+    return response.data || [];
+  },
+
+  async getBatchStockMovements(batchId: string): Promise<StockMovementRecord[]> {
+    const response = await apiClient.get<StockMovementRecord[]>(
+      `/stock-control/movements/batch/${batchId}`
+    );
+    return response.data || [];
   }
 };

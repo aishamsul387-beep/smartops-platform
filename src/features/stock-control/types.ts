@@ -11,6 +11,8 @@ export type DemandTrend = 'rising' | 'stable' | 'falling';
 export type ProcurementAction = 'order_now' | 'order_this_week' | 'monitor';
 export type ProcurementQueueStatus = 'immediate' | 'this_week' | 'monitor';
 export type SupplierSource = 'inventory_master' | 'batch_history' | 'unassigned';
+export type StockMovementType = 'receipt';
+export type StockMovementReferenceType = 'grn' | 'po' | 'batch';
 
 export interface StockControlSummary {
   totalItems: number;
@@ -125,4 +127,42 @@ export interface DraftPurchaseOrderResult {
     currency: string;
     reorderByDate: string;
   };
+}
+
+export interface StockMovementRecord {
+  id: string;
+  movementType: StockMovementType;
+  inventoryItemId: string;
+  itemCode: string;
+  barcode: string;
+  itemName: string;
+  batchId: string;
+  batchNumber: string;
+  lotNumber: string;
+  supplierLotNumber: string;
+  supplierName: string;
+  qtyIn: number;
+  qtyOut: number;
+  netQty: number;
+  availableQty: number;
+  reservedQty: number;
+  blockedQty: number;
+  qaHoldQty: number;
+  unitCost: number;
+  currency: string;
+  batchStatus: string;
+  purchaseOrderNo: string;
+  goodsReceivedNoteNo: string;
+  referenceType: StockMovementReferenceType;
+  referenceNo: string;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  manufactureDate: string | null;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  occurredAt: string;
+  notes: string;
 }

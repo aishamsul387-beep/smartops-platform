@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { stockControlApi } from '../api';
@@ -163,6 +165,7 @@ export function StockControlScreen() {
             </div>
           </div>
 
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={() => void refresh()}
@@ -178,6 +181,20 @@ export function StockControlScreen() {
           >
             Refresh
           </button>
+
+          <Link
+            href="/stock-movements"
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              background: '#ffffff',
+              fontWeight: 600
+            }}
+          >
+            Open Movement Ledger
+          </Link>
+        </div>
         </div>
       </div>
 
@@ -307,7 +324,7 @@ export function StockControlScreen() {
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                           <div>{item.preferredSupplierName}</div>
                           <div style={{ color: '#64748b', fontSize: '12px' }}>
-                            Source: {getSupplierSourceLabel(item.supplierSource)} Â· Score {item.supplierScore}
+                            Source: {getSupplierSourceLabel(item.supplierSource)} Ã‚Â· Score {item.supplierScore}
                           </div>
                         </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
@@ -408,7 +425,7 @@ export function StockControlScreen() {
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                           <div>{item.preferredSupplierName}</div>
                           <div style={{ color: '#64748b', fontSize: '12px' }}>
-                            Source: {getSupplierSourceLabel(item.supplierSource)} Â· Score {item.supplierScore}
+                            Source: {getSupplierSourceLabel(item.supplierSource)} Ã‚Â· Score {item.supplierScore}
                           </div>
                         </td>
                         <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
@@ -483,9 +500,9 @@ export function StockControlScreen() {
                     </div>
                     <div style={{ color: '#475569', marginBottom: '6px' }}>{item.riskNote}</div>
                     <div style={{ color: '#64748b', fontSize: '14px' }}>
-                      Supplier: <strong>{item.preferredSupplierName}</strong> ({getSupplierSourceLabel(item.supplierSource)}) Â·
-                      Monthly usage est.: <strong>{item.monthlyUsageEstimate}</strong> Â·
-                      Days of cover: <strong>{item.estimatedDaysOfCover}</strong> Â·
+                      Supplier: <strong>{item.preferredSupplierName}</strong> ({getSupplierSourceLabel(item.supplierSource)}) Ã‚Â·
+                      Monthly usage est.: <strong>{item.monthlyUsageEstimate}</strong> Ã‚Â·
+                      Days of cover: <strong>{item.estimatedDaysOfCover}</strong> Ã‚Â·
                       Estimated reorder value: <strong>{formatMoney(item.estimatedReorderValue, item.currency)}</strong>
                     </div>
                   </div>
