@@ -110,12 +110,14 @@ export function PurchaseOrderCreateScreen() {
             nextLine.unitCost = String(selected.standardCost);
           }
 
+          nextLines[index] = nextLine;
+
           return {
             ...current,
             supplierName:
               current.supplierName.trim() || selected.preferredSupplierName || current.supplierName,
             currency: selected.currency || current.currency,
-            lines: nextLines.map((line, lineIndex) => (lineIndex === index ? nextLine : line))
+            lines: nextLines
           };
         }
       }
@@ -199,8 +201,8 @@ export function PurchaseOrderCreateScreen() {
           Create Purchase Order
         </div>
         <div style={{ color: '#475569', lineHeight: 1.6 }}>
-          Manual PO creation now supports line items with inventory selection, qty, unit cost, and
-          auto-calculated totals.
+          Manual PO creation now supports line items with separate product name, SKU, barcode, qty,
+          unit cost, and auto-calculated totals.
         </div>
       </div>
 
@@ -323,7 +325,7 @@ export function PurchaseOrderCreateScreen() {
                 Purchase Order Lines
               </div>
               <div style={{ color: '#475569' }}>
-                Select inventory items and define qty and cost per line.
+                Select product name and review SKU / barcode separately for each line.
               </div>
             </div>
 
@@ -407,22 +409,36 @@ export function PurchaseOrderCreateScreen() {
                     }}
                   >
                     <div>
-                      <label style={labelStyle}>Inventory Item</label>
+                      <label style={labelStyle}>Product Name</label>
                       <select
                         value={line.inventoryItemId}
                         onChange={(e) => updateLineField(index, 'inventoryItemId', e.target.value)}
                         style={selectStyle}
                       >
                         <option value="">
-                          {isInventoryLoading ? 'Loading inventory...' : 'Select inventory item'}
+                          {isInventoryLoading ? 'Loading inventory...' : 'Select product name'}
                         </option>
                         {inventoryItems.map((item) => (
                           <option key={item.id} value={item.id}>
-                            {item.sku} - {item.name}
+                            {item.name}
                           </option>
                         ))}
                       </select>
                       {lineError.inventoryItemId ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{lineError.inventoryItemId}</div> : null}
+                    </div>
+
+                    <div>
+                      <label style={labelStyle}>SKU</label>
+                      <div style={{ ...inputStyle, background: '#ffffff' }}>
+                        {selected?.sku || '-'}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={labelStyle}>Barcode</label>
+                      <div style={{ ...inputStyle, background: '#ffffff' }}>
+                        {selected?.barcode || '-'}
+                      </div>
                     </div>
 
                     <div>
@@ -472,7 +488,9 @@ export function PurchaseOrderCreateScreen() {
                           color: '#475569'
                         }}
                       >
-                        <strong>{selected.sku} - {selected.name}</strong><br />
+                        <strong>{selected.name}</strong><br />
+                        SKU: <strong>{selected.sku || '-'}</strong><br />
+                        Barcode: <strong>{selected.barcode || '-'}</strong><br />
                         Preferred supplier: <strong>{selected.preferredSupplierName || '-'}</strong><br />
                         Standard cost: <strong>{selected.currency} {Number(selected.standardCost || 0).toFixed(2)}</strong><br />
                         Item type: <strong>{selected.itemType}</strong>

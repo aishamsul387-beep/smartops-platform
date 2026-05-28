@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ordersApi } from '../api';
 import { usePurchaseOrderDetail } from '../hooks/usePurchaseOrderDetail';
+import { usePurchaseOrderLineInventorySummary } from '../hooks/usePurchaseOrderLineInventorySummary';
 
 function getStatusStyle(status: string) {
   if (status === 'draft') {
@@ -70,6 +71,12 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
   const { item, isLoading, error, refresh } = usePurchaseOrderDetail(id);
   const [isIssuing, setIsIssuing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const {
+    itemsById: inventorySummaryById,
+    isLoading: isInventorySummaryLoading,
+    error: inventorySummaryError
+  } = usePurchaseOrderLineInventorySummary(item?.lines || []);
 
   async function handleIssue() {
     if (!item) {
@@ -301,12 +308,19 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
           background: '#ffffff',
           border: '1px solid #e2e8f0',
           borderRadius: '16px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          marginBottom: '24px'
         }}
       >
         <div style={{ padding: '20px', fontSize: '22px', fontWeight: 700 }}>
           Purchase Order Lines
         </div>
+
+        {inventorySummaryError ? (
+          <div style={{ padding: '0 20px 16px 20px', color: '#b91c1c' }}>
+            {inventorySummaryError}
+          </div>
+        ) : null}
 
         {item.lines.length === 0 ? (
           <div style={{ padding: '24px', color: '#64748b' }}>No line items found.</div>
@@ -316,39 +330,130 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
               <thead>
                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Line</th>
-                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Item</th>
-                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Qty</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>SKU</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Barcode</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Product Name</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Ordered Qty</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Received Qty</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Remaining Qty</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Unit Cost</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Line Total</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Notes</th>
                 </tr>
               </thead>
               <tbody>
-                {item.lines.map((line) => (
-                  <tr key={line.id}>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
-                      {line.lineNo}
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      <div style={{ fontWeight: 700 }}>{line.itemCode}</div>
-                      <div>{line.itemName}</div>
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {line.orderedQty}
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {line.currency} {Number(line.unitCost).toFixed(2)}
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {line.currency} {Number(line.lineTotal).toFixed(2)}
-                    </td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {line.notes || '-'}
-                    </td>
-                  </tr>
-                ))}
+                {item.lines.map((line) => {
+                  const remainingQty = Math.max(line.orderedQty - line.receivedQty, 0);
+                  const inventorySummary = inventorySummaryById[line.inventoryItemId];
+
+                  return (
+                    <tr key={line.id}>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                        {line.lineNo}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {inventorySummary?.sku || line.itemCode || '-'}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {isInventorySummaryLoading && !inventorySummary ? 'Loading...' : inventorySummary?.barcode || '-'}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {inventorySummary?.name || line.itemName || '-'}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {line.orderedQty}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {line.receivedQty}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {remainingQty}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {line.currency} {Number(line.unitCost).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {line.currency} {Number(line.lineTotal).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                        {line.notes || '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+          </div>
+        )}
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '20px'
+        }}
+      >
+        <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px' }}>
+          Receipt History by PO Line
+        </div>
+
+        {item.lines.length === 0 ? (
+          <div style={{ color: '#64748b' }}>No PO lines available.</div>
+        ) : (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {item.lines.map((line) => {
+              const inventorySummary = inventorySummaryById[line.inventoryItemId];
+
+              return (
+                <div
+                  key={`${line.id}-history`}
+                  style={{
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '14px',
+                    padding: '16px'
+                  }}
+                >
+                  <div style={{ fontWeight: 700, marginBottom: '8px' }}>
+                    Line {line.lineNo} Â· {inventorySummary?.sku || line.itemCode || '-'} Â· {inventorySummary?.name || line.itemName || '-'}
+                  </div>
+
+                  {!line.receiptHistory || line.receiptHistory.length === 0 ? (
+                    <div style={{ color: '#64748b' }}>No receipt history yet.</div>
+                  ) : (
+                    <div style={{ display: 'grid', gap: '10px' }}>
+                      {line.receiptHistory.map((receipt) => (
+                        <div
+                          key={receipt.grnId}
+                          style={{
+                            padding: '12px',
+                            borderRadius: '10px',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0'
+                          }}
+                        >
+                          <div style={{ fontWeight: 700, marginBottom: '6px' }}>
+                            <Link href={`/orders/goods-received-notes/${receipt.grnId}`} style={{ color: '#2563eb' }}>
+                              {receipt.grnNo}
+                            </Link>
+                          </div>
+                          <div style={{ color: '#475569', fontSize: '14px' }}>
+                            Received Qty: <strong>{receipt.receivedQty}</strong> Â·
+                            Status: <strong>{receipt.status}</strong> Â·
+                            Received Date: <strong>{receipt.receivedDate || '-'}</strong>
+                          </div>
+                          <div style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>
+                            Linked Batch: <strong>{receipt.linkedBatchId || '-'}</strong> Â·
+                            Posted At: <strong>{receipt.postedAt}</strong>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

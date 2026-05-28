@@ -32,6 +32,16 @@ export interface PurchaseOrderPlanningContext {
   reorderByDate: string;
 }
 
+export interface PurchaseOrderLineReceiptRecord {
+  grnId: string;
+  grnNo: string;
+  receivedQty: number;
+  receivedDate: string | null;
+  status: GRNStatus;
+  linkedBatchId: string | null;
+  postedAt: string;
+}
+
 export interface PurchaseOrderLineRecord {
   id: string;
   lineNo: number;
@@ -40,6 +50,21 @@ export interface PurchaseOrderLineRecord {
   itemName: string;
   orderedQty: number;
   receivedQty: number;
+  unitCost: number;
+  currency: string;
+  lineTotal: number;
+  notes: string;
+  receiptHistory?: PurchaseOrderLineReceiptRecord[];
+}
+
+export interface PurchaseOrderLineContextRecord {
+  purchaseOrderLineId: string;
+  lineNo: number;
+  itemCode: string;
+  itemName: string;
+  orderedQty: number;
+  receivedQty: number;
+  remainingQty: number;
   unitCost: number;
   currency: string;
   lineTotal: number;
@@ -86,6 +111,7 @@ export interface GRNRecord {
   bin: string;
   linkedBatchId: string | null;
   postedAt: string;
+  purchaseOrderLineContext?: PurchaseOrderLineContextRecord | null;
 }
 
 export interface OrdersDashboardSummary {
