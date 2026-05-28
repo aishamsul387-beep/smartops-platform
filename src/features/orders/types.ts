@@ -39,6 +39,7 @@ export interface PurchaseOrderLineRecord {
   itemCode: string;
   itemName: string;
   orderedQty: number;
+  receivedQty: number;
   unitCost: number;
   currency: string;
   lineTotal: number;
@@ -65,6 +66,7 @@ export interface GRNRecord {
   id: string;
   grnNo: string;
   poNo: string;
+  purchaseOrderLineId: string;
   inventoryItemId: string;
   supplierName: string;
   batchNumber: string;
@@ -117,6 +119,7 @@ export interface CreatePurchaseOrderRequest {
 
 export interface CreateGRNRequest {
   poNo: string;
+  purchaseOrderLineId: string;
   inventoryItemId: string;
   supplierName: string;
   batchNumber: string;
@@ -159,6 +162,7 @@ export interface PurchaseOrderFormErrors
 
 export interface GRNFormValues {
   poNo: string;
+  purchaseOrderLineId: string;
   inventoryItemId: string;
   supplierName: string;
   batchNumber: string;

@@ -26,6 +26,7 @@ export const initialPurchaseOrderFormValues: PurchaseOrderFormValues = {
 
 export const initialGRNFormValues: GRNFormValues = {
   poNo: '',
+  purchaseOrderLineId: '',
   inventoryItemId: '',
   supplierName: '',
   batchNumber: '',
@@ -179,6 +180,10 @@ export function validateGRNForm(values: GRNFormValues): {
     errors.poNo = 'PO number is required';
   }
 
+  if (!values.purchaseOrderLineId.trim()) {
+    errors.purchaseOrderLineId = 'Purchase order line is required';
+  }
+
   if (!values.inventoryItemId.trim()) {
     errors.inventoryItemId = 'Inventory item is required';
   }
@@ -191,12 +196,12 @@ export function validateGRNForm(values: GRNFormValues): {
     errors.batchNumber = 'Batch number is required';
   }
 
-  if (!isValidNonNegativeNumber(values.receivedLines)) {
-    errors.receivedLines = 'Received lines must be 0 or greater';
+  if (!isValidNonNegativeNumber(values.receivedLines) || Number(values.receivedLines) <= 0) {
+    errors.receivedLines = 'Received lines must be greater than 0';
   }
 
-  if (!isValidNonNegativeNumber(values.receivedQty)) {
-    errors.receivedQty = 'Received quantity must be 0 or greater';
+  if (!isValidNonNegativeNumber(values.receivedQty) || Number(values.receivedQty) <= 0) {
+    errors.receivedQty = 'Received quantity must be greater than 0';
   }
 
   return {
@@ -208,6 +213,7 @@ export function validateGRNForm(values: GRNFormValues): {
 export function mapGRNFormToRequest(values: GRNFormValues): CreateGRNRequest {
   return {
     poNo: values.poNo.trim(),
+    purchaseOrderLineId: values.purchaseOrderLineId.trim(),
     inventoryItemId: values.inventoryItemId.trim(),
     supplierName: values.supplierName.trim(),
     batchNumber: values.batchNumber.trim(),

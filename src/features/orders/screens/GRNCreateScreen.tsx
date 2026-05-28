@@ -2,39 +2,75 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ROUTES } from '@/lib/routes';
+import { ordersApi } from '../api';
 import { useCreateGRN } from '../hooks/useCreateGRN';
 import { initialGRNFormValues, mapGRNFormToRequest, validateGRNForm } from '../schema';
-import type { GRNFormErrors, GRNFormValues } from '../types';
-import { inventoryApi } from '@/features/inventory/api';
-import type { InventoryItem } from '@/features/inventory/types';
+import type { GRNFormErrors, GRNFormValues, PurchaseOrderRecord } from '../types';
 
 export function GRNCreateScreen() {
   const router = useRouter();
   const { createGRN, isSubmitting, error } = useCreateGRN();
 
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [isInventoryLoading, setIsInventoryLoading] = useState(true);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderRecord[]>([]);
+  const [isPoLoading, setIsPoLoading] = useState(true);
+  const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState('');
+  const [selectedLineId, setSelectedLineId] = useState('');
 
   const [values, setValues] = useState<GRNFormValues>(initialGRNFormValues);
   const [errors, setErrors] = useState<GRNFormErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadInventoryItems() {
+    async function loadPurchaseOrders() {
       try {
-        setIsInventoryLoading(true);
-        const result = await inventoryApi.getInventoryList({ search: '', status: 'all' });
-        setInventoryItems(result.items);
+        setIsPoLoading(true);
+        const rows = await ordersApi.getPurchaseOrders({ search: '', status: 'all' });
+        setPurchaseOrders(
+          rows.filter(
+            (item) =>
+              item.status === 'issued' || item.status === 'partially_received'
+          )
+        );
       } catch {
-        setInventoryItems([]);
+        setPurchaseOrders([]);
       } finally {
-        setIsInventoryLoading(false);
+        setIsPoLoading(false);
       }
     }
 
-    void loadInventoryItems();
+    void loadPurchaseOrders();
   }, []);
+
+  const selectedPurchaseOrder = useMemo(
+    () => purchaseOrders.find((item) => item.id === selectedPurchaseOrderId) || null,
+    [purchaseOrders, selectedPurchaseOrderId]
+  );
+
+  const availableLines = useMemo(() => {
+    if (!selectedPurchaseOrder) {
+      return [];
+    }
+
+    return selectedPurchaseOrder.lines.filter((line) => line.receivedQty < line.orderedQty);
+  }, [selectedPurchaseOrder]);
+
+  const selectedLine = useMemo(
+    () => availableLines.find((line) => line.id === selectedLineId) || null,
+    [availableLines, selectedLineId]
+  );
+
+  const remainingQty = selectedLine
+    ? Math.max(selectedLine.orderedQty - selectedLine.receivedQty, 0)
+    : 0;
+
+  const numericReceivedQty = Number(values.receivedQty);
+  const isReceivedQtyInvalid =
+    !!selectedLine &&
+    (!Number.isFinite(numericReceivedQty) ||
+      numericReceivedQty <= 0 ||
+      numericReceivedQty > remainingQty);
 
   function updateField<K extends keyof GRNFormValues>(field: K, value: GRNFormValues[K]) {
     setValues((current) => ({
@@ -46,6 +82,49 @@ export function GRNCreateScreen() {
       ...current,
       [field]: undefined
     }));
+
+    setFormError(null);
+  }
+
+  function handlePurchaseOrderChange(poId: string) {
+    setSelectedPurchaseOrderId(poId);
+    setSelectedLineId('');
+
+    const po = purchaseOrders.find((item) => item.id === poId);
+
+    setValues((current) => ({
+      ...current,
+      poNo: po?.poNo || '',
+      purchaseOrderLineId: '',
+      supplierName: po?.supplierName || '',
+      inventoryItemId: '',
+      receivedQty: '0'
+    }));
+
+    setFormError(null);
+  }
+
+  function handleLineChange(lineId: string) {
+    setSelectedLineId(lineId);
+
+    const line = availableLines.find((item) => item.id === lineId);
+
+    if (!line) {
+      return;
+    }
+
+    const nextRemainingQty = Math.max(line.orderedQty - line.receivedQty, 0);
+
+    setValues((current) => ({
+      ...current,
+      purchaseOrderLineId: line.id,
+      inventoryItemId: line.inventoryItemId,
+      supplierName: selectedPurchaseOrder?.supplierName || current.supplierName,
+      receivedLines: '1',
+      receivedQty: String(nextRemainingQty)
+    }));
+
+    setFormError(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -58,7 +137,27 @@ export function GRNCreateScreen() {
       return;
     }
 
+    if (!selectedPurchaseOrder) {
+      setFormError('Purchase order selection is required');
+      return;
+    }
+
+    if (!selectedLine) {
+      setFormError('Purchase order line selection is required');
+      return;
+    }
+
+    if (isReceivedQtyInvalid) {
+      setFormError(
+        remainingQty > 0
+          ? `Received quantity cannot exceed remaining PO quantity (${remainingQty})`
+          : 'Selected PO line is already fully received'
+      );
+      return;
+    }
+
     try {
+      setFormError(null);
       const created = await createGRN(mapGRNFormToRequest(values));
       router.replace(ROUTES.goodsReceivedNoteDetail(created.id));
       router.refresh();
@@ -69,95 +168,254 @@ export function GRNCreateScreen() {
 
   return (
     <div className="container">
-      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
-        <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>Create Goods Received Note</div>
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+          Create Goods Received Note
+        </div>
         <div style={{ color: '#475569', lineHeight: 1.6 }}>
-          This GRN flow can now create linked batch traceability when posted.
+          Receive goods against issued purchase order lines with guardrails to prevent over-receipt.
         </div>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px'
+        }}
       >
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '16px'
+          }}
+        >
           <div>
-            <label htmlFor="poNo" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>PO No</label>
-            <input id="poNo" value={values.poNo} onChange={(e) => updateField('poNo', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="purchaseOrderId" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Purchase Order
+            </label>
+            <select
+              id="purchaseOrderId"
+              value={selectedPurchaseOrderId}
+              onChange={(e) => handlePurchaseOrderChange(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff'
+              }}
+            >
+              <option value="">
+                {isPoLoading ? 'Loading purchase orders...' : 'Select issued purchase order'}
+              </option>
+              {purchaseOrders.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.poNo} - {item.supplierName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="purchaseOrderLineId" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Purchase Order Line
+            </label>
+            <select
+              id="purchaseOrderLineId"
+              value={selectedLineId}
+              onChange={(e) => handleLineChange(e.target.value)}
+              disabled={!selectedPurchaseOrder}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff'
+              }}
+            >
+              <option value="">
+                {selectedPurchaseOrder ? 'Select PO line' : 'Select purchase order first'}
+              </option>
+              {availableLines.map((line) => (
+                <option key={line.id} value={line.id}>
+                  {line.itemCode} - {line.itemName}
+                </option>
+              ))}
+            </select>
+            {errors.purchaseOrderLineId ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.purchaseOrderLineId}</div> : null}
+          </div>
+
+          <div>
+            <label htmlFor="poNo" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              PO No
+            </label>
+            <input
+              id="poNo"
+              value={values.poNo}
+              onChange={(e) => updateField('poNo', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+              readOnly
+            />
             {errors.poNo ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.poNo}</div> : null}
           </div>
 
           <div>
-            <label htmlFor="inventoryItemId" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Inventory Item</label>
-            <select
-              id="inventoryItemId"
-              value={values.inventoryItemId}
-              onChange={(e) => updateField('inventoryItemId', e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
-            >
-              <option value="">
-                {isInventoryLoading ? 'Loading inventory...' : 'Select inventory item'}
-              </option>
-              {inventoryItems.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.sku} - {item.name}
-                </option>
-              ))}
-            </select>
-            {errors.inventoryItemId ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.inventoryItemId}</div> : null}
-          </div>
-
-          <div>
-            <label htmlFor="supplierName" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Supplier Name</label>
-            <input id="supplierName" value={values.supplierName} onChange={(e) => updateField('supplierName', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="supplierName" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Supplier Name
+            </label>
+            <input
+              id="supplierName"
+              value={values.supplierName}
+              onChange={(e) => updateField('supplierName', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+              readOnly
+            />
             {errors.supplierName ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.supplierName}</div> : null}
           </div>
 
           <div>
-            <label htmlFor="batchNumber" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Batch Number</label>
-            <input id="batchNumber" value={values.batchNumber} onChange={(e) => updateField('batchNumber', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="inventoryItemId" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Inventory Item ID
+            </label>
+            <input
+              id="inventoryItemId"
+              value={values.inventoryItemId}
+              onChange={(e) => updateField('inventoryItemId', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+              readOnly
+            />
+            {errors.inventoryItemId ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.inventoryItemId}</div> : null}
+          </div>
+
+          <div>
+            <label htmlFor="batchNumber" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Batch Number
+            </label>
+            <input
+              id="batchNumber"
+              value={values.batchNumber}
+              onChange={(e) => updateField('batchNumber', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
             {errors.batchNumber ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.batchNumber}</div> : null}
           </div>
 
           <div>
-            <label htmlFor="lotNumber" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Lot Number</label>
-            <input id="lotNumber" value={values.lotNumber} onChange={(e) => updateField('lotNumber', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="lotNumber" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Lot Number
+            </label>
+            <input
+              id="lotNumber"
+              value={values.lotNumber}
+              onChange={(e) => updateField('lotNumber', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="supplierLotNumber" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Supplier Lot Number</label>
-            <input id="supplierLotNumber" value={values.supplierLotNumber} onChange={(e) => updateField('supplierLotNumber', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="supplierLotNumber" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Supplier Lot Number
+            </label>
+            <input
+              id="supplierLotNumber"
+              value={values.supplierLotNumber}
+              onChange={(e) => updateField('supplierLotNumber', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="manufactureDate" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Manufacture Date</label>
-            <input id="manufactureDate" type="date" value={values.manufactureDate} onChange={(e) => updateField('manufactureDate', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="manufactureDate" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Manufacture Date
+            </label>
+            <input
+              id="manufactureDate"
+              type="date"
+              value={values.manufactureDate}
+              onChange={(e) => updateField('manufactureDate', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="expiryDate" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Expiry Date</label>
-            <input id="expiryDate" type="date" value={values.expiryDate} onChange={(e) => updateField('expiryDate', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="expiryDate" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Expiry Date
+            </label>
+            <input
+              id="expiryDate"
+              type="date"
+              value={values.expiryDate}
+              onChange={(e) => updateField('expiryDate', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="receivedDate" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Received Date</label>
-            <input id="receivedDate" type="date" value={values.receivedDate} onChange={(e) => updateField('receivedDate', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="receivedDate" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Received Date
+            </label>
+            <input
+              id="receivedDate"
+              type="date"
+              value={values.receivedDate}
+              onChange={(e) => updateField('receivedDate', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="receivedLines" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Received Lines</label>
-            <input id="receivedLines" value={values.receivedLines} onChange={(e) => updateField('receivedLines', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="receivedLines" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Received Lines
+            </label>
+            <input
+              id="receivedLines"
+              value={values.receivedLines}
+              onChange={(e) => updateField('receivedLines', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
             {errors.receivedLines ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.receivedLines}</div> : null}
           </div>
 
           <div>
-            <label htmlFor="receivedQty" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Received Qty</label>
-            <input id="receivedQty" value={values.receivedQty} onChange={(e) => updateField('receivedQty', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="receivedQty" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Received Qty
+            </label>
+            <input
+              id="receivedQty"
+              value={values.receivedQty}
+              onChange={(e) => updateField('receivedQty', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: isReceivedQtyInvalid ? '1px solid #dc2626' : '1px solid #cbd5e1'
+              }}
+            />
             {errors.receivedQty ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.receivedQty}</div> : null}
+            {selectedLine && isReceivedQtyInvalid ? (
+              <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>
+                Received quantity must be greater than 0 and cannot exceed remaining qty ({remainingQty}).
+              </div>
+            ) : null}
           </div>
 
           <div>
-            <label htmlFor="status" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Status</label>
+            <label htmlFor="status" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Status
+            </label>
             <select
               id="status"
               value={values.status}
@@ -170,49 +428,140 @@ export function GRNCreateScreen() {
           </div>
 
           <div>
-            <label htmlFor="warehouseLocation" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Warehouse Location</label>
-            <input id="warehouseLocation" value={values.warehouseLocation} onChange={(e) => updateField('warehouseLocation', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="warehouseLocation" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Warehouse Location
+            </label>
+            <input
+              id="warehouseLocation"
+              value={values.warehouseLocation}
+              onChange={(e) => updateField('warehouseLocation', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="zone" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Zone</label>
-            <input id="zone" value={values.zone} onChange={(e) => updateField('zone', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="zone" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Zone
+            </label>
+            <input
+              id="zone"
+              value={values.zone}
+              onChange={(e) => updateField('zone', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="aisle" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Aisle</label>
-            <input id="aisle" value={values.aisle} onChange={(e) => updateField('aisle', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="aisle" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Aisle
+            </label>
+            <input
+              id="aisle"
+              value={values.aisle}
+              onChange={(e) => updateField('aisle', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="levelCode" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Level</label>
-            <input id="levelCode" value={values.levelCode} onChange={(e) => updateField('levelCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="levelCode" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Level
+            </label>
+            <input
+              id="levelCode"
+              value={values.levelCode}
+              onChange={(e) => updateField('levelCode', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
 
           <div>
-            <label htmlFor="bin" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Bin</label>
-            <input id="bin" value={values.bin} onChange={(e) => updateField('bin', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            <label htmlFor="bin" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Bin
+            </label>
+            <input
+              id="bin"
+              value={values.bin}
+              onChange={(e) => updateField('bin', e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
           </div>
         </div>
 
-        {error ? (
-          <div style={{ marginTop: '16px', padding: '12px', borderRadius: '10px', background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
-            {error}
+        {selectedLine ? (
+          <div
+            style={{
+              marginTop: '20px',
+              padding: '14px',
+              borderRadius: '12px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              color: '#475569'
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: '8px' }}>
+              Selected PO Line Context
+            </div>
+            <div>Item: <strong>{selectedLine.itemCode} - {selectedLine.itemName}</strong></div>
+            <div>Ordered Qty: <strong>{selectedLine.orderedQty}</strong></div>
+            <div>Already Received: <strong>{selectedLine.receivedQty}</strong></div>
+            <div>Remaining Qty: <strong>{remainingQty}</strong></div>
+            <div>Unit Cost: <strong>{selectedLine.currency} {Number(selectedLine.unitCost).toFixed(2)}</strong></div>
+          </div>
+        ) : null}
+
+        {(error || formError) ? (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#fef2f2',
+              color: '#b91c1c',
+              border: '1px solid #fecaca'
+            }}
+          >
+            {formError || error}
           </div>
         ) : null}
 
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
           <button
             type="submit"
-            disabled={isSubmitting}
-            style={{ padding: '12px 16px', borderRadius: '10px', border: 'none', background: isSubmitting ? '#94a3b8' : '#0f172a', color: '#ffffff', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+            disabled={
+              isSubmitting ||
+              !selectedPurchaseOrder ||
+              !selectedLine ||
+              isReceivedQtyInvalid
+            }
+            style={{
+              padding: '12px 16px',
+              borderRadius: '10px',
+              border: 'none',
+              background:
+                isSubmitting || !selectedPurchaseOrder || !selectedLine || isReceivedQtyInvalid
+                  ? '#94a3b8'
+                  : '#0f172a',
+              color: '#ffffff',
+              cursor:
+                isSubmitting || !selectedPurchaseOrder || !selectedLine || isReceivedQtyInvalid
+                  ? 'not-allowed'
+                  : 'pointer',
+              fontWeight: 600
+            }}
           >
             {isSubmitting ? 'Creating...' : 'Create GRN'}
           </button>
 
           <Link
             href={ROUTES.goodsReceivedNotes}
-            style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', fontWeight: 600 }}
+            style={{
+              padding: '12px 16px',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              background: '#ffffff',
+              fontWeight: 600
+            }}
           >
             Cancel
           </Link>
