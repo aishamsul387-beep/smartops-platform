@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { inventoryApi } from '@/features/inventory/api';
 import type { InventoryItem } from '@/features/inventory/types';
 import { useCreatePurchaseOrder } from '../hooks/useCreatePurchaseOrder';
@@ -47,31 +47,50 @@ const itemLineCardStyle = {
   background: '#f8fafc'
 } as const;
 
+function sortInventoryItems(items: InventoryItem[]) {
+  return [...items].sort((a, b) => {
+    const nameCompare = String(a.name || '').localeCompare(String(b.name || ''));
+    if (nameCompare !== 0) {
+      return nameCompare;
+    }
+
+    return String(a.sku || '').localeCompare(String(b.sku || ''));
+  });
+}
+
 export function PurchaseOrderCreateScreen() {
   const router = useRouter();
   const { createPurchaseOrder, isSubmitting, error } = useCreatePurchaseOrder();
 
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [isInventoryLoading, setIsInventoryLoading] = useState(true);
+  const [inventoryLoadError, setInventoryLoadError] = useState<string | null>(null);
 
   const [values, setValues] = useState<PurchaseOrderFormValues>(initialPurchaseOrderFormValues);
   const [errors, setErrors] = useState<PurchaseOrderFormErrors>({});
 
-  useEffect(() => {
-    async function loadInventoryItems() {
-      try {
-        setIsInventoryLoading(true);
-        const result = await inventoryApi.getInventoryList({ search: '', status: 'all' });
-        setInventoryItems(result.items.filter((item) => item.isActive));
-      } catch {
-        setInventoryItems([]);
-      } finally {
-        setIsInventoryLoading(false);
-      }
-    }
+  const loadInventoryItems = useCallback(async () => {
+    try {
+      setIsInventoryLoading(true);
+      setInventoryLoadError(null);
 
-    void loadInventoryItems();
+      const result = await inventoryApi.getInventoryList({ search: '', status: 'all' });
+      const allItems = Array.isArray(result.items) ? result.items : [];
+      const activeItems = allItems.filter((item) => item.isActive);
+
+      const nextItems = activeItems.length > 0 ? activeItems : allItems;
+      setInventoryItems(sortInventoryItems(nextItems));
+    } catch (err: any) {
+      setInventoryItems([]);
+      setInventoryLoadError(err?.message || 'Failed to load product options');
+    } finally {
+      setIsInventoryLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadInventoryItems();
+  }, [loadInventoryItems]);
 
   const totals = useMemo(() => calculatePurchaseOrderTotals(values), [values]);
 
@@ -345,6 +364,57 @@ export function PurchaseOrderCreateScreen() {
             </button>
           </div>
 
+          {inventoryLoadError ? (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fff7ed',
+                color: '#c2410c',
+                border: '1px solid #fdba74',
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '12px',
+                alignItems: 'center',
+                flexWrap: 'wrap'
+              }}
+            >
+              <span>{inventoryLoadError}</span>
+
+              <button
+                type="button"
+                onClick={() => void loadInventoryItems()}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #fdba74',
+                  background: '#ffffff',
+                  color: '#9a3412',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Retry load
+              </button>
+            </div>
+          ) : null}
+
+          {!isInventoryLoading && inventoryItems.length === 0 ? (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#f8fafc',
+                color: '#475569',
+                border: '1px solid #e2e8f0'
+              }}
+            >
+              No inventory items are currently available for selection.
+            </div>
+          ) : null}
+
           {errors.lines ? (
             <div
               style={{
@@ -444,21 +514,25 @@ export function PurchaseOrderCreateScreen() {
                     <div>
                       <label style={labelStyle}>Ordered Qty</label>
                       <input
+                        type="number"
+                        min="1"
+                        step="1"
                         value={line.orderedQty}
                         onChange={(e) => updateLineField(index, 'orderedQty', e.target.value)}
                         style={inputStyle}
                       />
-                      {lineError.orderedQty ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{lineError.orderedQty}</div> : null}
                     </div>
 
                     <div>
                       <label style={labelStyle}>Unit Cost</label>
                       <input
+                        type="number"
+                        min="0"
+                        step="0.01"
                         value={line.unitCost}
                         onChange={(e) => updateLineField(index, 'unitCost', e.target.value)}
                         style={inputStyle}
                       />
-                      {lineError.unitCost ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{lineError.unitCost}</div> : null}
                     </div>
 
                     <div>
@@ -467,36 +541,40 @@ export function PurchaseOrderCreateScreen() {
                         {values.currency} {Number(lineTotal || 0).toFixed(2)}
                       </div>
                     </div>
-
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={labelStyle}>Notes</label>
-                      <input
-                        value={line.notes}
-                        onChange={(e) => updateLineField(index, 'notes', e.target.value)}
-                        style={inputStyle}
-                      />
-                    </div>
-
-                    {selected ? (
-                      <div
-                        style={{
-                          gridColumn: '1 / -1',
-                          padding: '12px',
-                          borderRadius: '10px',
-                          background: '#ffffff',
-                          border: '1px solid #e2e8f0',
-                          color: '#475569'
-                        }}
-                      >
-                        <strong>{selected.name}</strong><br />
-                        SKU: <strong>{selected.sku || '-'}</strong><br />
-                        Barcode: <strong>{selected.barcode || '-'}</strong><br />
-                        Preferred supplier: <strong>{selected.preferredSupplierName || '-'}</strong><br />
-                        Standard cost: <strong>{selected.currency} {Number(selected.standardCost || 0).toFixed(2)}</strong><br />
-                        Item type: <strong>{selected.itemType}</strong>
-                      </div>
-                    ) : null}
                   </div>
+
+                  <div style={{ marginTop: '16px' }}>
+                    <label style={labelStyle}>Notes</label>
+                    <textarea
+                      rows={3}
+                      value={line.notes}
+                      onChange={(e) => updateLineField(index, 'notes', e.target.value)}
+                      style={{
+                        ...inputStyle,
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+
+                  {selected ? (
+                    <div
+                      style={{
+                        marginTop: '16px',
+                        padding: '12px',
+                        borderRadius: '10px',
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        color: '#475569',
+                        fontSize: '14px'
+                      }}
+                    >
+                      SKU: <strong>{selected.sku || '-'}</strong><br />
+                      Barcode: <strong>{selected.barcode || '-'}</strong><br />
+                      Product Name: <strong>{selected.name || '-'}</strong><br />
+                      Preferred Supplier: <strong>{selected.preferredSupplierName || '-'}</strong><br />
+                      Standard Cost: <strong>{selected.currency} {Number(selected.standardCost || 0).toFixed(2)}</strong>
+                    </div>
+                  ) : null}
                 </div>
               );
             })}
@@ -528,10 +606,10 @@ export function PurchaseOrderCreateScreen() {
               background: isSubmitting ? '#94a3b8' : '#0f172a',
               color: '#ffffff',
               cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              fontWeight: 600
+              fontWeight: 700
             }}
           >
-            {isSubmitting ? 'Creating...' : 'Create purchase order'}
+            {isSubmitting ? 'Creating purchase order...' : 'Create purchase order'}
           </button>
 
           <Link
@@ -541,7 +619,8 @@ export function PurchaseOrderCreateScreen() {
               borderRadius: '10px',
               border: '1px solid #cbd5e1',
               background: '#ffffff',
-              fontWeight: 600
+              color: '#334155',
+              fontWeight: 700
             }}
           >
             Cancel
