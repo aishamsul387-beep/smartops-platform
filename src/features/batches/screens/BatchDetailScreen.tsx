@@ -1,14 +1,18 @@
 ﻿'use client'
 
+import Link from 'next/link'
 import { useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useBatchDetail } from '../hooks/useBatchDetail'
+import { useBatchInventorySummary } from '../hooks/useBatchInventorySummary'
 import type { H10ABatchStatus, H10AStockMovementRecord } from '../api'
 
 export type BatchDetailScreenProps = {
   id?: string
   batchId?: string
 }
+
+type UnknownRecord = Record<string, unknown>
 
 const STATUS_OPTIONS: Array<{
   value: H10ABatchStatus
@@ -42,9 +46,14 @@ const STATUS_OPTIONS: Array<{
   }
 ]
 
+function safeText(value: unknown) {
+  const text = String(value ?? '').trim()
+  return text || 'N/A'
+}
+
 function formatDate(value?: string | null) {
   if (!value) {
-    return 'â€”'
+    return 'N/A'
   }
 
   const parsed = new Date(value)
@@ -62,6 +71,10 @@ function formatNumber(value?: number | null) {
   }
 
   return parsed.toLocaleString()
+}
+
+function formatFlag(value: unknown) {
+  return value === true ? 'Yes' : value === false ? 'No' : 'N/A'
 }
 
 function statusBadgeTone(status?: string | null) {
@@ -85,7 +98,7 @@ function DetailItem(props: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{props.label}</div>
-      <div className="mt-2 break-words text-sm text-slate-900">{props.value || 'â€”'}</div>
+      <div className="mt-2 break-words text-sm text-slate-900">{props.value}</div>
     </div>
   )
 }
@@ -119,15 +132,15 @@ function MovementTable({ items }: { items: H10AStockMovementRecord[] }) {
           {items.map((item) => (
             <tr key={item.id} className="border-t border-slate-100">
               <td className="px-4 py-3 align-top text-slate-700">{formatDate(item.occurredAt)}</td>
-              <td className="px-4 py-3 align-top text-slate-900">{item.referenceNo || 'â€”'}</td>
-              <td className="px-4 py-3 align-top uppercase text-slate-700">{item.referenceType}</td>
+              <td className="px-4 py-3 align-top text-slate-900">{safeText(item.referenceNo)}</td>
+              <td className="px-4 py-3 align-top uppercase text-slate-700">{safeText(item.referenceType)}</td>
               <td className="px-4 py-3 align-top">
                 <span
                   className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeTone(
                     item.batchStatus
                   )}`}
                 >
-                  {item.batchStatus || 'â€”'}
+                  {safeText(item.batchStatus)}
                 </span>
               </td>
               <td className="px-4 py-3 align-top text-right text-slate-700">{formatNumber(item.qtyIn)}</td>
@@ -161,6 +174,14 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
     quantitySummary
   } = useBatchDetail(batchId)
 
+  const {
+    item: inventoryItem,
+    isLoading: isInventoryLoading,
+    error: inventoryError,
+    refresh: refreshInventory
+  } = useBatchInventorySummary(batch?.inventoryItemId ?? '')
+
+  const inventoryData = (inventoryItem ?? null) as UnknownRecord | null
   const currentStatus = String(batch?.batchStatus ?? '').toLowerCase()
 
   const statusSummary = useMemo(() => {
@@ -240,9 +261,9 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{batch.batchNumber}</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{safeText(batch.batchNumber)}</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Inventory Item ID: <span className="font-medium text-slate-700">{batch.inventoryItemId}</span>
+              Inventory Item ID: <span className="font-medium text-slate-700">{safeText(batch.inventoryItemId)}</span>
             </p>
           </div>
 
@@ -252,7 +273,7 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
                 batch.batchStatus
               )}`}
             >
-              {batch.batchStatus}
+              {safeText(batch.batchStatus)}
             </span>
           </div>
         </div>
@@ -266,10 +287,67 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
           >
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
+
+          <Link
+            href={`/inventory/${batch.inventoryItemId}`}
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Open Inventory Detail
+          </Link>
         </div>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Linked Inventory Context</h2>
+            <p className="text-sm text-slate-500">
+              Quick identity and planning context for the inventory item linked to this batch.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void refreshInventory()}
+            disabled={isInventoryLoading}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isInventoryLoading ? 'Refreshing inventory...' : 'Refresh Inventory Context'}
+          </button>
+        </div>
+
+        {inventoryError ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {inventoryError}
+          </div>
+        ) : null}
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <DetailItem label="SKU" value={safeText(inventoryData?.sku)} />
+          <DetailItem label="Barcode" value={safeText(inventoryData?.barcode)} />
+          <DetailItem label="Product Name" value={safeText(inventoryData?.name)} />
+          <DetailItem label="Category" value={safeText(inventoryData?.category)} />
+          <DetailItem label="Item Type" value={safeText(inventoryData?.itemType)} />
+          <DetailItem label="On Hand Qty" value={formatNumber(Number(inventoryData?.quantity ?? 0))} />
+          <DetailItem label="Reorder Level" value={formatNumber(Number(inventoryData?.reorderLevel ?? 0))} />
+          <DetailItem
+            label="Min / Max Stock"
+            value={`${formatNumber(Number(inventoryData?.minimumStockLevel ?? 0))} / ${formatNumber(
+              Number(inventoryData?.maximumStockLevel ?? 0)
+            )}`}
+          />
+          <DetailItem label="Preferred Supplier" value={safeText(inventoryData?.preferredSupplierName)} />
+          <DetailItem
+            label="Standard Cost"
+            value={`${safeText(inventoryData?.currency)} / ${formatNumber(Number(inventoryData?.standardCost ?? 0))}`}
+          />
+          <DetailItem label="Active" value={formatFlag(inventoryData?.isActive)} />
+          <DetailItem label="Batch Tracked" value={formatFlag(inventoryData?.isBatchTracked)} />
+          <DetailItem label="Expiry Tracked" value={formatFlag(inventoryData?.isExpiryTracked)} />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Batch Status Actions</h2>
           <p className="text-sm text-slate-500">
@@ -303,15 +381,18 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <DetailItem label="Lot Number" value={batch.lotNumber || 'â€”'} />
-        <DetailItem label="Supplier Lot Number" value={batch.supplierLotNumber || 'â€”'} />
-        <DetailItem label="Supplier Name" value={batch.supplierName || 'â€”'} />
-        <DetailItem label="Currency / Unit Cost" value={`${batch.currency || 'â€”'} / ${formatNumber(batch.unitCost)}`} />
+        <DetailItem label="Lot Number" value={safeText(batch.lotNumber)} />
+        <DetailItem label="Supplier Lot Number" value={safeText(batch.supplierLotNumber)} />
+        <DetailItem label="Supplier Name" value={safeText(batch.supplierName)} />
+        <DetailItem
+          label="Currency / Unit Cost"
+          value={`${safeText(batch.currency)} / ${formatNumber(batch.unitCost)}`}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <DetailItem label="Purchase Order No" value={batch.purchaseOrderNo || 'â€”'} />
-        <DetailItem label="GRN No" value={batch.goodsReceivedNoteNo || 'â€”'} />
+        <DetailItem label="Purchase Order No" value={safeText(batch.purchaseOrderNo)} />
+        <DetailItem label="GRN No" value={safeText(batch.goodsReceivedNoteNo)} />
         <DetailItem label="Updated At" value={formatDate(batch.updatedAt)} />
         <DetailItem label="Received Date" value={formatDate(batch.receivedDate)} />
         <DetailItem label="Manufacture Date" value={formatDate(batch.manufactureDate)} />
@@ -335,18 +416,18 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Location</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <DetailItem label="Warehouse Location" value={batch.warehouseLocation || 'â€”'} />
-          <DetailItem label="Zone" value={batch.zone || 'â€”'} />
-          <DetailItem label="Aisle" value={batch.aisle || 'â€”'} />
-          <DetailItem label="Level" value={batch.levelCode || 'â€”'} />
-          <DetailItem label="Bin" value={batch.bin || 'â€”'} />
+          <DetailItem label="Warehouse Location" value={safeText(batch.warehouseLocation)} />
+          <DetailItem label="Zone" value={safeText(batch.zone)} />
+          <DetailItem label="Aisle" value={safeText(batch.aisle)} />
+          <DetailItem label="Level" value={safeText(batch.levelCode)} />
+          <DetailItem label="Bin" value={safeText(batch.bin)} />
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Notes</h2>
         <div className="mt-4 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
-          {batch.notes || 'No notes available.'}
+          {safeText(batch.notes)}
         </div>
       </div>
 

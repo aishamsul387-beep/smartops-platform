@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { inventoryApi } from '@/features/inventory/api';
 import type { InventoryItem } from '@/features/inventory/types';
 
@@ -9,7 +9,7 @@ export function useBatchInventorySummary(inventoryItemId: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!inventoryItemId.trim()) {
       setItem(null);
       setError(null);
@@ -29,11 +29,11 @@ export function useBatchInventorySummary(inventoryItemId: string) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [inventoryItemId]);
 
   useEffect(() => {
     void load();
-  }, [inventoryItemId]);
+  }, [load]);
 
   return {
     item,
