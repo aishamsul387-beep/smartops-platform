@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useBatchDetail } from '../hooks/useBatchDetail'
 import { useBatchInventorySummary } from '../hooks/useBatchInventorySummary'
@@ -95,7 +95,7 @@ function statusBadgeTone(status?: string | null) {
   }
 }
 
-function poStatusTone(status?: string | null) {
+function poStatusTone(status?: string | string[] | null) {
   switch (String(status ?? '').toLowerCase()) {
     case 'draft':
       return 'bg-slate-100 text-slate-800 border border-slate-200'
@@ -110,7 +110,7 @@ function poStatusTone(status?: string | null) {
   }
 }
 
-function grnStatusTone(status?: string | null) {
+function grnStatusTone(status?: string | string[] | null) {
   switch (String(status ?? '').toLowerCase()) {
     case 'posted':
       return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
@@ -127,6 +127,76 @@ function DetailItem(props: { label: string; value: string }) {
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{props.label}</div>
       <div className="mt-2 break-words text-sm text-slate-900">{props.value}</div>
     </div>
+  )
+}
+
+function ReferenceCard(props: {
+  label: string
+  value: string
+  copied: boolean
+  onCopy: () => void
+  href?: string
+  hrefLabel?: string
+}) {
+  const canCopy = props.value !== 'N/A'
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{props.label}</div>
+
+      <div className="mt-2 break-words text-sm font-semibold text-slate-900">{props.value}</div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={props.onCopy}
+          disabled={!canCopy}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {props.copied ? 'Copied' : 'Copy'}
+        </button>
+
+        {props.href ? (
+          <Link
+            href={props.href}
+            className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+          >
+            {props.hrefLabel || 'Open'}
+          </Link>
+        ) : (
+          <span className="rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-xs text-slate-400">
+            Detail unavailable
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function QuickLinkButton(props: {
+  href?: string
+  label: string
+  tone?: 'dark' | 'light' | 'violet'
+}) {
+  const toneClass =
+    props.tone === 'violet'
+      ? 'bg-violet-600 text-white hover:bg-violet-700'
+      : props.tone === 'light'
+        ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+        : 'bg-slate-900 text-white hover:bg-slate-800'
+
+  if (!props.href) {
+    return (
+      <span className="rounded-lg border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-slate-400">
+        {props.label} unavailable
+      </span>
+    )
+  }
+
+  return (
+    <Link href={props.href} className={`rounded-lg px-4 py-2 text-sm font-medium ${toneClass}`}>
+      {props.label}
+    </Link>
   )
 }
 
@@ -225,7 +295,13 @@ function SourceCard(props: {
             {props.hrefLabel || 'Open Detail'}
           </Link>
         </div>
-      ) : null}
+      ) : (
+        <div className="mt-5">
+          <span className="inline-flex rounded-lg border border-dashed border-slate-300 px-4 py-2 text-sm text-slate-400">
+            Detail route unavailable
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -264,6 +340,8 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
     hasSourceContext
   } = useBatchSourceDocumentContext(batch?.purchaseOrderNo ?? '', batch?.goodsReceivedNoteNo ?? '')
 
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+
   const inventoryData = (inventoryItem ?? null) as UnknownRecord | null
   const currentStatus = String(batch?.batchStatus ?? '').toLowerCase()
 
@@ -295,6 +373,31 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
     }
 
     await updateStatus(nextStatus, statusNote)
+  }
+
+  const handleCopy = async (key: string, value: string) => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const text = String(value ?? '').trim()
+    if (!text || text === 'N/A') {
+      return
+    }
+
+    try {
+      await window.navigator.clipboard.writeText(text)
+      setCopiedKey(key)
+      window.setTimeout(() => {
+        setCopiedKey((current) => (current === key ? null : current))
+      }, 1500)
+    } catch {
+      // no-op
+    }
+  }
+
+  const handleRefreshAll = async () => {
+    await Promise.allSettled([refresh(), refreshInventory(), refreshSourceContext()])
   }
 
   if (!batchId) {
@@ -370,13 +473,76 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
           >
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
+        </div>
+      </div>
 
-          <Link
-            href={`/inventory/${batch.inventoryItemId}`}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Quick Actions & Reference Tools</h2>
+            <p className="text-sm text-slate-500">
+              Operator-friendly shortcuts and copyable references for fast batch navigation.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void handleRefreshAll()}
+            disabled={isRefreshing || isInventoryLoading || isSourceContextLoading}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Open Inventory Detail
-          </Link>
+            {isRefreshing || isInventoryLoading || isSourceContextLoading
+              ? 'Refreshing all...'
+              : 'Refresh All Context'}
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <QuickLinkButton href="/batches" label="Back to Batches" tone="light" />
+          <QuickLinkButton href={`/inventory/${batch.inventoryItemId}`} label="Open Inventory Detail" tone="dark" />
+          <QuickLinkButton
+            href={purchaseOrder?.id ? `/orders/purchase-orders/${purchaseOrder.id}` : undefined}
+            label="Open Purchase Order Detail"
+            tone="dark"
+          />
+          <QuickLinkButton
+            href={grn?.id ? `/orders/goods-received-notes/${grn.id}` : undefined}
+            label="Open GRN Detail"
+            tone="violet"
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <ReferenceCard
+            label="Batch Number"
+            value={safeText(batch.batchNumber)}
+            copied={copiedKey === 'batchNumber'}
+            onCopy={() => void handleCopy('batchNumber', safeText(batch.batchNumber))}
+          />
+          <ReferenceCard
+            label="Inventory Item ID"
+            value={safeText(batch.inventoryItemId)}
+            copied={copiedKey === 'inventoryItemId'}
+            onCopy={() => void handleCopy('inventoryItemId', safeText(batch.inventoryItemId))}
+            href={`/inventory/${batch.inventoryItemId}`}
+            hrefLabel="Open Inventory"
+          />
+          <ReferenceCard
+            label="Purchase Order No"
+            value={safeText(batch.purchaseOrderNo)}
+            copied={copiedKey === 'purchaseOrderNo'}
+            onCopy={() => void handleCopy('purchaseOrderNo', safeText(batch.purchaseOrderNo))}
+            href={purchaseOrder?.id ? `/orders/purchase-orders/${purchaseOrder.id}` : undefined}
+            hrefLabel="Open PO"
+          />
+          <ReferenceCard
+            label="GRN No"
+            value={safeText(batch.goodsReceivedNoteNo)}
+            copied={copiedKey === 'goodsReceivedNoteNo'}
+            onCopy={() => void handleCopy('goodsReceivedNoteNo', safeText(batch.goodsReceivedNoteNo))}
+            href={grn?.id ? `/orders/goods-received-notes/${grn.id}` : undefined}
+            hrefLabel="Open GRN"
+          />
         </div>
       </div>
 
