@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useGRNDetail } from '../hooks/useGRNDetail';
@@ -175,6 +175,22 @@ export function GRNDetailScreen({ id }: { id: string }) {
             >
               Open batches
             </Link>
+
+            {item.linkedBatchId ? (
+              <Link
+                href={`/batches/${item.linkedBatchId}`}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  fontWeight: 600
+                }}
+              >
+                Open linked batch
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>
@@ -227,6 +243,13 @@ export function GRNDetailScreen({ id }: { id: string }) {
           <DetailRow label="Received Lines" value={item.receivedLines} />
           <DetailRow label="Received Qty" value={item.receivedQty} />
           <DetailRow label="Linked Batch ID" value={item.linkedBatchId} />
+          {item.linkedBatchId ? (
+            <div style={{ marginTop: '12px' }}>
+              <Link href={`/batches/${item.linkedBatchId}`} style={{ color: '#7c3aed', fontWeight: 600 }}>
+                Open linked batch detail
+              </Link>
+            </div>
+          ) : null}
           <div style={{ marginTop: '16px' }}>
             <span
               style={{

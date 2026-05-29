@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -416,7 +416,7 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
                   }}
                 >
                   <div style={{ fontWeight: 700, marginBottom: '8px' }}>
-                    Line {line.lineNo} Â· {inventorySummary?.sku || line.itemCode || '-'} Â· {inventorySummary?.name || line.itemName || '-'}
+                    Line {line.lineNo} Ã‚Â· {inventorySummary?.sku || line.itemCode || '-'} Ã‚Â· {inventorySummary?.name || line.itemName || '-'}
                   </div>
 
                   {!line.receiptHistory || line.receiptHistory.length === 0 ? (
@@ -433,18 +433,35 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
                             border: '1px solid #e2e8f0'
                           }}
                         >
-                          <div style={{ fontWeight: 700, marginBottom: '6px' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '6px',
+                              fontWeight: 700,
+                              marginBottom: '6px'
+                            }}
+                          >
                             <Link href={`/orders/goods-received-notes/${receipt.grnId}`} style={{ color: '#2563eb' }}>
                               {receipt.grnNo}
                             </Link>
+
+                            {receipt.linkedBatchId ? (
+                              <Link
+                                href={`/batches/${receipt.linkedBatchId}`}
+                                style={{ color: '#7c3aed', fontSize: '13px', fontWeight: 700 }}
+                              >
+                                Open Batch {receipt.linkedBatchId}
+                              </Link>
+                            ) : null}
                           </div>
                           <div style={{ color: '#475569', fontSize: '14px' }}>
-                            Received Qty: <strong>{receipt.receivedQty}</strong> Â·
-                            Status: <strong>{receipt.status}</strong> Â·
+                            Received Qty: <strong>{receipt.receivedQty}</strong> Ã‚Â·
+                            Status: <strong>{receipt.status}</strong> Ã‚Â·
                             Received Date: <strong>{receipt.receivedDate || '-'}</strong>
                           </div>
                           <div style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>
-                            Linked Batch: <strong>{receipt.linkedBatchId || '-'}</strong> Â·
+                            Linked Batch: <strong>{receipt.linkedBatchId || '-'}</strong> Ã‚Â·
                             Posted At: <strong>{receipt.postedAt}</strong>
                           </div>
                         </div>
