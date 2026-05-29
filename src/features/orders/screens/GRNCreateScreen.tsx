@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ROUTES } from '@/lib/routes';
 import { ordersApi } from '../api';
@@ -11,7 +11,11 @@ import type { GRNFormErrors, GRNFormValues, PurchaseOrderRecord } from '../types
 
 export function GRNCreateScreen() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { createGRN, isSubmitting, error } = useCreateGRN();
+
+  const preselectedPoId = String(searchParams.get('poId') ?? '').trim();
+  const preselectedPoNo = String(searchParams.get('poNo') ?? '').trim();
 
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderRecord[]>([]);
   const [isPoLoading, setIsPoLoading] = useState(true);
@@ -42,6 +46,31 @@ export function GRNCreateScreen() {
 
     void loadPurchaseOrders();
   }, []);
+
+  useEffect(() => {
+    if (isPoLoading || selectedPurchaseOrderId) {
+      return;
+    }
+
+    if (!purchaseOrders.length) {
+      return;
+    }
+
+    const matchById = preselectedPoId
+      ? purchaseOrders.find((item) => item.id === preselectedPoId) || null
+      : null;
+
+    const matchByPoNo =
+      !matchById && preselectedPoNo
+        ? purchaseOrders.find((item) => item.poNo === preselectedPoNo) || null
+        : null;
+
+    const target = matchById || matchByPoNo;
+
+    if (target) {
+      handlePurchaseOrderChange(target.id);
+    }
+  }, [isPoLoading, purchaseOrders, preselectedPoId, preselectedPoNo, selectedPurchaseOrderId]);
 
   const selectedPurchaseOrder = useMemo(
     () => purchaseOrders.find((item) => item.id === selectedPurchaseOrderId) || null,
@@ -88,17 +117,26 @@ export function GRNCreateScreen() {
 
   function handlePurchaseOrderChange(poId: string) {
     setSelectedPurchaseOrderId(poId);
-    setSelectedLineId('');
 
     const po = purchaseOrders.find((item) => item.id === poId);
+    const availablePoLines = po
+      ? po.lines.filter((line) => line.receivedQty < line.orderedQty)
+      : [];
+    const nextLine = availablePoLines.length === 1 ? availablePoLines[0] : null;
+    const nextRemainingQty = nextLine
+      ? Math.max(nextLine.orderedQty - nextLine.receivedQty, 0)
+      : 0;
+
+    setSelectedLineId(nextLine?.id || '');
 
     setValues((current) => ({
       ...current,
       poNo: po?.poNo || '',
-      purchaseOrderLineId: '',
+      purchaseOrderLineId: nextLine?.id || '',
       supplierName: po?.supplierName || '',
-      inventoryItemId: '',
-      receivedQty: '0'
+      inventoryItemId: nextLine?.inventoryItemId || '',
+      receivedLines: '1',
+      receivedQty: nextLine ? String(nextRemainingQty) : '0'
     }));
 
     setFormError(null);
@@ -184,6 +222,21 @@ export function GRNCreateScreen() {
         <div style={{ color: '#475569', lineHeight: 1.6 }}>
           Receive goods against issued purchase order lines with guardrails to prevent over-receipt.
         </div>
+
+        {preselectedPoId || preselectedPoNo ? (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#eff6ff',
+              color: '#1d4ed8',
+              border: '1px solid #bfdbfe'
+            }}
+          >
+            This GRN form was opened from an issued purchase order. Matching PO context will be preselected when available.
+          </div>
+        ) : null}
       </div>
 
       <form
@@ -256,6 +309,21 @@ export function GRNCreateScreen() {
               ))}
             </select>
             {errors.purchaseOrderLineId ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.purchaseOrderLineId}</div> : null}
+            {selectedPurchaseOrder && availableLines.length === 0 ? (
+              <div style={{ color: '#9a3412', marginTop: '8px', fontSize: '14px' }}>
+                All PO lines for this purchase order are already fully received.
+              </div>
+            ) : null}
+            {selectedPurchaseOrder && availableLines.length === 1 ? (
+              <div style={{ color: '#475569', marginTop: '8px', fontSize: '14px' }}>
+                One receivable PO line was found and auto-filled below.
+              </div>
+            ) : null}
+            {selectedPurchaseOrder && availableLines.length > 1 && !selectedLine ? (
+              <div style={{ color: '#475569', marginTop: '8px', fontSize: '14px' }}>
+                Select a PO line to auto-fill Inventory Item ID and remaining receivable quantity.
+              </div>
+            ) : null}
           </div>
 
           <div>
@@ -294,10 +362,20 @@ export function GRNCreateScreen() {
               id="inventoryItemId"
               value={values.inventoryItemId}
               onChange={(e) => updateField('inventoryItemId', e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#f8fafc',
+                color: '#334155'
+              }}
               readOnly
             />
             {errors.inventoryItemId ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.inventoryItemId}</div> : null}
+            <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>
+              Auto-filled from the selected purchase order line. This field is read-only by design.
+            </div>
           </div>
 
           <div>
@@ -570,3 +648,4 @@ export function GRNCreateScreen() {
     </div>
   );
 }
+

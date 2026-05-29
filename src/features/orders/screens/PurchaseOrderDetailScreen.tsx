@@ -1,7 +1,9 @@
 ﻿'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { ROUTES } from '@/lib/routes';
 import { ordersApi } from '../api';
 import { usePurchaseOrderDetail } from '../hooks/usePurchaseOrderDetail';
 import { usePurchaseOrderLineInventorySummary } from '../hooks/usePurchaseOrderLineInventorySummary';
@@ -135,6 +137,7 @@ function DetailRow({
 }
 
 export function PurchaseOrderDetailScreen({ id }: { id: string }) {
+  const router = useRouter();
   const { item, isLoading, error, refresh } = usePurchaseOrderDetail(id);
   const [isIssuing, setIsIssuing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -154,8 +157,16 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
     try {
       setIsIssuing(true);
       setActionError(null);
-      await ordersApi.issuePurchaseOrder(item.id);
-      await refresh();
+
+      const issued = await ordersApi.issuePurchaseOrder(item.id);
+
+      router.replace(
+        `${ROUTES.goodsReceivedNotesCreate}?poId=${encodeURIComponent(issued.id)}&poNo=${encodeURIComponent(
+          issued.poNo
+        )}`
+      );
+      router.refresh();
+      return;
     } catch (err: any) {
       setActionError(err?.message || 'Failed to issue purchase order');
     } finally {
@@ -657,3 +668,4 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
     </div>
   );
 }
+
