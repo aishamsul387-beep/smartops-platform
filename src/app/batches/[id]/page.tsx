@@ -1,14 +1,16 @@
-import { ProtectedLayout } from '@/components/layout/ProtectedLayout';
-import { BatchDetailScreen } from '@/features/batches/screens/BatchDetailScreen';
+﻿import { ProtectedLayout } from '@/components/layout/ProtectedLayout'
+import BatchDetailScreen from '@/features/batches/screens/BatchDetailScreen'
 
-export default function BatchDetailPage({
-  params
-}: {
-  params: { id: string };
-}) {
+type PageProps = {
+  params: {
+    id: string
+  }
+}
+
+export default function BatchDetailPage({ params }: PageProps) {
   return (
     <ProtectedLayout permissions={[]}>
-      <BatchDetailScreen id={params.id} />
+      <BatchDetailScreen batchId={params.id} />
     </ProtectedLayout>
-  );
+  )
 }

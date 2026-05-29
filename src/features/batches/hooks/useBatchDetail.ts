@@ -1,104 +1,170 @@
-'use client';
+﻿'use client'
 
-import { useEffect, useState } from 'react';
-import { apiClient } from '@/services/api/client';
-import { ENDPOINTS } from '@/services/api/endpoints';
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  h10aGetBatchDetail,
+  h10aGetBatchMovements,
+  h10aUpdateBatchStatus,
+  type H10ABatchDetail,
+  type H10ABatchStatus,
+  type H10AStockMovementRecord
+} from '../api'
 
-export interface BatchDetailRecord {
-  id: string;
-  inventoryItemId: string;
-  batchNumber: string;
-  lotNumber: string;
-  supplierLotNumber: string;
-  manufactureDate: string | null;
-  expiryDate: string | null;
-  receivedDate: string | null;
-  supplierName: string;
-  purchaseOrderNo: string;
-  goodsReceivedNoteNo: string;
-  unitCost: number;
-  currency: string;
-  receivedQty: number;
-  availableQty: number;
-  reservedQty: number;
-  blockedQty: number;
-  qaHoldQty: number;
-  batchStatus: string;
-  warehouseLocation: string;
-  zone: string;
-  aisle: string;
-  levelCode: string;
-  bin: string;
-  notes: string;
+export interface UseBatchDetailResult {
+  batchId: string
+  batch: H10ABatchDetail | null
+  item: H10ABatchDetail | null
+  movements: H10AStockMovementRecord[]
+  isLoading: boolean
+  isRefreshing: boolean
+  isUpdatingStatus: boolean
+  error: string | null
+  statusError: string | null
+  refresh: () => Promise<void>
+  refetch: () => Promise<void>
+  updateStatus: (nextStatus: H10ABatchStatus, statusNote?: string) => Promise<H10ABatchDetail | null>
+  quantitySummary: {
+    receivedQty: number
+    availableQty: number
+    reservedQty: number
+    blockedQty: number
+    qaHoldQty: number
+    netQty: number
+  }
 }
 
-function asText(value: unknown, fallback = '') {
-  return String(value ?? fallback);
-}
-
-function asNumber(value: unknown, fallback = 0) {
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? fallback : parsed;
-}
-
-function mapBatch(payload: any): BatchDetailRecord {
-  return {
-    id: asText(payload?.id),
-    inventoryItemId: asText(payload?.inventoryItemId),
-    batchNumber: asText(payload?.batchNumber),
-    lotNumber: asText(payload?.lotNumber),
-    supplierLotNumber: asText(payload?.supplierLotNumber),
-    manufactureDate: payload?.manufactureDate ? asText(payload?.manufactureDate) : null,
-    expiryDate: payload?.expiryDate ? asText(payload?.expiryDate) : null,
-    receivedDate: payload?.receivedDate ? asText(payload?.receivedDate) : null,
-    supplierName: asText(payload?.supplierName),
-    purchaseOrderNo: asText(payload?.purchaseOrderNo),
-    goodsReceivedNoteNo: asText(payload?.goodsReceivedNoteNo),
-    unitCost: asNumber(payload?.unitCost, 0),
-    currency: asText(payload?.currency, 'USD'),
-    receivedQty: asNumber(payload?.receivedQty, 0),
-    availableQty: asNumber(payload?.availableQty, 0),
-    reservedQty: asNumber(payload?.reservedQty, 0),
-    blockedQty: asNumber(payload?.blockedQty, 0),
-    qaHoldQty: asNumber(payload?.qaHoldQty, 0),
-    batchStatus: asText(payload?.batchStatus),
-    warehouseLocation: asText(payload?.warehouseLocation),
-    zone: asText(payload?.zone),
-    aisle: asText(payload?.aisle),
-    levelCode: asText(payload?.levelCode),
-    bin: asText(payload?.bin),
-    notes: asText(payload?.notes)
-  };
-}
-
-export function useBatchDetail(id: string) {
-  const [item, setItem] = useState<BatchDetailRecord | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  async function load() {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await apiClient.get<any>(ENDPOINTS.batches.detail(id));
-      setItem(mapBatch(response.data));
-    } catch (err: any) {
-      setItem(null);
-      setError(err?.message || 'Failed to load batch detail');
-    } finally {
-      setIsLoading(false);
-    }
+function toSafeNumber(value: unknown) {
+  const parsed = Number(value)
+  if (Number.isNaN(parsed) || parsed < 0) {
+    return 0
   }
 
+  return parsed
+}
+
+export function useBatchDetail(batchId?: string): UseBatchDetailResult {
+  const resolvedBatchId = String(batchId ?? '').trim()
+
+  const [batch, setBatch] = useState<H10ABatchDetail | null>(null)
+  const [movements, setMovements] = useState<H10AStockMovementRecord[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
+
+  const load = useCallback(
+    async (mode: 'initial' | 'refresh' = 'refresh') => {
+      if (!resolvedBatchId) {
+        setBatch(null)
+        setMovements([])
+        setError('Batch id is required')
+        setIsLoading(false)
+        setIsRefreshing(false)
+        return
+      }
+
+      if (mode === 'initial') {
+        setIsLoading(true)
+      } else {
+        setIsRefreshing(true)
+      }
+
+      setError(null)
+
+      try {
+        const [batchDetail, batchMovements] = await Promise.all([
+          h10aGetBatchDetail(resolvedBatchId),
+          h10aGetBatchMovements(resolvedBatchId)
+        ])
+
+        setBatch(batchDetail)
+        setMovements(batchMovements)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to load batch detail'
+        setError(message)
+      } finally {
+        setIsLoading(false)
+        setIsRefreshing(false)
+      }
+    },
+    [resolvedBatchId]
+  )
+
   useEffect(() => {
-    void load();
-  }, [id]);
+    void load('initial')
+  }, [load])
+
+  const updateStatus = useCallback(
+    async (nextStatus: H10ABatchStatus, statusNote = '') => {
+      if (!resolvedBatchId) {
+        return null
+      }
+
+      setIsUpdatingStatus(true)
+      setStatusError(null)
+
+      try {
+        const updatedBatch = await h10aUpdateBatchStatus(resolvedBatchId, {
+          batchStatus: nextStatus,
+          statusNote
+        })
+
+        setBatch(updatedBatch)
+
+        const batchMovements = await h10aGetBatchMovements(resolvedBatchId)
+        setMovements(batchMovements)
+
+        return updatedBatch
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to update batch status'
+        setStatusError(message)
+        throw err
+      } finally {
+        setIsUpdatingStatus(false)
+      }
+    },
+    [resolvedBatchId]
+  )
+
+  const quantitySummary = useMemo(() => {
+    const receivedQty = toSafeNumber(batch?.receivedQty)
+    const availableQty = toSafeNumber(batch?.availableQty)
+    const reservedQty = toSafeNumber(batch?.reservedQty)
+    const blockedQty = toSafeNumber(batch?.blockedQty)
+    const qaHoldQty = toSafeNumber(batch?.qaHoldQty)
+
+    const bucketTotal = availableQty + reservedQty + blockedQty + qaHoldQty
+
+    return {
+      receivedQty,
+      availableQty,
+      reservedQty,
+      blockedQty,
+      qaHoldQty,
+      netQty: bucketTotal > 0 ? bucketTotal : receivedQty
+    }
+  }, [batch])
+
+  const refresh = useCallback(async () => {
+    await load('refresh')
+  }, [load])
 
   return {
-    item,
+    batchId: resolvedBatchId,
+    batch,
+    item: batch,
+    movements,
     isLoading,
+    isRefreshing,
+    isUpdatingStatus,
     error,
-    refresh: load
-  };
+    statusError,
+    refresh,
+    refetch: refresh,
+    updateStatus,
+    quantitySummary
+  }
 }
+
+export default useBatchDetail
