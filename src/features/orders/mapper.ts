@@ -1,6 +1,8 @@
-import type {
+﻿import type {
   GRNRecord,
   OrdersDashboardSummary,
+  PurchaseOrderLineContextRecord,
+  PurchaseOrderLineReceiptRecord,
   PurchaseOrderLineRecord,
   PurchaseOrderPlanningContext,
   PurchaseOrderRecord,
@@ -55,6 +57,38 @@ function mapPlanningContext(payload: any): PurchaseOrderPlanningContext | null {
   };
 }
 
+function mapPurchaseOrderLineReceipt(payload: any): PurchaseOrderLineReceiptRecord {
+  return {
+    grnId: asText(payload?.grnId),
+    grnNo: asText(payload?.grnNo),
+    receivedQty: asNumber(payload?.receivedQty, 0),
+    receivedDate: payload?.receivedDate ? asText(payload?.receivedDate) : null,
+    status: asText(payload?.status, 'draft') as GRNRecord['status'],
+    linkedBatchId: payload?.linkedBatchId ? asText(payload?.linkedBatchId) : null,
+    postedAt: asText(payload?.postedAt)
+  };
+}
+
+function mapPurchaseOrderLineContext(payload: any): PurchaseOrderLineContextRecord | null {
+  if (!payload) {
+    return null;
+  }
+
+  return {
+    purchaseOrderLineId: asText(payload?.purchaseOrderLineId),
+    lineNo: asNumber(payload?.lineNo, 0),
+    itemCode: asText(payload?.itemCode),
+    itemName: asText(payload?.itemName),
+    orderedQty: asNumber(payload?.orderedQty, 0),
+    receivedQty: asNumber(payload?.receivedQty, 0),
+    remainingQty: asNumber(payload?.remainingQty, 0),
+    unitCost: asNumber(payload?.unitCost, 0),
+    currency: asText(payload?.currency, 'USD'),
+    lineTotal: asNumber(payload?.lineTotal, 0),
+    notes: asText(payload?.notes)
+  };
+}
+
 function mapPurchaseOrderLine(payload: any): PurchaseOrderLineRecord {
   return {
     id: asText(payload?.id),
@@ -67,7 +101,10 @@ function mapPurchaseOrderLine(payload: any): PurchaseOrderLineRecord {
     unitCost: asNumber(payload?.unitCost, 0),
     currency: asText(payload?.currency, 'USD'),
     lineTotal: asNumber(payload?.lineTotal, 0),
-    notes: asText(payload?.notes)
+    notes: asText(payload?.notes),
+    receiptHistory: Array.isArray(payload?.receiptHistory)
+      ? payload.receiptHistory.map(mapPurchaseOrderLineReceipt)
+      : []
   };
 }
 
@@ -133,7 +170,8 @@ export function mapGRN(payload: any): GRNRecord {
     levelCode: asText(payload?.levelCode),
     bin: asText(payload?.bin),
     linkedBatchId: payload?.linkedBatchId ? asText(payload?.linkedBatchId) : null,
-    postedAt: asText(payload?.postedAt)
+    postedAt: asText(payload?.postedAt),
+    purchaseOrderLineContext: mapPurchaseOrderLineContext(payload?.purchaseOrderLineContext)
   };
 }
 
