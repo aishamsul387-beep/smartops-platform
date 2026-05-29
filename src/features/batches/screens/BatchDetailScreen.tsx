@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useBatchDetail } from '../hooks/useBatchDetail'
 import { useBatchInventorySummary } from '../hooks/useBatchInventorySummary'
+import { useBatchSourceDocumentContext } from '../hooks/useBatchSourceDocumentContext'
 import type { H10ABatchStatus, H10AStockMovementRecord } from '../api'
 
 export type BatchDetailScreenProps = {
@@ -94,6 +95,32 @@ function statusBadgeTone(status?: string | null) {
   }
 }
 
+function poStatusTone(status?: string | null) {
+  switch (String(status ?? '').toLowerCase()) {
+    case 'draft':
+      return 'bg-slate-100 text-slate-800 border border-slate-200'
+    case 'issued':
+      return 'bg-blue-100 text-blue-800 border border-blue-200'
+    case 'partially_received':
+      return 'bg-amber-100 text-amber-800 border border-amber-200'
+    case 'received':
+      return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+    default:
+      return 'bg-slate-100 text-slate-700 border border-slate-200'
+  }
+}
+
+function grnStatusTone(status?: string | null) {
+  switch (String(status ?? '').toLowerCase()) {
+    case 'posted':
+      return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+    case 'draft':
+      return 'bg-slate-100 text-slate-800 border border-slate-200'
+    default:
+      return 'bg-slate-100 text-slate-700 border border-slate-200'
+  }
+}
+
 function DetailItem(props: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -156,6 +183,53 @@ function MovementTable({ items }: { items: H10AStockMovementRecord[] }) {
   )
 }
 
+function SourceCard(props: {
+  title: string
+  description: string
+  badge: string
+  badgeTone: string
+  primaryLabel: string
+  primaryValue: string
+  secondaryLabel: string
+  secondaryValue: string
+  tertiaryLabel: string
+  tertiaryValue: string
+  href?: string
+  hrefLabel?: string
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-2">
+          <div className="text-lg font-semibold text-slate-900">{props.title}</div>
+          <p className="text-sm text-slate-500">{props.description}</p>
+        </div>
+
+        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${props.badgeTone}`}>
+          {props.badge}
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <DetailItem label={props.primaryLabel} value={props.primaryValue} />
+        <DetailItem label={props.secondaryLabel} value={props.secondaryValue} />
+        <DetailItem label={props.tertiaryLabel} value={props.tertiaryValue} />
+      </div>
+
+      {props.href ? (
+        <div className="mt-5">
+          <Link
+            href={props.href}
+            className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            {props.hrefLabel || 'Open Detail'}
+          </Link>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function BatchDetailScreen(props: BatchDetailScreenProps) {
   const params = useParams<{ id?: string | string[] }>()
   const routeId = Array.isArray(params?.id) ? params.id[0] : params?.id
@@ -180,6 +254,15 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
     error: inventoryError,
     refresh: refreshInventory
   } = useBatchInventorySummary(batch?.inventoryItemId ?? '')
+
+  const {
+    purchaseOrder,
+    grn,
+    isLoading: isSourceContextLoading,
+    error: sourceContextError,
+    refresh: refreshSourceContext,
+    hasSourceContext
+  } = useBatchSourceDocumentContext(batch?.purchaseOrderNo ?? '', batch?.goodsReceivedNoteNo ?? '')
 
   const inventoryData = (inventoryItem ?? null) as UnknownRecord | null
   const currentStatus = String(batch?.batchStatus ?? '').toLowerCase()
@@ -297,7 +380,7 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Linked Inventory Context</h2>
@@ -347,7 +430,71 @@ export function BatchDetailScreen(props: BatchDetailScreenProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Source Document Context</h2>
+            <p className="text-sm text-slate-500">
+              Quick traceability to the purchase order and goods received note that produced this batch.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void refreshSourceContext()}
+            disabled={isSourceContextLoading}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSourceContextLoading ? 'Refreshing source context...' : 'Refresh Source Context'}
+          </button>
+        </div>
+
+        {sourceContextError ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {sourceContextError}
+          </div>
+        ) : null}
+
+        {hasSourceContext ? (
+          <div className="grid gap-6 xl:grid-cols-2">
+            <SourceCard
+              title="Purchase Order Context"
+              description="Linked purchasing document for this batch receipt flow."
+              badge={purchaseOrder?.statusLabel || safeText(batch.purchaseOrderNo)}
+              badgeTone={poStatusTone(purchaseOrder?.status)}
+              primaryLabel="PO No"
+              primaryValue={safeText(purchaseOrder?.poNo || batch.purchaseOrderNo)}
+              secondaryLabel="Supplier"
+              secondaryValue={safeText(purchaseOrder?.supplierName || batch.supplierName)}
+              tertiaryLabel="Expected / Created"
+              tertiaryValue={`${formatDate(purchaseOrder?.expectedDate)} / ${formatDate(purchaseOrder?.createdAt)}`}
+              href={purchaseOrder?.id ? `/orders/purchase-orders/${purchaseOrder.id}` : undefined}
+              hrefLabel="Open Purchase Order Detail"
+            />
+
+            <SourceCard
+              title="GRN Context"
+              description="Linked goods received note that created or updated this batch."
+              badge={grn?.statusLabel || safeText(batch.goodsReceivedNoteNo)}
+              badgeTone={grnStatusTone(grn?.status)}
+              primaryLabel="GRN No"
+              primaryValue={safeText(grn?.grnNo || batch.goodsReceivedNoteNo)}
+              secondaryLabel="PO No"
+              secondaryValue={safeText(grn?.poNo || batch.purchaseOrderNo)}
+              tertiaryLabel="Received / Posted"
+              tertiaryValue={`${formatDate(grn?.receivedDate)} / ${formatDate(grn?.postedAt)}`}
+              href={grn?.id ? `/orders/goods-received-notes/${grn.id}` : undefined}
+              hrefLabel="Open GRN Detail"
+            />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
+            No linked purchase order or GRN context was found for this batch.
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Batch Status Actions</h2>
           <p className="text-sm text-slate-500">

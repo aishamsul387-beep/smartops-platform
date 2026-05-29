@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/api/client';
+﻿import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
 import { mapGRN, mapOrdersSummary, mapPurchaseOrder, mapQuotation } from './mapper';
 import type {
@@ -26,6 +26,10 @@ function buildListUrl(basePath: string, filters?: OrdersListFilters) {
 
   const queryString = query.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;
+}
+
+function normalizeText(value: unknown) {
+  return String(value ?? '').trim().toLowerCase();
 }
 
 export const ordersApi = {
@@ -57,6 +61,23 @@ export const ordersApi = {
     return mapPurchaseOrder(response.data);
   },
 
+  async findPurchaseOrderByNumber(poNo: string): Promise<PurchaseOrderDetailResponse | null> {
+    const normalizedPoNo = String(poNo ?? '').trim();
+    if (!normalizedPoNo) {
+      return null;
+    }
+
+    const items = await this.getPurchaseOrders({ search: normalizedPoNo });
+    const match =
+      items.find((item) => normalizeText(item.poNo) === normalizeText(normalizedPoNo)) || null;
+
+    if (!match?.id) {
+      return null;
+    }
+
+    return this.getPurchaseOrderDetail(match.id);
+  },
+
   async createPurchaseOrder(payload: CreatePurchaseOrderRequest): Promise<PurchaseOrder> {
     const response = await apiClient.post<any>(ENDPOINTS.orders.createPurchaseOrder, payload);
     return mapPurchaseOrder(response.data);
@@ -79,6 +100,23 @@ export const ordersApi = {
   async getGRNDetail(id: string): Promise<GRNDetailResponse> {
     const response = await apiClient.get<any>(ENDPOINTS.orders.goodsReceivedNoteDetail(id));
     return mapGRN(response.data);
+  },
+
+  async findGRNByNumber(grnNo: string): Promise<GRNDetailResponse | null> {
+    const normalizedGrnNo = String(grnNo ?? '').trim();
+    if (!normalizedGrnNo) {
+      return null;
+    }
+
+    const items = await this.getGoodsReceivedNotes({ search: normalizedGrnNo });
+    const match =
+      items.find((item) => normalizeText(item.grnNo) === normalizeText(normalizedGrnNo)) || null;
+
+    if (!match?.id) {
+      return null;
+    }
+
+    return this.getGRNDetail(match.id);
   },
 
   async createGRN(payload: CreateGRNRequest): Promise<GRN> {
