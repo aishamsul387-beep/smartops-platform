@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { useGRNDetail } from '../hooks/useGRNDetail';
 import { useGRNInventorySummary } from '../hooks/useGRNInventorySummary';
 
@@ -51,6 +52,56 @@ function DetailRow({
   );
 }
 
+function CopyReferenceCard({
+  label,
+  value,
+  copied,
+  onCopy
+}: {
+  label: string;
+  value: string | number | null | undefined;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  const displayValue = value === null || value === undefined || value === '' ? '-' : String(value);
+  const canCopy = displayValue !== '-';
+
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '20px'
+      }}
+    >
+      <div style={{ color: '#64748b', marginBottom: '8px', fontSize: '12px', fontWeight: 700 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: '20px', fontWeight: 700, wordBreak: 'break-word' }}>{displayValue}</div>
+
+      <div style={{ marginTop: '14px' }}>
+        <button
+          type="button"
+          onClick={onCopy}
+          disabled={!canCopy}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: '1px solid #cbd5e1',
+            background: canCopy ? '#ffffff' : '#f8fafc',
+            color: canCopy ? '#334155' : '#94a3b8',
+            cursor: canCopy ? 'pointer' : 'not-allowed',
+            fontWeight: 600
+          }}
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function getStatusStyle(status: string) {
   if (status === 'posted') {
     return {
@@ -67,6 +118,18 @@ function getStatusStyle(status: string) {
   };
 }
 
+function formatDate(value: string | null | undefined) {
+  const text = String(value ?? '').trim();
+  if (!text) return '-';
+
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) {
+    return text;
+  }
+
+  return parsed.toLocaleString();
+}
+
 export function GRNDetailScreen({ id }: { id: string }) {
   const { item, isLoading, error, refresh } = useGRNDetail(id);
   const {
@@ -74,6 +137,25 @@ export function GRNDetailScreen({ id }: { id: string }) {
     isLoading: isInventoryLoading,
     error: inventoryError
   } = useGRNInventorySummary(item?.inventoryItemId || '');
+
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  async function handleCopy(key: string, value: unknown) {
+    const text = String(value ?? '').trim();
+    if (!text || typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      window.setTimeout(() => {
+        setCopiedKey((current) => (current === key ? null : current));
+      }, 1500);
+    } catch {
+      // no-op
+    }
+  }
 
   if (isLoading) {
     return (
@@ -117,6 +199,11 @@ export function GRNDetailScreen({ id }: { id: string }) {
       </div>
     );
   }
+
+  const linkedBatchFallback =
+    item.status === 'draft'
+      ? 'Batch link will become available after this GRN is posted.'
+      : 'No linked batch is currently recorded for this GRN.';
 
   return (
     <div className="container">
@@ -203,6 +290,40 @@ export function GRNDetailScreen({ id }: { id: string }) {
           marginBottom: '24px'
         }}
       >
+        <CopyReferenceCard
+          label="GRN No"
+          value={item.grnNo}
+          copied={copiedKey === 'grnNo'}
+          onCopy={() => void handleCopy('grnNo', item.grnNo)}
+        />
+        <CopyReferenceCard
+          label="PO No"
+          value={item.poNo}
+          copied={copiedKey === 'poNo'}
+          onCopy={() => void handleCopy('poNo', item.poNo)}
+        />
+        <CopyReferenceCard
+          label="Linked Batch ID"
+          value={item.linkedBatchId}
+          copied={copiedKey === 'linkedBatchId'}
+          onCopy={() => void handleCopy('linkedBatchId', item.linkedBatchId)}
+        />
+        <CopyReferenceCard
+          label="Inventory Item ID"
+          value={item.inventoryItemId}
+          copied={copiedKey === 'inventoryItemId'}
+          onCopy={() => void handleCopy('inventoryItemId', item.inventoryItemId)}
+        />
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          marginBottom: '24px'
+        }}
+      >
         <DetailCard label="PO No" value={item.poNo} />
         <DetailCard label="PO Line ID" value={item.purchaseOrderLineId} />
         <DetailCard label="Inventory Item" value={item.inventoryItemId} />
@@ -243,13 +364,29 @@ export function GRNDetailScreen({ id }: { id: string }) {
           <DetailRow label="Received Lines" value={item.receivedLines} />
           <DetailRow label="Received Qty" value={item.receivedQty} />
           <DetailRow label="Linked Batch ID" value={item.linkedBatchId} />
+
           {item.linkedBatchId ? (
             <div style={{ marginTop: '12px' }}>
               <Link href={`/batches/${item.linkedBatchId}`} style={{ color: '#7c3aed', fontWeight: 600 }}>
                 Open linked batch detail
               </Link>
             </div>
-          ) : null}
+          ) : (
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                background: '#fff7ed',
+                color: '#9a3412',
+                border: '1px solid #fdba74',
+                fontSize: '13px'
+              }}
+            >
+              {linkedBatchFallback}
+            </div>
+          )}
+
           <div style={{ marginTop: '16px' }}>
             <span
               style={{
@@ -277,10 +414,10 @@ export function GRNDetailScreen({ id }: { id: string }) {
           <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>
             Date Tracking
           </div>
-          <DetailRow label="Manufacture Date" value={item.manufactureDate} />
-          <DetailRow label="Expiry Date" value={item.expiryDate} />
-          <DetailRow label="Received Date" value={item.receivedDate} />
-          <DetailRow label="Posted At" value={item.postedAt} />
+          <DetailRow label="Manufacture Date" value={formatDate(item.manufactureDate)} />
+          <DetailRow label="Expiry Date" value={formatDate(item.expiryDate)} />
+          <DetailRow label="Received Date" value={formatDate(item.receivedDate)} />
+          <DetailRow label="Posted At" value={formatDate(item.postedAt)} />
         </div>
 
         <div

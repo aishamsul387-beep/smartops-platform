@@ -44,6 +44,73 @@ function getSupplierSourceLabel(value: string) {
   return 'Unassigned';
 }
 
+function safeText(value: unknown) {
+  const text = String(value ?? '').trim();
+  return text || '-';
+}
+
+function formatDate(value: string | null | undefined) {
+  const text = String(value ?? '').trim();
+  if (!text) return '-';
+
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) {
+    return text;
+  }
+
+  return parsed.toLocaleString();
+}
+
+function CopyReferenceCard({
+  label,
+  value,
+  copied,
+  onCopy
+}: {
+  label: string;
+  value: string | number | null | undefined;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  const displayValue = value === null || value === undefined || value === '' ? '-' : String(value);
+  const canCopy = displayValue !== '-';
+
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '20px'
+      }}
+    >
+      <div style={{ color: '#64748b', marginBottom: '8px', fontSize: '12px', fontWeight: 700 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: '20px', fontWeight: 700, wordBreak: 'break-word' }}>{displayValue}</div>
+
+      <div style={{ marginTop: '14px' }}>
+        <button
+          type="button"
+          onClick={onCopy}
+          disabled={!canCopy}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: '1px solid #cbd5e1',
+            background: canCopy ? '#ffffff' : '#f8fafc',
+            color: canCopy ? '#334155' : '#94a3b8',
+            cursor: canCopy ? 'pointer' : 'not-allowed',
+            fontWeight: 600
+          }}
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function DetailRow({
   label,
   value
@@ -71,6 +138,7 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
   const { item, isLoading, error, refresh } = usePurchaseOrderDetail(id);
   const [isIssuing, setIsIssuing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const {
     itemsById: inventorySummaryById,
@@ -92,6 +160,23 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
       setActionError(err?.message || 'Failed to issue purchase order');
     } finally {
       setIsIssuing(false);
+    }
+  }
+
+  async function handleCopy(key: string, value: unknown) {
+    const text = String(value ?? '').trim();
+    if (!text || typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      window.setTimeout(() => {
+        setCopiedKey((current) => (current === key ? null : current));
+      }, 1500);
+    } catch {
+      // no-op
     }
   }
 
@@ -232,6 +317,40 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
         ) : null}
       </div>
 
+      <div
+        style={{
+          display: 'grid',
+          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          marginBottom: '24px'
+        }}
+      >
+        <CopyReferenceCard
+          label="PO No"
+          value={item.poNo}
+          copied={copiedKey === 'poNo'}
+          onCopy={() => void handleCopy('poNo', item.poNo)}
+        />
+        <CopyReferenceCard
+          label="Supplier"
+          value={item.supplierName}
+          copied={copiedKey === 'supplierName'}
+          onCopy={() => void handleCopy('supplierName', item.supplierName)}
+        />
+        <CopyReferenceCard
+          label="Expected Date"
+          value={formatDate(item.expectedDate)}
+          copied={copiedKey === 'expectedDate'}
+          onCopy={() => void handleCopy('expectedDate', item.expectedDate)}
+        />
+        <CopyReferenceCard
+          label="Created At"
+          value={formatDate(item.createdAt)}
+          copied={copiedKey === 'createdAt'}
+          onCopy={() => void handleCopy('createdAt', item.createdAt)}
+        />
+      </div>
+
       {item.planningContext ? (
         <div
           style={{
@@ -275,8 +394,8 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
           <DetailRow label="Supplier" value={item.supplierName} />
           <DetailRow label="Line Count" value={item.lines.length} />
           <DetailRow label="Total Amount" value={`${item.currency} ${Number(item.totalAmount).toFixed(2)}`} />
-          <DetailRow label="Expected Date" value={item.expectedDate} />
-          <DetailRow label="Created At" value={item.createdAt} />
+          <DetailRow label="Expected Date" value={formatDate(item.expectedDate)} />
+          <DetailRow label="Created At" value={formatDate(item.createdAt)} />
         </div>
 
         {item.planningContext ? (
@@ -416,56 +535,117 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
                   }}
                 >
                   <div style={{ fontWeight: 700, marginBottom: '8px' }}>
-                    Line {line.lineNo} Ã‚Â· {inventorySummary?.sku || line.itemCode || '-'} Ã‚Â· {inventorySummary?.name || line.itemName || '-'}
+                    Line {line.lineNo} â€¢ {inventorySummary?.sku || line.itemCode || '-'} â€¢ {inventorySummary?.name || line.itemName || '-'}
                   </div>
 
                   {!line.receiptHistory || line.receiptHistory.length === 0 ? (
                     <div style={{ color: '#64748b' }}>No receipt history yet.</div>
                   ) : (
                     <div style={{ display: 'grid', gap: '10px' }}>
-                      {line.receiptHistory.map((receipt) => (
-                        <div
-                          key={receipt.grnId}
-                          style={{
-                            padding: '12px',
-                            borderRadius: '10px',
-                            background: '#f8fafc',
-                            border: '1px solid #e2e8f0'
-                          }}
-                        >
+                      {line.receiptHistory.map((receipt) => {
+                        const batchLinkUnavailableReason =
+                          receipt.status === 'draft'
+                            ? 'Batch link will become available after this GRN is posted.'
+                            : 'No linked batch is recorded for this GRN.';
+
+                        return (
                           <div
+                            key={receipt.grnId}
                             style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '6px',
-                              fontWeight: 700,
-                              marginBottom: '6px'
+                              padding: '12px',
+                              borderRadius: '10px',
+                              background: '#f8fafc',
+                              border: '1px solid #e2e8f0'
                             }}
                           >
-                            <Link href={`/orders/goods-received-notes/${receipt.grnId}`} style={{ color: '#2563eb' }}>
-                              {receipt.grnNo}
-                            </Link>
-
-                            {receipt.linkedBatchId ? (
-                              <Link
-                                href={`/batches/${receipt.linkedBatchId}`}
-                                style={{ color: '#7c3aed', fontSize: '13px', fontWeight: 700 }}
-                              >
-                                Open Batch {receipt.linkedBatchId}
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '10px',
+                                alignItems: 'center',
+                                marginBottom: '8px'
+                              }}
+                            >
+                              <Link href={`/orders/goods-received-notes/${receipt.grnId}`} style={{ color: '#2563eb', fontWeight: 700 }}>
+                                {receipt.grnNo}
                               </Link>
+
+                              <button
+                                type="button"
+                                onClick={() => void handleCopy(`grn-${receipt.grnId}`, receipt.grnNo)}
+                                style={{
+                                  padding: '6px 10px',
+                                  borderRadius: '8px',
+                                  border: '1px solid #cbd5e1',
+                                  background: '#ffffff',
+                                  color: '#334155',
+                                  cursor: 'pointer',
+                                  fontWeight: 600,
+                                  fontSize: '12px'
+                                }}
+                              >
+                                {copiedKey === `grn-${receipt.grnId}` ? 'Copied GRN' : 'Copy GRN No'}
+                              </button>
+
+                              {receipt.linkedBatchId ? (
+                                <>
+                                  <Link
+                                    href={`/batches/${receipt.linkedBatchId}`}
+                                    style={{ color: '#7c3aed', fontSize: '13px', fontWeight: 700 }}
+                                  >
+                                    Open Batch {receipt.linkedBatchId}
+                                  </Link>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleCopy(`batch-${receipt.grnId}`, receipt.linkedBatchId)}
+                                    style={{
+                                      padding: '6px 10px',
+                                      borderRadius: '8px',
+                                      border: '1px solid #cbd5e1',
+                                      background: '#ffffff',
+                                      color: '#334155',
+                                      cursor: 'pointer',
+                                      fontWeight: 600,
+                                      fontSize: '12px'
+                                    }}
+                                  >
+                                    {copiedKey === `batch-${receipt.grnId}` ? 'Copied Batch' : 'Copy Batch ID'}
+                                  </button>
+                                </>
+                              ) : null}
+                            </div>
+
+                            <div style={{ color: '#475569', fontSize: '14px' }}>
+                              Received Qty: <strong>{receipt.receivedQty}</strong> â€¢
+                              Status: <strong>{receipt.status}</strong> â€¢
+                              Received Date: <strong>{formatDate(receipt.receivedDate)}</strong>
+                            </div>
+
+                            <div style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>
+                              Linked Batch: <strong>{receipt.linkedBatchId || '-'}</strong> â€¢
+                              Posted At: <strong>{formatDate(receipt.postedAt)}</strong>
+                            </div>
+
+                            {!receipt.linkedBatchId ? (
+                              <div
+                                style={{
+                                  marginTop: '8px',
+                                  padding: '10px 12px',
+                                  borderRadius: '8px',
+                                  background: '#fff7ed',
+                                  color: '#9a3412',
+                                  border: '1px solid #fdba74',
+                                  fontSize: '13px'
+                                }}
+                              >
+                                {batchLinkUnavailableReason}
+                              </div>
                             ) : null}
                           </div>
-                          <div style={{ color: '#475569', fontSize: '14px' }}>
-                            Received Qty: <strong>{receipt.receivedQty}</strong> Ã‚Â·
-                            Status: <strong>{receipt.status}</strong> Ã‚Â·
-                            Received Date: <strong>{receipt.receivedDate || '-'}</strong>
-                          </div>
-                          <div style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>
-                            Linked Batch: <strong>{receipt.linkedBatchId || '-'}</strong> Ã‚Â·
-                            Posted At: <strong>{receipt.postedAt}</strong>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
