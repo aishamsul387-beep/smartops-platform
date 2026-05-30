@@ -102,6 +102,11 @@ export const ordersApi = {
     return mapGRN(response.data);
   },
 
+  async postGRN(id: string): Promise<GRNDetailResponse> {
+    const response = await apiClient.patch<any>(ENDPOINTS.orders.postGoodsReceivedNote(id), {});
+    return mapGRN(response.data);
+  },
+
   async findGRNByNumber(grnNo: string): Promise<GRNDetailResponse | null> {
     const normalizedGrnNo = String(grnNo ?? '').trim();
     if (!normalizedGrnNo) {

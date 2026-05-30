@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { ordersApi } from '../api';
 import { useGRNDetail } from '../hooks/useGRNDetail';
 import { useGRNInventorySummary } from '../hooks/useGRNInventorySummary';
 
@@ -139,6 +140,8 @@ export function GRNDetailScreen({ id }: { id: string }) {
   } = useGRNInventorySummary(item?.inventoryItemId || '');
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function handleCopy(key: string, value: unknown) {
     const text = String(value ?? '').trim();
@@ -154,6 +157,23 @@ export function GRNDetailScreen({ id }: { id: string }) {
       }, 1500);
     } catch {
       // no-op
+    }
+  }
+
+  async function handlePost() {
+    if (!item) {
+      return;
+    }
+
+    try {
+      setIsPosting(true);
+      setActionError(null);
+      await ordersApi.postGRN(item.id);
+      await refresh();
+    } catch (err: any) {
+      setActionError(err?.message || 'Failed to post GRN');
+    } finally {
+      setIsPosting(false);
     }
   }
 
@@ -231,7 +251,7 @@ export function GRNDetailScreen({ id }: { id: string }) {
               {item.grnNo}
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              GRN now supports PO-line traceability, receipt context, and inventory identity visibility.
+              GRN now supports PO-line traceability, receipt context, inventory identity visibility.
             </div>
           </div>
 
@@ -263,6 +283,25 @@ export function GRNDetailScreen({ id }: { id: string }) {
               Open batches
             </Link>
 
+            {item.status === 'draft' ? (
+              <button
+                type="button"
+                onClick={() => void handlePost()}
+                disabled={isPosting}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: isPosting ? '#94a3b8' : '#0f172a',
+                  color: '#ffffff',
+                  cursor: isPosting ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {isPosting ? 'Posting GRN...' : 'Post GRN'}
+              </button>
+            ) : null}
+
             {item.linkedBatchId ? (
               <Link
                 href={`/batches/${item.linkedBatchId}`}
@@ -280,6 +319,21 @@ export function GRNDetailScreen({ id }: { id: string }) {
             ) : null}
           </div>
         </div>
+
+        {actionError ? (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#fef2f2',
+              color: '#b91c1c',
+              border: '1px solid #fecaca'
+            }}
+          >
+            {actionError}
+          </div>
+        ) : null}
       </div>
 
       <div

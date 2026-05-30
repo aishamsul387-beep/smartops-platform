@@ -1,4 +1,4 @@
-export const ENDPOINTS = {
+﻿export const ENDPOINTS = {
   auth: {
     login: '/auth/login',
     logout: '/auth/logout',
@@ -47,6 +47,7 @@ export const ENDPOINTS = {
     goodsReceivedNotes: '/orders/goods-received-notes',
     goodsReceivedNoteDetail: (id: string) => `/orders/goods-received-notes/${id}`,
     createGoodsReceivedNote: '/orders/goods-received-notes',
+    postGoodsReceivedNote: (id: string) => `/orders/goods-received-notes/${id}/post`,
     supplierInvoices: '/orders/supplier-invoices',
     supplierCreditNotes: '/orders/supplier-credit-notes',
     returns: '/orders/returns'
