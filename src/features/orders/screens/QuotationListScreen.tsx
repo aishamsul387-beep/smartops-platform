@@ -437,7 +437,7 @@ export function QuotationListScreen() {
                                 fontSize: '12px'
                               }}
                             >
-                              Create PO
+                              Create PO from Quote
                             </Link>
                           ) : null}
 
@@ -514,3 +514,4 @@ export function QuotationListScreen() {
     </div>
   );
 }
+

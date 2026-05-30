@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { ROUTES } from '@/lib/routes';
 import { ordersApi } from '../api';
@@ -138,6 +138,9 @@ function DetailRow({
 
 export function PurchaseOrderDetailScreen({ id }: { id: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const source = String(searchParams.get('source') ?? '').trim();
+  const quotationNoFromQuery = String(searchParams.get('quotationNo') ?? '').trim();
   const { item, isLoading, error, refresh } = usePurchaseOrderDetail(id);
   const [isIssuing, setIsIssuing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -324,6 +327,23 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
             }}
           >
             {actionError}
+          </div>
+        ) : null}
+
+        {source === 'quotation-handoff' && (item.quotationNo || quotationNoFromQuery) ? (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#ecfdf5',
+              color: '#065f46',
+              border: '1px solid #a7f3d0'
+            }}
+          >
+            Purchase order created from approved quotation{' '}
+            <strong>{item.quotationNo || quotationNoFromQuery}</strong>. Continue with issuing,
+            receiving, and traceability follow-up from this record.
           </div>
         ) : null}
       </div>
@@ -668,4 +688,5 @@ export function PurchaseOrderDetailScreen({ id }: { id: string }) {
     </div>
   );
 }
+
 

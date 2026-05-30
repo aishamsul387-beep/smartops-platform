@@ -216,7 +216,12 @@ export function PurchaseOrderCreateScreen() {
         mapPurchaseOrderFormToCreateRequest(values, inventoryItems)
       );
 
-      router.replace(`/orders/purchase-orders/${created.id}`);
+      const nextQuery =
+        sourceFromQuery === 'quotation-list' && values.quotationNo.trim()
+          ? `?source=quotation-handoff&quotationNo=${encodeURIComponent(values.quotationNo.trim())}`
+          : '';
+
+      router.replace(`/orders/purchase-orders/${created.id}${nextQuery}`);
       router.refresh();
     } catch {
       // hook error shown on screen
@@ -666,3 +671,4 @@ export function PurchaseOrderCreateScreen() {
     </div>
   );
 }
+
