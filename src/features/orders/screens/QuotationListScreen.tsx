@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ROUTES } from '@/lib/routes';
-import { ordersApi } from '../api';
 import { useQuotations } from '../hooks/useQuotations';
 import type { Quotation } from '../types';
 
@@ -129,6 +128,17 @@ function getQuotationNextStep(item: Quotation) {
     detail: 'Draft quotation is still internal and should be reviewed before supplier outreach.',
     tone: { background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }
   };
+}
+
+function buildCreatePoHref(item: Quotation) {
+  const params = new URLSearchParams({
+    quotationNo: item.quotationNo,
+    supplierName: item.supplierName,
+    currency: item.currency,
+    source: 'quotation-list'
+  });
+
+  return `${ROUTES.purchaseOrdersCreate}?${params.toString()}`;
 }
 
 export function QuotationListScreen() {
@@ -417,7 +427,7 @@ export function QuotationListScreen() {
 
                           {item.status === 'approved' ? (
                             <Link
-                              href={ROUTES.purchaseOrdersCreate}
+                              href={buildCreatePoHref(item)}
                               style={{
                                 padding: '6px 10px',
                                 borderRadius: '8px',

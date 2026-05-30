@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { inventoryApi } from '@/features/inventory/api';
 import type { InventoryItem } from '@/features/inventory/types';
@@ -60,7 +60,13 @@ function sortInventoryItems(items: InventoryItem[]) {
 
 export function PurchaseOrderCreateScreen() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { createPurchaseOrder, isSubmitting, error } = useCreatePurchaseOrder();
+
+  const quotationNoFromQuery = String(searchParams.get('quotationNo') ?? '').trim();
+  const supplierNameFromQuery = String(searchParams.get('supplierName') ?? '').trim();
+  const currencyFromQuery = String(searchParams.get('currency') ?? '').trim();
+  const sourceFromQuery = String(searchParams.get('source') ?? '').trim();
 
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [isInventoryLoading, setIsInventoryLoading] = useState(true);
@@ -91,6 +97,19 @@ export function PurchaseOrderCreateScreen() {
   useEffect(() => {
     void loadInventoryItems();
   }, [loadInventoryItems]);
+
+  useEffect(() => {
+    if (!quotationNoFromQuery && !supplierNameFromQuery && !currencyFromQuery) {
+      return;
+    }
+
+    setValues((current) => ({
+      ...current,
+      quotationNo: current.quotationNo.trim() || quotationNoFromQuery || current.quotationNo,
+      supplierName: current.supplierName.trim() || supplierNameFromQuery || current.supplierName,
+      currency: current.currency.trim() || currencyFromQuery || current.currency
+    }));
+  }, [quotationNoFromQuery, supplierNameFromQuery, currencyFromQuery]);
 
   const totals = useMemo(() => calculatePurchaseOrderTotals(values), [values]);
 
@@ -223,6 +242,23 @@ export function PurchaseOrderCreateScreen() {
           Manual PO creation now supports line items with separate product name, SKU, barcode, qty,
           unit cost, and auto-calculated totals.
         </div>
+
+        {quotationNoFromQuery || supplierNameFromQuery || currencyFromQuery ? (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#eff6ff',
+              color: '#1d4ed8',
+              border: '1px solid #bfdbfe'
+            }}
+          >
+            {sourceFromQuery === 'quotation-list'
+              ? 'This purchase order form was opened from an approved quotation. Supplier, quotation number, and currency have been prefilled when available.'
+              : 'Quotation context was detected and prefilled where available.'}
+          </div>
+        ) : null}
       </div>
 
       <form
