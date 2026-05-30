@@ -334,6 +334,117 @@ export function GRNDetailScreen({ id }: { id: string }) {
             {actionError}
           </div>
         ) : null}
+
+        {item.status === 'posted' ? (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '14px',
+              borderRadius: '12px',
+              background: '#ecfdf5',
+              color: '#065f46',
+              border: '1px solid #a7f3d0'
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: '6px' }}>
+              GRN posting complete
+            </div>
+            <div style={{ lineHeight: 1.6, marginBottom: '12px' }}>
+              This GRN is now posted. Continue to the linked batch, return to receiving review, or move back into purchase order follow-up.
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {item.linkedBatchId ? (
+                <Link
+                  href={`/batches/${item.linkedBatchId}`}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    fontWeight: 600
+                  }}
+                >
+                  Open linked batch
+                </Link>
+              ) : (
+                <span
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    border: '1px dashed #6ee7b7',
+                    background: '#ffffff',
+                    color: '#047857',
+                    fontWeight: 600
+                  }}
+                >
+                  Linked batch unavailable
+                </span>
+              )}
+
+              <Link
+                href="/orders/goods-received-notes"
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid #a7f3d0',
+                  background: '#ffffff',
+                  color: '#065f46',
+                  fontWeight: 600
+                }}
+              >
+                Back to GRN list
+              </Link>
+
+              <Link
+                href="/orders/purchase-orders"
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid #a7f3d0',
+                  background: '#ffffff',
+                  color: '#065f46',
+                  fontWeight: 600
+                }}
+              >
+                Open Purchase Orders
+              </Link>
+
+              <Link
+                href="/batches"
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid #a7f3d0',
+                  background: '#ffffff',
+                  color: '#065f46',
+                  fontWeight: 600
+                }}
+              >
+                Open Batch Control
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '14px',
+              borderRadius: '12px',
+              background: '#eff6ff',
+              color: '#1d4ed8',
+              border: '1px solid #bfdbfe'
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: '6px' }}>
+              Draft GRN next step
+            </div>
+            <div style={{ lineHeight: 1.6 }}>
+              Post this GRN to complete receiving, create/link the batch, and unlock direct batch drill-down from this screen and related PO receipt history.
+            </div>
+          </div>
+        )}
       </div>
 
       <div
@@ -564,3 +675,4 @@ export function GRNDetailScreen({ id }: { id: string }) {
     </div>
   );
 }
+
