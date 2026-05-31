@@ -1,4 +1,4 @@
-﻿import { apiClient } from '@/services/api/client';
+import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
 import { mapGRN, mapOrdersSummary, mapPurchaseOrder, mapQuotation } from './mapper';
 import type {
@@ -26,10 +26,6 @@ function buildListUrl(basePath: string, filters?: OrdersListFilters) {
 
   const queryString = query.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;
-}
-
-function normalizeText(value: unknown) {
-  return String(value ?? '').trim().toLowerCase();
 }
 
 export const ordersApi = {
@@ -61,21 +57,13 @@ export const ordersApi = {
     return mapPurchaseOrder(response.data);
   },
 
-  async findPurchaseOrderByNumber(poNo: string): Promise<PurchaseOrderDetailResponse | null> {
-    const normalizedPoNo = String(poNo ?? '').trim();
-    if (!normalizedPoNo) {
-      return null;
-    }
+  async findPurchaseOrderByNumber(poNo: string): Promise<PurchaseOrder | null> {
+    const items = await this.getPurchaseOrders({
+      search: poNo,
+      status: 'all'
+    });
 
-    const items = await this.getPurchaseOrders({ search: normalizedPoNo });
-    const match =
-      items.find((item) => normalizeText(item.poNo) === normalizeText(normalizedPoNo)) || null;
-
-    if (!match?.id) {
-      return null;
-    }
-
-    return this.getPurchaseOrderDetail(match.id);
+    return items.find((item) => item.poNo === poNo) || null;
   },
 
   async createPurchaseOrder(payload: CreatePurchaseOrderRequest): Promise<PurchaseOrder> {
@@ -102,30 +90,29 @@ export const ordersApi = {
     return mapGRN(response.data);
   },
 
-  async postGRN(id: string): Promise<GRNDetailResponse> {
-    const response = await apiClient.patch<any>(ENDPOINTS.orders.postGoodsReceivedNote(id), {});
-    return mapGRN(response.data);
-  },
+  async findGRNByNumber(grnNo: string): Promise<GRN | null> {
+    const items = await this.getGoodsReceivedNotes({
+      search: grnNo,
+      status: 'all'
+    });
 
-  async findGRNByNumber(grnNo: string): Promise<GRNDetailResponse | null> {
-    const normalizedGrnNo = String(grnNo ?? '').trim();
-    if (!normalizedGrnNo) {
-      return null;
-    }
-
-    const items = await this.getGoodsReceivedNotes({ search: normalizedGrnNo });
-    const match =
-      items.find((item) => normalizeText(item.grnNo) === normalizeText(normalizedGrnNo)) || null;
-
-    if (!match?.id) {
-      return null;
-    }
-
-    return this.getGRNDetail(match.id);
+    return items.find((item) => item.grnNo === grnNo) || null;
   },
 
   async createGRN(payload: CreateGRNRequest): Promise<GRN> {
     const response = await apiClient.post<any>(ENDPOINTS.orders.createGoodsReceivedNote, payload);
     return mapGRN(response.data);
+  },
+
+  async postGRN(id: string): Promise<GRN> {
+    const current = await this.getGRNDetail(id);
+
+    if (current.status === 'posted') {
+      return current;
+    }
+
+    throw new Error(
+      'Post GRN action is not enabled in the current backend flow. Create GRN using status "posted" instead.'
+    );
   }
 };
