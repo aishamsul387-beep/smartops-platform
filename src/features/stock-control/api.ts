@@ -6,6 +6,8 @@ import type {
   ReorderSuggestion,
   StockControlAlert,
   StockControlSummary,
+  StockIssuePreviewResult,
+  StockIssueResult,
   StockMovementRecord
 } from './types';
 
@@ -48,21 +50,48 @@ export const stockControlApi = {
   },
 
   async getStockMovements(): Promise<StockMovementRecord[]> {
-    const response = await apiClient.get<StockMovementRecord[]>('/stock-control/movements');
+    const response = await apiClient.get<StockMovementRecord[]>(ENDPOINTS.stockControl.movements);
     return response.data || [];
   },
 
   async getInventoryStockMovements(inventoryItemId: string): Promise<StockMovementRecord[]> {
     const response = await apiClient.get<StockMovementRecord[]>(
-      `/stock-control/movements/inventory/${inventoryItemId}`
+      ENDPOINTS.stockControl.movementsByInventory(inventoryItemId)
     );
     return response.data || [];
   },
 
   async getBatchStockMovements(batchId: string): Promise<StockMovementRecord[]> {
     const response = await apiClient.get<StockMovementRecord[]>(
-      `/stock-control/movements/batch/${batchId}`
+      ENDPOINTS.stockControl.movementsByBatch(batchId)
     );
     return response.data || [];
+  },
+
+  async getIssuePreview(
+    inventoryItemId: string,
+    requestedQty: number
+  ): Promise<StockIssuePreviewResult> {
+    const query = new URLSearchParams({
+      inventoryItemId,
+      requestedQty: String(requestedQty)
+    }).toString();
+
+    const response = await apiClient.get<StockIssuePreviewResult>(
+      `${ENDPOINTS.stockControl.issuePreview}?${query}`
+    );
+    return response.data;
+  },
+
+  async createIssue(payload: {
+    inventoryItemId: string;
+    requestedQty: number;
+    reason: string;
+  }): Promise<StockIssueResult> {
+    const response = await apiClient.post<StockIssueResult>(
+      ENDPOINTS.stockControl.createIssue,
+      payload
+    );
+    return response.data;
   }
 };

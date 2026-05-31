@@ -11,8 +11,8 @@ export type DemandTrend = 'rising' | 'stable' | 'falling';
 export type ProcurementAction = 'order_now' | 'order_this_week' | 'monitor';
 export type ProcurementQueueStatus = 'immediate' | 'this_week' | 'monitor';
 export type SupplierSource = 'inventory_master' | 'batch_history' | 'unassigned';
-export type StockMovementType = 'receipt';
-export type StockMovementReferenceType = 'grn' | 'po' | 'batch';
+export type StockMovementType = 'receipt' | 'status_change' | 'issue';
+export type StockMovementReferenceType = 'grn' | 'po' | 'batch' | 'issue';
 
 export interface StockControlSummary {
   totalItems: number;
@@ -151,6 +151,8 @@ export interface StockMovementRecord {
   unitCost: number;
   currency: string;
   batchStatus: string;
+  previousStatus?: string;
+  nextStatus?: string;
   purchaseOrderNo: string;
   goodsReceivedNoteNo: string;
   referenceType: StockMovementReferenceType;
@@ -165,4 +167,44 @@ export interface StockMovementRecord {
   receivedDate: string | null;
   occurredAt: string;
   notes: string;
+}
+
+export interface StockIssueAllocationRecord {
+  batchId: string;
+  batchNumber: string;
+  inventoryItemId: string;
+  availableQtyBefore: number;
+  issuedQty: number;
+  availableQtyAfter: number;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  unitCost: number;
+  currency: string;
+}
+
+export interface StockIssuePreviewResult {
+  requestedQty: number;
+  totalAvailableQty: number;
+  allocatedQty: number;
+  remainingUnallocatedQty: number;
+  allocations: StockIssueAllocationRecord[];
+}
+
+export interface StockIssueResult {
+  issue: {
+    id: string;
+    issueNo: string;
+    inventoryItemId: string;
+    requestedQty: number;
+    issuedQty: number;
+    reason: string;
+    issueDate: string;
+    allocations: StockIssueAllocationRecord[];
+  };
+  preview: StockIssuePreviewResult;
 }

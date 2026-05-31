@@ -1,4 +1,4 @@
-﻿export const ENDPOINTS = {
+export const ENDPOINTS = {
   auth: {
     login: '/auth/login',
     logout: '/auth/logout',
@@ -26,7 +26,13 @@
     reorderSuggestions: '/stock-control/reorder-suggestions',
     procurementActions: '/stock-control/procurement-actions',
     createDraftPurchaseOrderFromSuggestion: (inventoryItemId: string) =>
-      `/stock-control/reorder-suggestions/${inventoryItemId}/create-po-draft`
+      `/stock-control/reorder-suggestions/${inventoryItemId}/create-po-draft`,
+    movements: '/stock-control/movements',
+    movementsByInventory: (inventoryItemId: string) =>
+      `/stock-control/movements/inventory/${inventoryItemId}`,
+    movementsByBatch: (batchId: string) => `/stock-control/movements/batch/${batchId}`,
+    issuePreview: '/stock-control/issue-preview',
+    createIssue: '/stock-control/issues'
   },
   warehouse: {
     summary: '/warehouse/summary',
@@ -47,7 +53,6 @@
     goodsReceivedNotes: '/orders/goods-received-notes',
     goodsReceivedNoteDetail: (id: string) => `/orders/goods-received-notes/${id}`,
     createGoodsReceivedNote: '/orders/goods-received-notes',
-    postGoodsReceivedNote: (id: string) => `/orders/goods-received-notes/${id}/post`,
     supplierInvoices: '/orders/supplier-invoices',
     supplierCreditNotes: '/orders/supplier-credit-notes',
     returns: '/orders/returns'
