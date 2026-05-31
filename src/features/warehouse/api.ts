@@ -4,6 +4,7 @@ import { mapWarehouseLocation, mapWarehouseLocationListResponse } from './mapper
 import type {
   CreateWarehouseLocationRequest,
   UpdateWarehouseLocationRequest,
+  WarehouseLocationImportResult,
   WarehouseLocationListFilters
 } from './types';
 
@@ -56,5 +57,17 @@ export const warehouseApi = {
       isActive
     });
     return mapWarehouseLocation(response.data);
+  },
+
+  async importLocationsCsv(csvText: string): Promise<WarehouseLocationImportResult> {
+    const response = await apiClient.post<any>(ENDPOINTS.warehouse.importCsv, {
+      csvText
+    });
+    return response.data;
+  },
+
+  async exportLocationsCsv(): Promise<string> {
+    const response = await apiClient.get<any>(ENDPOINTS.warehouse.exportCsv);
+    return typeof response.data === 'string' ? response.data : String(response.data ?? '');
   }
 };

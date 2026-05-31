@@ -26,6 +26,16 @@ export interface WarehouseLocationListResponse {
   total: number;
 }
 
+export interface WarehouseLocationImportResult {
+  inserted: number;
+  updated: number;
+  skipped: number;
+  errors: Array<{
+    rowNumber: number;
+    message: string;
+  }>;
+}
+
 export interface WarehouseLocationListFilters {
   search?: string;
   status?: 'all' | WarehouseLocationStatus;

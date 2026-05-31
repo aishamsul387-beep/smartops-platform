@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { PageHeaderCard, PageSectionCard, PageStatCard, PageStatsGrid } from '@/components/layout/PageShell';
 import { useCreateWarehouseLocation } from '../hooks/useCreateWarehouseLocation';
 import { useToggleWarehouseLocationActive } from '../hooks/useToggleWarehouseLocationActive';
@@ -10,7 +10,13 @@ import {
   mapWarehouseLocationFormToCreateRequest,
   validateWarehouseLocationForm
 } from '../schema';
-import type { WarehouseLocationFormErrors, WarehouseLocationFormValues, WarehouseLocationRecord } from '../types';
+import { warehouseApi } from '../api';
+import type {
+  WarehouseLocationFormErrors,
+  WarehouseLocationFormValues,
+  WarehouseLocationImportResult,
+  WarehouseLocationRecord
+} from '../types';
 
 function getStatusStyle(status: string) {
   if (status === 'empty') {
@@ -36,6 +42,132 @@ function getStatusStyle(status: string) {
   };
 }
 
+function csvEscape(value: unknown) {
+  const text = String(value ?? '');
+  if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+function downloadTextFile(content: string, fileName: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function buildWarehouseLocationTemplateCsv() {
+  const header = [
+    'warehouseCode',
+    'warehouseName',
+    'locationCode',
+    'zone',
+    'aisle',
+    'levelCode',
+    'bin',
+    'locationType',
+    'status',
+    'palletCapacity',
+    'usedPalletCapacity',
+    'cubicCapacityM3',
+    'usedCubicCapacityM3',
+    'isActive',
+    'notes'
+  ];
+
+  const sampleRows = [
+    [
+      'WH-001',
+      'Main Warehouse',
+      'A-01-01-01',
+      'A',
+      '01',
+      '01',
+      '01',
+      'rack',
+      'empty',
+      '4',
+      '0',
+      '12',
+      '0',
+      'true',
+      'Sample rack location'
+    ],
+    [
+      'WH-002',
+      'Overflow Warehouse',
+      'B-02-04-02',
+      'B',
+      '02',
+      '04',
+      '02',
+      'bulk',
+      'occupied',
+      '6',
+      '2',
+      '18',
+      '6',
+      'true',
+      'Sample bulk location'
+    ]
+  ];
+
+  return [
+    header.join(','),
+    ...sampleRows.map((row) => row.map(csvEscape).join(','))
+  ].join('\n');
+}
+
+function buildWarehouseLocationExportCsv(items: WarehouseLocationRecord[]) {
+  const header = [
+    'warehouseCode',
+    'warehouseName',
+    'locationCode',
+    'zone',
+    'aisle',
+    'levelCode',
+    'bin',
+    'locationType',
+    'status',
+    'palletCapacity',
+    'usedPalletCapacity',
+    'cubicCapacityM3',
+    'usedCubicCapacityM3',
+    'isActive',
+    'notes'
+  ];
+
+  const rows = items.map((item) =>
+    [
+      item.warehouseCode,
+      item.warehouseName,
+      item.locationCode,
+      item.zone,
+      item.aisle,
+      item.levelCode,
+      item.bin,
+      item.locationType,
+      item.status,
+      item.palletCapacity,
+      item.usedPalletCapacity,
+      item.cubicCapacityM3,
+      item.usedCubicCapacityM3,
+      item.isActive,
+      item.notes
+    ]
+      .map(csvEscape)
+      .join(',')
+  );
+
+  return [header.join(','), ...rows].join('\n');
+}
+
 export function WarehouseLocationMasterScreen() {
   const {
     items,
@@ -55,6 +187,17 @@ export function WarehouseLocationMasterScreen() {
 
   const [values, setValues] = useState<WarehouseLocationFormValues>(initialWarehouseLocationFormValues);
   const [errors, setErrors] = useState<WarehouseLocationFormErrors>({});
+
+  const [csvText, setCsvText] = useState('');
+  const [pendingCsvText, setPendingCsvText] = useState('');
+  const [selectedCsvFileName, setSelectedCsvFileName] = useState<string | null>(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
+
+  const [importResult, setImportResult] = useState<WarehouseLocationImportResult | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
 
   const summary = useMemo(() => {
     const activeItems = items.filter((item) => item.isActive).length;
@@ -113,29 +256,270 @@ export function WarehouseLocationMasterScreen() {
     }
   }
 
+  function handleCsvFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setSelectedCsvFileName(null);
+      setPendingCsvText('');
+      return;
+    }
+
+    setSelectedCsvFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPendingCsvText(String(reader.result ?? ''));
+    };
+    reader.readAsText(file);
+  }
+
+  function handleConfirmAttachedFile() {
+    setCsvText(pendingCsvText);
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  function handleRemoveAttachedFile() {
+    setSelectedCsvFileName(null);
+    setPendingCsvText('');
+    setCsvText('');
+    setFileInputKey((current) => current + 1);
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  async function handleImportCsv() {
+    try {
+      setIsImporting(true);
+      setImportError(null);
+      const result = await warehouseApi.importLocationsCsv(csvText);
+      setImportResult(result);
+      await refresh();
+    } catch (err: any) {
+      setImportResult(null);
+      setImportError(err?.message || 'Failed to import CSV');
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  async function handleExportCsv() {
+    try {
+      setIsExporting(true);
+      const csv = buildWarehouseLocationExportCsv(items);
+      downloadTextFile(csv, 'warehouse-locations.csv', 'text/csv;charset=utf-8;');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  async function handleDownloadTemplate() {
+    try {
+      setIsDownloadingTemplate(true);
+      const csv = buildWarehouseLocationTemplateCsv();
+      downloadTextFile(csv, 'warehouse-locations-template.csv', 'text/csv;charset=utf-8;');
+    } finally {
+      setIsDownloadingTemplate(false);
+    }
+  }
+
   return (
     <div className="container">
       <PageHeaderCard
         title="Warehouse Location Master"
         description="Master location setup for storage, inventory control, receiving, and future capacity analytics."
         actions={
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            style={{
-              padding: '10px 14px',
-              borderRadius: '10px',
-              border: 'none',
-              background: '#0f172a',
-              color: '#ffffff',
-              cursor: 'pointer',
-              fontWeight: 600
-            }}
-          >
-            Refresh
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Refresh
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleDownloadTemplate()}
+              disabled={isDownloadingTemplate}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                cursor: isDownloadingTemplate ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isDownloadingTemplate ? 'Preparing...' : 'Download CSV Template'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleExportCsv()}
+              disabled={isExporting}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isExporting ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                cursor: isExporting ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isExporting ? 'Exporting...' : 'Export CSV'}
+            </button>
+          </>
         }
       />
+
+      <PageSectionCard
+        title="Import Warehouse Locations CSV"
+        description="Upload or paste CSV content to create/update location master records in bulk."
+      >
+        <div style={{ display: 'grid', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Upload CSV File
+            </label>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                key={fileInputKey}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleCsvFileChange}
+              />
+
+              <button
+                type="button"
+                onClick={handleConfirmAttachedFile}
+                disabled={!pendingCsvText.trim()}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: !pendingCsvText.trim() ? '#94a3b8' : '#0f172a',
+                  color: '#ffffff',
+                  cursor: !pendingCsvText.trim() ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Confirm Attached File
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRemoveAttachedFile}
+                disabled={!selectedCsvFileName}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: !selectedCsvFileName ? '#94a3b8' : '#334155',
+                  cursor: !selectedCsvFileName ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Remove File
+              </button>
+            </div>
+
+            {selectedCsvFileName ? (
+              <div style={{ marginTop: '8px', color: '#475569', fontSize: '14px' }}>
+                Attached file: <strong>{selectedCsvFileName}</strong>
+              </div>
+            ) : null}
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              CSV Content
+            </label>
+            <textarea
+              value={csvText}
+              onChange={(e) => setCsvText(e.target.value)}
+              rows={8}
+              placeholder="warehouseCode,warehouseName,locationCode,zone,aisle,levelCode,bin,locationType,status,palletCapacity,usedPalletCapacity,cubicCapacityM3,usedCubicCapacityM3,isActive,notes"
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => void handleImportCsv()}
+              disabled={isImporting || !csvText.trim()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isImporting || !csvText.trim() ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                cursor: isImporting || !csvText.trim() ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isImporting ? 'Importing...' : 'Import CSV'}
+            </button>
+          </div>
+
+          {importError ? (
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {importError}
+            </div>
+          ) : null}
+
+          {importResult ? (
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                color: '#334155'
+              }}
+            >
+              <div><strong>Inserted:</strong> {importResult.inserted}</div>
+              <div><strong>Updated:</strong> {importResult.updated}</div>
+              <div><strong>Skipped:</strong> {importResult.skipped}</div>
+              {importResult.errors.length > 0 ? (
+                <div style={{ marginTop: '8px', color: '#b91c1c' }}>
+                  {importResult.errors.map((error, index) => (
+                    <div key={index}>
+                      Row {error.rowNumber}: {error.message}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </PageSectionCard>
 
       <PageSectionCard title="Create Warehouse Location">
         <form onSubmit={handleSubmit}>

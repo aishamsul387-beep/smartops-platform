@@ -40,7 +40,9 @@ export const ENDPOINTS = {
     locationDetail: (id: string) => `/warehouse/locations/${id}`,
     createLocation: '/warehouse/locations',
     updateLocation: (id: string) => `/warehouse/locations/${id}`,
-    toggleLocationActive: (id: string) => `/warehouse/locations/${id}/active`
+    toggleLocationActive: (id: string) => `/warehouse/locations/${id}/active`,
+    importCsv: '/warehouse/locations/import-csv',
+    exportCsv: '/warehouse/locations/export-csv'
   },
   tasks: {
     list: '/tasks',
