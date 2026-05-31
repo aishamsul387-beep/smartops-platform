@@ -2,6 +2,17 @@ import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
 import type { BatchRecord } from './types';
 
+export interface BatchStatusHistoryRecord {
+  id: string;
+  batchId: string;
+  inventoryItemId: string;
+  batchNumber: string;
+  previousStatus: string;
+  nextStatus: string;
+  notes: string;
+  changedAt: string;
+}
+
 export const batchesApi = {
   async getBatchList(filters: any) {
     const query = new URLSearchParams();
@@ -24,6 +35,11 @@ export const batchesApi = {
   async getBatchById(id: string): Promise<BatchRecord> {
     const response = await apiClient.get<any>(ENDPOINTS.batches.detail(id));
     return response.data;
+  },
+
+  async getBatchStatusHistory(id: string): Promise<BatchStatusHistoryRecord[]> {
+    const response = await apiClient.get<any>(`/batches/${id}/status-history`);
+    return response.data || [];
   },
 
   async createBatch(payload: any) {

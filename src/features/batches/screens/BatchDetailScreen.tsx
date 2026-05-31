@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { batchesApi } from '../api';
+import { useEffect, useState } from 'react';
+import { batchesApi, type BatchStatusHistoryRecord } from '../api';
 import { useBatchDetail } from '../hooks/useBatchDetail';
 import { useBatchInventorySummary } from '../hooks/useBatchInventorySummary';
 
@@ -114,6 +114,29 @@ export function BatchDetailScreen({ id }: { id: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [statusHistory, setStatusHistory] = useState<BatchStatusHistoryRecord[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadHistory() {
+      if (!item?.id) {
+        setStatusHistory([]);
+        return;
+      }
+
+      try {
+        setIsHistoryLoading(true);
+        const rows = await batchesApi.getBatchStatusHistory(item.id);
+        setStatusHistory(rows);
+      } catch {
+        setStatusHistory([]);
+      } finally {
+        setIsHistoryLoading(false);
+      }
+    }
+
+    void loadHistory();
+  }, [item?.id]);
 
   async function handleStatusUpdate() {
     if (!item) {
@@ -133,8 +156,14 @@ export function BatchDetailScreen({ id }: { id: string }) {
       setItem(updated);
       setStatusNotes('');
       setActionSuccess(`Batch status updated to ${updated.batchStatus}`);
+
+      setIsHistoryLoading(true);
+      const rows = await batchesApi.getBatchStatusHistory(item.id);
+      setStatusHistory(rows);
+      setIsHistoryLoading(false);
     } catch (err: any) {
       setActionError(err?.message || 'Failed to update batch status');
+      setIsHistoryLoading(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -402,6 +431,50 @@ export function BatchDetailScreen({ id }: { id: string }) {
 
       <div
         style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>
+          Batch Status History
+        </div>
+
+        {isHistoryLoading ? (
+          <div style={{ color: '#64748b' }}>Loading status history...</div>
+        ) : statusHistory.length === 0 ? (
+          <div style={{ color: '#64748b' }}>No status history found.</div>
+        ) : (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {statusHistory.map((row) => (
+              <div
+                key={row.id}
+                style={{
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  background: '#f8fafc'
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: '6px' }}>
+                  {row.previousStatus} â†’ {row.nextStatus}
+                </div>
+                <div style={{ color: '#475569', fontSize: '14px' }}>
+                  Changed At: <strong>{row.changedAt}</strong>
+                </div>
+                <div style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                  Notes: <strong>{row.notes || '-'}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div
+        style={{
           display: 'grid',
           gap: '24px',
           gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
@@ -457,74 +530,6 @@ export function BatchDetailScreen({ id }: { id: string }) {
           <DetailRow label="Supplier Lot Number" value={item.supplierLotNumber || '-'} />
           <DetailRow label="Lot Number" value={item.lotNumber || '-'} />
           <DetailRow label="Notes" value={item.notes || '-'} />
-        </div>
-
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            padding: '24px'
-          }}
-        >
-          <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>
-            Quantity Breakdown
-          </div>
-          <DetailRow label="Received Qty" value={item.receivedQty} />
-          <DetailRow label="Available Qty" value={item.availableQty} />
-          <DetailRow label="Reserved Qty" value={item.reservedQty} />
-          <DetailRow label="Blocked Qty" value={item.blockedQty} />
-          <DetailRow label="QA Hold Qty" value={item.qaHoldQty} />
-          <DetailRow label="Unit Cost" value={`${item.currency} ${Number(item.unitCost).toFixed(2)}`} />
-        </div>
-
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            padding: '24px'
-          }}
-        >
-          <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>
-            Date Tracking
-          </div>
-          <DetailRow label="Manufacture Date" value={item.manufactureDate} />
-          <DetailRow label="Expiry Date" value={item.expiryDate} />
-          <DetailRow label="Received Date" value={item.receivedDate} />
-          <DetailRow label="Currency" value={item.currency} />
-        </div>
-
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            padding: '24px'
-          }}
-        >
-          <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '16px' }}>
-            Storage Location
-          </div>
-          <DetailRow label="Warehouse Location" value={item.warehouseLocation} />
-          <DetailRow label="Zone" value={item.zone} />
-          <DetailRow label="Aisle" value={item.aisle} />
-          <DetailRow label="Level" value={item.levelCode} />
-          <DetailRow label="Bin" value={item.bin} />
-          <div style={{ marginTop: '16px' }}>
-            <span
-              style={{
-                display: 'inline-block',
-                padding: '6px 10px',
-                borderRadius: '999px',
-                fontSize: '12px',
-                fontWeight: 700,
-                ...getBatchStatusStyle(item.batchStatus)
-              }}
-            >
-              {item.batchStatus}
-            </span>
-          </div>
         </div>
       </div>
     </div>
