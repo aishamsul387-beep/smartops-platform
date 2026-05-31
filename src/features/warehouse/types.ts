@@ -1,43 +1,76 @@
-export type WarehouseLocationStatus = 'available' | 'limited' | 'full';
+export type WarehouseLocationStatus = 'empty' | 'occupied' | 'blocked';
+export type WarehouseLocationType = 'rack' | 'floor' | 'bulk' | 'staging' | 'quarantine';
 
-export interface WarehouseLocationDto {
+export interface WarehouseLocationRecord {
   id: string;
-  code: string;
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
   zone: string;
   aisle: string;
+  levelCode: string;
   bin: string;
-  capacity: number;
-  occupied: number;
-  itemCount: number;
+  locationType: WarehouseLocationType;
   status: WarehouseLocationStatus;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
   updatedAt: string;
 }
 
-export interface WarehouseLocation {
-  id: string;
-  code: string;
-  zone: string;
-  aisle: string;
-  bin: string;
-  capacity: number;
-  occupied: number;
-  itemCount: number;
-  status: WarehouseLocationStatus;
-  statusLabel: string;
-  utilizationPercent: number;
-  updatedAt: string;
+export interface WarehouseLocationListResponse {
+  items: WarehouseLocationRecord[];
+  total: number;
 }
 
-export interface WarehouseLocationFilters {
+export interface WarehouseLocationListFilters {
   search?: string;
-  status?: WarehouseLocationStatus | 'all';
+  status?: 'all' | WarehouseLocationStatus;
+  type?: 'all' | WarehouseLocationType;
+  active?: 'all' | 'active' | 'inactive';
 }
 
-export interface WarehouseSummary {
-  totalLocations: number;
-  activeLocations: number;
-  fullLocations: number;
-  totalCapacity: number;
-  totalOccupied: number;
-  utilizationPercent: number;
+export interface CreateWarehouseLocationRequest {
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
 }
+
+export interface UpdateWarehouseLocationRequest extends CreateWarehouseLocationRequest {
+  id: string;
+}
+
+export interface WarehouseLocationFormValues {
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  palletCapacity: string;
+  usedPalletCapacity: string;
+  cubicCapacityM3: string;
+  usedCubicCapacityM3: string;
+  isActive: boolean;
+  notes: string;
+}
+
+export type WarehouseLocationFormErrors = Partial<Record<keyof WarehouseLocationFormValues, string>>;

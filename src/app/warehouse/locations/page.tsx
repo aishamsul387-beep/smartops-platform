@@ -1,11 +1,10 @@
 import { ProtectedLayout } from '@/components/layout/ProtectedLayout';
-import { WarehouseLocationsScreen } from '@/features/warehouse/screens/WarehouseLocationsScreen';
-import { PERMISSIONS } from '@/types/permissions';
+import { WarehouseLocationMasterScreen } from '@/features/warehouse/screens/WarehouseLocationMasterScreen';
 
 export default function WarehouseLocationsPage() {
   return (
-    <ProtectedLayout permissions={[PERMISSIONS.WAREHOUSE_VIEW]}>
-      <WarehouseLocationsScreen />
+    <ProtectedLayout permissions={[]}>
+      <WarehouseLocationMasterScreen />
     </ProtectedLayout>
   );
 }

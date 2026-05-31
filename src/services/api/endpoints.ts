@@ -36,7 +36,11 @@ export const ENDPOINTS = {
   },
   warehouse: {
     summary: '/warehouse/summary',
-    locations: '/warehouse/locations'
+    locations: '/warehouse/locations',
+    locationDetail: (id: string) => `/warehouse/locations/${id}`,
+    createLocation: '/warehouse/locations',
+    updateLocation: (id: string) => `/warehouse/locations/${id}`,
+    toggleLocationActive: (id: string) => `/warehouse/locations/${id}/active`
   },
   tasks: {
     list: '/tasks',

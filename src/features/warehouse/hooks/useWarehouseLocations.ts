@@ -1,66 +1,86 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { warehouseApi } from '../api';
-import type { WarehouseLocation, WarehouseLocationFilters } from '../types';
-
-const initialFilters: WarehouseLocationFilters = {
-  search: '',
-  status: 'all'
-};
+import type {
+  WarehouseLocationListFilters,
+  WarehouseLocationRecord,
+  WarehouseLocationStatus
+} from '../types';
 
 export function useWarehouseLocations() {
-  const [locations, setLocations] = useState<WarehouseLocation[]>([]);
-  const [filters, setFilters] = useState<WarehouseLocationFilters>(initialFilters);
+  const [items, setItems] = useState<WarehouseLocationRecord[]>([]);
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<WarehouseLocationListFilters>({
+    search: '',
+    status: 'all',
+    type: 'all',
+    active: 'all'
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function load(nextFilters: WarehouseLocationFilters) {
+  async function load(nextFilters?: WarehouseLocationListFilters) {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await warehouseApi.getWarehouseLocations(nextFilters);
-      setLocations(data);
+
+      const effective = nextFilters ?? filters;
+      const response = await warehouseApi.getLocations(effective);
+
+      setItems(response.items);
+      setTotal(response.total);
     } catch (err: any) {
+      setItems([]);
+      setTotal(0);
       setError(err?.message || 'Failed to load warehouse locations');
-      setLocations([]);
     } finally {
       setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    void load(filters);
-  }, [filters]);
+    void load();
+  }, [filters.search, filters.status, filters.type, filters.active]);
 
-  const totalVisible = useMemo(() => locations.length, [locations]);
-
-  function updateSearch(value: string) {
+  function updateSearch(search: string) {
     setFilters((current) => ({
       ...current,
-      search: value
+      search
     }));
   }
 
-  function updateStatus(value: WarehouseLocationFilters['status']) {
+  function updateStatus(status: 'all' | WarehouseLocationStatus) {
     setFilters((current) => ({
       ...current,
-      status: value
+      status
     }));
   }
 
-  async function refresh() {
-    await load(filters);
+  function updateType(type: WarehouseLocationListFilters['type']) {
+    setFilters((current) => ({
+      ...current,
+      type
+    }));
+  }
+
+  function updateActive(active: WarehouseLocationListFilters['active']) {
+    setFilters((current) => ({
+      ...current,
+      active
+    }));
   }
 
   return {
-    locations,
+    items,
+    total,
     filters,
     isLoading,
     error,
-    totalVisible,
     updateSearch,
     updateStatus,
-    refresh
+    updateType,
+    updateActive,
+    refresh: () => load(filters)
   };
 }
