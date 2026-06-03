@@ -1,66 +1,97 @@
-import type {
-  CreateWarehouseLocationRequest,
-  WarehouseLocationFormValues,
+﻿import type {
+  WarehouseCapacityUom,
   WarehouseLocationListResponse,
-  WarehouseLocationRecord
+  WarehouseLocationRecord,
+  WarehouseLocationStatus,
+  WarehouseLocationType
 } from './types';
 
-function asText(value: unknown, fallback = '') {
-  return String(value ?? fallback);
+const allowedStatuses: WarehouseLocationStatus[] = ['empty', 'occupied', 'blocked'];
+const allowedTypes: WarehouseLocationType[] = [
+  'rack',
+  'floor',
+  'bulk',
+  'staging',
+  'quarantine',
+  'shelves',
+  'island'
+];
+const allowedCapacityUom: WarehouseCapacityUom[] = ['pallet', 'pcs', 'carton'];
+
+function extractPayload<T = any>(value: any): T {
+  if (value && typeof value === 'object' && 'data' in value && value.data !== undefined) {
+    return value.data as T;
+  }
+
+  return value as T;
 }
 
-function asNumber(value: unknown, fallback = 0) {
+function normalizeText(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function normalizeNumber(value: unknown) {
   const parsed = Number(value);
-  return Number.isNaN(parsed) ? fallback : parsed;
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function mapWarehouseLocation(payload: any): WarehouseLocationRecord {
+function normalizeBoolean(value: unknown) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  const normalized = String(value ?? '').trim().toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'active';
+}
+
+function normalizeStatus(value: unknown): WarehouseLocationStatus {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseLocationStatus;
+  return allowedStatuses.includes(normalized) ? normalized : 'empty';
+}
+
+function normalizeType(value: unknown): WarehouseLocationType {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseLocationType;
+  return allowedTypes.includes(normalized) ? normalized : 'rack';
+}
+
+function normalizeCapacityUom(value: unknown): WarehouseCapacityUom {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseCapacityUom;
+  return allowedCapacityUom.includes(normalized) ? normalized : 'pallet';
+}
+
+export function mapWarehouseLocation(data: any): WarehouseLocationRecord {
+  const source = extractPayload<any>(data) ?? {};
+
   return {
-    id: asText(payload?.id),
-    warehouseCode: asText(payload?.warehouseCode),
-    warehouseName: asText(payload?.warehouseName),
-    locationCode: asText(payload?.locationCode),
-    zone: asText(payload?.zone),
-    aisle: asText(payload?.aisle),
-    levelCode: asText(payload?.levelCode),
-    bin: asText(payload?.bin),
-    locationType: asText(payload?.locationType) as WarehouseLocationRecord['locationType'],
-    status: asText(payload?.status) as WarehouseLocationRecord['status'],
-    palletCapacity: asNumber(payload?.palletCapacity),
-    usedPalletCapacity: asNumber(payload?.usedPalletCapacity),
-    cubicCapacityM3: asNumber(payload?.cubicCapacityM3),
-    usedCubicCapacityM3: asNumber(payload?.usedCubicCapacityM3),
-    isActive: Boolean(payload?.isActive),
-    notes: asText(payload?.notes),
-    updatedAt: asText(payload?.updatedAt)
+    id: normalizeText(source.id),
+    warehouseCode: normalizeText(source.warehouseCode),
+    warehouseName: normalizeText(source.warehouseName),
+    locationCode: normalizeText(source.locationCode),
+    zone: normalizeText(source.zone),
+    aisle: normalizeText(source.aisle),
+    levelCode: normalizeText(source.levelCode),
+    bin: normalizeText(source.bin),
+    locationType: normalizeType(source.locationType),
+    status: normalizeStatus(source.status),
+    capacityUom: normalizeCapacityUom(source.capacityUom),
+    palletCapacity: normalizeNumber(source.palletCapacity),
+    usedPalletCapacity: normalizeNumber(source.usedPalletCapacity),
+    cubicCapacityM3: normalizeNumber(source.cubicCapacityM3),
+    usedCubicCapacityM3: normalizeNumber(source.usedCubicCapacityM3),
+    isActive: normalizeBoolean(source.isActive),
+    notes: normalizeText(source.notes),
+    updatedAt: normalizeText(source.updatedAt)
   };
 }
 
-export function mapWarehouseLocationListResponse(payload: any): WarehouseLocationListResponse {
-  return {
-    items: Array.isArray(payload?.items) ? payload.items.map(mapWarehouseLocation) : [],
-    total: asNumber(payload?.total)
-  };
-}
+export function mapWarehouseLocationListResponse(data: any): WarehouseLocationListResponse {
+  const source = extractPayload<any>(data) ?? {};
+  const rawItems = Array.isArray(source.items) ? source.items : [];
+  const items = rawItems.map(mapWarehouseLocation);
+  const total = Number.isFinite(Number(source.total)) ? Number(source.total) : items.length;
 
-export function mapWarehouseLocationFormToRequest(
-  values: WarehouseLocationFormValues
-): CreateWarehouseLocationRequest {
   return {
-    warehouseCode: values.warehouseCode.trim(),
-    warehouseName: values.warehouseName.trim(),
-    locationCode: values.locationCode.trim(),
-    zone: values.zone.trim(),
-    aisle: values.aisle.trim(),
-    levelCode: values.levelCode.trim(),
-    bin: values.bin.trim(),
-    locationType: values.locationType,
-    status: values.status,
-    palletCapacity: Number(values.palletCapacity),
-    usedPalletCapacity: Number(values.usedPalletCapacity),
-    cubicCapacityM3: Number(values.cubicCapacityM3),
-    usedCubicCapacityM3: Number(values.usedCubicCapacityM3),
-    isActive: values.isActive,
-    notes: values.notes.trim()
+    items,
+    total
   };
 }

@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/api/client';
+﻿import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
 import { mapWarehouseLocation, mapWarehouseLocationListResponse } from './mapper';
 import type {
@@ -63,7 +63,8 @@ export const warehouseApi = {
     const response = await apiClient.post<any>(ENDPOINTS.warehouse.importCsv, {
       csvText
     });
-    return response.data;
+
+    return response.data?.data ?? response.data;
   },
 
   async exportLocationsCsv(): Promise<string> {

@@ -1,5 +1,14 @@
-export type WarehouseLocationStatus = 'empty' | 'occupied' | 'blocked';
-export type WarehouseLocationType = 'rack' | 'floor' | 'bulk' | 'staging' | 'quarantine';
+﻿export type WarehouseLocationStatus = 'empty' | 'occupied' | 'blocked';
+export type WarehouseLocationType =
+  | 'rack'
+  | 'floor'
+  | 'bulk'
+  | 'staging'
+  | 'quarantine'
+  | 'shelves'
+  | 'island';
+
+export type WarehouseCapacityUom = 'pallet' | 'pcs' | 'carton';
 
 export interface WarehouseLocationRecord {
   id: string;
@@ -12,6 +21,7 @@ export interface WarehouseLocationRecord {
   bin: string;
   locationType: WarehouseLocationType;
   status: WarehouseLocationStatus;
+  capacityUom: WarehouseCapacityUom;
   palletCapacity: number;
   usedPalletCapacity: number;
   cubicCapacityM3: number;
@@ -53,6 +63,7 @@ export interface CreateWarehouseLocationRequest {
   bin: string;
   locationType: WarehouseLocationType;
   status: WarehouseLocationStatus;
+  capacityUom: WarehouseCapacityUom;
   palletCapacity: number;
   usedPalletCapacity: number;
   cubicCapacityM3: number;
@@ -75,6 +86,7 @@ export interface WarehouseLocationFormValues {
   bin: string;
   locationType: WarehouseLocationType;
   status: WarehouseLocationStatus;
+  capacityUom: WarehouseCapacityUom;
   palletCapacity: string;
   usedPalletCapacity: string;
   cubicCapacityM3: string;

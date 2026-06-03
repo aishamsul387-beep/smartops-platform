@@ -1,9 +1,32 @@
-import { mapWarehouseLocationFormToRequest } from './mapper';
-import type {
+﻿import type {
   CreateWarehouseLocationRequest,
+  WarehouseCapacityUom,
   WarehouseLocationFormErrors,
-  WarehouseLocationFormValues
+  WarehouseLocationFormValues,
+  WarehouseLocationStatus,
+  WarehouseLocationType
 } from './types';
+
+const allowedTypes: WarehouseLocationType[] = [
+  'rack',
+  'floor',
+  'bulk',
+  'staging',
+  'quarantine',
+  'shelves',
+  'island'
+];
+const allowedStatuses: WarehouseLocationStatus[] = ['empty', 'occupied', 'blocked'];
+const allowedCapacityUom: WarehouseCapacityUom[] = ['pallet', 'pcs', 'carton'];
+
+function isBlank(value: string) {
+  return !value.trim();
+}
+
+function parseNonNegativeNumber(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
 
 export const initialWarehouseLocationFormValues: WarehouseLocationFormValues = {
   warehouseCode: '',
@@ -15,6 +38,7 @@ export const initialWarehouseLocationFormValues: WarehouseLocationFormValues = {
   bin: '',
   locationType: 'rack',
   status: 'empty',
+  capacityUom: 'pallet',
   palletCapacity: '0',
   usedPalletCapacity: '0',
   cubicCapacityM3: '0',
@@ -23,55 +47,90 @@ export const initialWarehouseLocationFormValues: WarehouseLocationFormValues = {
   notes: ''
 };
 
-function validateRequiredText(
-  value: string,
-  field: keyof WarehouseLocationFormValues,
-  errors: WarehouseLocationFormErrors,
-  label: string,
-  min = 1,
-  max = 120
-) {
-  const text = value.trim();
-
-  if (!text) {
-    errors[field] = `${label} is required`;
-    return;
-  }
-
-  if (text.length < min || text.length > max) {
-    errors[field] = `${label} must be between ${min} and ${max} characters`;
-  }
-}
-
-function validateNumberText(
-  value: string,
-  field: keyof WarehouseLocationFormValues,
-  errors: WarehouseLocationFormErrors,
-  label: string,
-  min = 0
-) {
-  const parsed = Number(value);
-
-  if (Number.isNaN(parsed) || parsed < min) {
-    errors[field] = `${label} must be a valid number ${min} or greater`;
-  }
-}
-
-export function validateWarehouseLocationForm(values: WarehouseLocationFormValues) {
+export function validateWarehouseLocationForm(values: WarehouseLocationFormValues): {
+  isValid: boolean;
+  errors: WarehouseLocationFormErrors;
+} {
   const errors: WarehouseLocationFormErrors = {};
 
-  validateRequiredText(values.warehouseCode, 'warehouseCode', errors, 'Warehouse code', 2, 30);
-  validateRequiredText(values.warehouseName, 'warehouseName', errors, 'Warehouse name', 2, 120);
-  validateRequiredText(values.locationCode, 'locationCode', errors, 'Location code', 3, 50);
-  validateRequiredText(values.zone, 'zone', errors, 'Zone', 1, 20);
-  validateRequiredText(values.aisle, 'aisle', errors, 'Aisle', 1, 20);
-  validateRequiredText(values.levelCode, 'levelCode', errors, 'Level', 1, 20);
-  validateRequiredText(values.bin, 'bin', errors, 'Bin', 1, 20);
+  if (isBlank(values.warehouseCode)) {
+    errors.warehouseCode = 'Warehouse Code is required';
+  } else if (values.warehouseCode.trim().length < 2 || values.warehouseCode.trim().length > 30) {
+    errors.warehouseCode = 'Warehouse Code must be between 2 and 30 characters';
+  }
 
-  validateNumberText(values.palletCapacity, 'palletCapacity', errors, 'Pallet capacity', 0);
-  validateNumberText(values.usedPalletCapacity, 'usedPalletCapacity', errors, 'Used pallet capacity', 0);
-  validateNumberText(values.cubicCapacityM3, 'cubicCapacityM3', errors, 'Cubic capacity', 0);
-  validateNumberText(values.usedCubicCapacityM3, 'usedCubicCapacityM3', errors, 'Used cubic capacity', 0);
+  if (isBlank(values.warehouseName)) {
+    errors.warehouseName = 'Warehouse Name is required';
+  } else if (values.warehouseName.trim().length < 2 || values.warehouseName.trim().length > 120) {
+    errors.warehouseName = 'Warehouse Name must be between 2 and 120 characters';
+  }
+
+  if (isBlank(values.locationCode)) {
+    errors.locationCode = 'Location Code is required';
+  } else if (values.locationCode.trim().length < 3 || values.locationCode.trim().length > 50) {
+    errors.locationCode = 'Location Code must be between 3 and 50 characters';
+  }
+
+  if (isBlank(values.zone)) {
+    errors.zone = 'Zone is required';
+  }
+
+  if (isBlank(values.aisle)) {
+    errors.aisle = 'Aisle is required';
+  }
+
+  if (isBlank(values.levelCode)) {
+    errors.levelCode = 'Level is required';
+  }
+
+  if (isBlank(values.bin)) {
+    errors.bin = 'Bin is required';
+  }
+
+  if (!allowedTypes.includes(values.locationType)) {
+    errors.locationType = 'Location Type is invalid';
+  }
+
+  if (!allowedStatuses.includes(values.status)) {
+    errors.status = 'Status is invalid';
+  }
+
+  if (!allowedCapacityUom.includes(values.capacityUom)) {
+    errors.capacityUom = 'Capacity Unit is invalid';
+  }
+
+  const palletCapacity = parseNonNegativeNumber(values.palletCapacity);
+  const usedPalletCapacity = parseNonNegativeNumber(values.usedPalletCapacity);
+  const cubicCapacityM3 = parseNonNegativeNumber(values.cubicCapacityM3);
+  const usedCubicCapacityM3 = parseNonNegativeNumber(values.usedCubicCapacityM3);
+
+  if (palletCapacity === null) {
+    errors.palletCapacity = 'Storage Capacity must be a valid number 0 or greater';
+  }
+
+  if (usedPalletCapacity === null) {
+    errors.usedPalletCapacity = 'Used Storage Capacity must be a valid number 0 or greater';
+  }
+
+  if (cubicCapacityM3 === null) {
+    errors.cubicCapacityM3 = 'Cubic Capacity (m3) must be a valid number 0 or greater';
+  }
+
+  if (usedCubicCapacityM3 === null) {
+    errors.usedCubicCapacityM3 = 'Used Cubic Capacity (m3) must be a valid number 0 or greater';
+  }
+
+  if (palletCapacity !== null && usedPalletCapacity !== null && usedPalletCapacity > palletCapacity) {
+    errors.usedPalletCapacity = 'Used Storage Capacity cannot exceed Storage Capacity';
+  }
+
+  if (cubicCapacityM3 !== null && usedCubicCapacityM3 !== null && usedCubicCapacityM3 > cubicCapacityM3) {
+    errors.usedCubicCapacityM3 = 'Used Cubic Capacity cannot exceed Cubic Capacity';
+  }
+
+  if (values.notes.trim().length > 250) {
+    errors.notes = 'Notes must be 250 characters or less';
+  }
 
   return {
     isValid: Object.keys(errors).length === 0,
@@ -82,5 +141,22 @@ export function validateWarehouseLocationForm(values: WarehouseLocationFormValue
 export function mapWarehouseLocationFormToCreateRequest(
   values: WarehouseLocationFormValues
 ): CreateWarehouseLocationRequest {
-  return mapWarehouseLocationFormToRequest(values);
+  return {
+    warehouseCode: values.warehouseCode.trim(),
+    warehouseName: values.warehouseName.trim(),
+    locationCode: values.locationCode.trim(),
+    zone: values.zone.trim(),
+    aisle: values.aisle.trim(),
+    levelCode: values.levelCode.trim(),
+    bin: values.bin.trim(),
+    locationType: values.locationType,
+    status: values.status,
+    capacityUom: values.capacityUom,
+    palletCapacity: Number(values.palletCapacity),
+    usedPalletCapacity: Number(values.usedPalletCapacity),
+    cubicCapacityM3: Number(values.cubicCapacityM3),
+    usedCubicCapacityM3: Number(values.usedCubicCapacityM3),
+    isActive: values.isActive,
+    notes: values.notes.trim()
+  };
 }

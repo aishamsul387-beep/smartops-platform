@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { PageHeaderCard, PageSectionCard, PageStatCard, PageStatsGrid } from '@/components/layout/PageShell';
@@ -73,6 +73,7 @@ function buildWarehouseLocationTemplateCsv() {
     'bin',
     'locationType',
     'status',
+    'capacityUom',
     'palletCapacity',
     'usedPalletCapacity',
     'cubicCapacityM3',
@@ -92,6 +93,7 @@ function buildWarehouseLocationTemplateCsv() {
       '01',
       'rack',
       'empty',
+      'pallet',
       '4',
       '0',
       '12',
@@ -100,28 +102,44 @@ function buildWarehouseLocationTemplateCsv() {
       'Sample rack location'
     ],
     [
-      'WH-002',
-      'Overflow Warehouse',
-      'B-02-04-02',
-      'B',
-      '02',
-      '04',
-      '02',
-      'bulk',
+      'OUT-001',
+      'Outlet 1',
+      'SH-01-01-01',
+      'SH',
+      '01',
+      '01',
+      '01',
+      'shelves',
       'occupied',
+      'pcs',
+      '120',
+      '48',
       '6',
       '2',
-      '18',
-      '6',
       'true',
-      'Sample bulk location'
+      'Sample outlet shelf using pcs capacity'
+    ],
+    [
+      'OUT-001',
+      'Outlet 1',
+      'BF-01-01-01',
+      'BF',
+      '01',
+      '01',
+      '01',
+      'floor',
+      'empty',
+      'carton',
+      '24',
+      '6',
+      '10',
+      '2',
+      'true',
+      'Sample outlet buffer stock using carton capacity'
     ]
   ];
 
-  return [
-    header.join(','),
-    ...sampleRows.map((row) => row.map(csvEscape).join(','))
-  ].join('\n');
+  return [header.join(','), ...sampleRows.map((row) => row.map(csvEscape).join(','))].join('\n');
 }
 
 function buildWarehouseLocationExportCsv(items: WarehouseLocationRecord[]) {
@@ -135,6 +153,7 @@ function buildWarehouseLocationExportCsv(items: WarehouseLocationRecord[]) {
     'bin',
     'locationType',
     'status',
+    'capacityUom',
     'palletCapacity',
     'usedPalletCapacity',
     'cubicCapacityM3',
@@ -154,6 +173,7 @@ function buildWarehouseLocationExportCsv(items: WarehouseLocationRecord[]) {
       item.bin,
       item.locationType,
       item.status,
+      item.capacityUom,
       item.palletCapacity,
       item.usedPalletCapacity,
       item.cubicCapacityM3,
@@ -166,6 +186,42 @@ function buildWarehouseLocationExportCsv(items: WarehouseLocationRecord[]) {
   );
 
   return [header.join(','), ...rows].join('\n');
+}
+
+function getCapacityUnitLabel(capacityUom: WarehouseLocationRecord['capacityUom']) {
+  if (capacityUom === 'pcs') {
+    return 'PCS';
+  }
+
+  if (capacityUom === 'carton') {
+    return 'Carton';
+  }
+
+  return 'Pallet';
+}
+
+function getStorageCapacityLabel(capacityUom: WarehouseLocationFormValues['capacityUom']) {
+  if (capacityUom === 'pcs') {
+    return 'Storage Capacity (PCS)';
+  }
+
+  if (capacityUom === 'carton') {
+    return 'Storage Capacity (Carton)';
+  }
+
+  return 'Storage Capacity (Pallet)';
+}
+
+function getUsedStorageCapacityLabel(capacityUom: WarehouseLocationFormValues['capacityUom']) {
+  if (capacityUom === 'pcs') {
+    return 'Used Storage Capacity (PCS)';
+  }
+
+  if (capacityUom === 'carton') {
+    return 'Used Storage Capacity (Carton)';
+  }
+
+  return 'Used Storage Capacity (Pallet)';
 }
 
 export function WarehouseLocationMasterScreen() {
@@ -450,7 +506,7 @@ export function WarehouseLocationMasterScreen() {
               value={csvText}
               onChange={(e) => setCsvText(e.target.value)}
               rows={8}
-              placeholder="warehouseCode,warehouseName,locationCode,zone,aisle,levelCode,bin,locationType,status,palletCapacity,usedPalletCapacity,cubicCapacityM3,usedCubicCapacityM3,isActive,notes"
+              placeholder="warehouseCode,warehouseName,locationCode,zone,aisle,levelCode,bin,locationType,status,capacityUom,palletCapacity,usedPalletCapacity,cubicCapacityM3,usedCubicCapacityM3,isActive,notes"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -580,7 +636,10 @@ export function WarehouseLocationMasterScreen() {
                 <option value="bulk">bulk</option>
                 <option value="staging">staging</option>
                 <option value="quarantine">quarantine</option>
+                <option value="shelves">shelves</option>
+                <option value="island">island</option>
               </select>
+              {errors.locationType ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.locationType}</div> : null}
             </div>
 
             <div>
@@ -590,16 +649,30 @@ export function WarehouseLocationMasterScreen() {
                 <option value="occupied">occupied</option>
                 <option value="blocked">blocked</option>
               </select>
+              {errors.status ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.status}</div> : null}
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Pallet Capacity</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Capacity Unit</label>
+              <select value={values.capacityUom} onChange={(e) => updateField('capacityUom', e.target.value as WarehouseLocationFormValues['capacityUom'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+                <option value="pallet">pallet</option>
+                <option value="pcs">pcs</option>
+                <option value="carton">carton</option>
+              </select>
+              <div style={{ marginTop: '8px', color: '#64748b', fontSize: '13px' }}>
+                Use <strong>pcs</strong> for outlet shelves, and <strong>carton</strong> for outlet buffer stock.
+              </div>
+              {errors.capacityUom ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.capacityUom}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>{getStorageCapacityLabel(values.capacityUom)}</label>
               <input value={values.palletCapacity} onChange={(e) => updateField('palletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
               {errors.palletCapacity ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.palletCapacity}</div> : null}
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Used Pallet Capacity</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>{getUsedStorageCapacityLabel(values.capacityUom)}</label>
               <input value={values.usedPalletCapacity} onChange={(e) => updateField('usedPalletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
               {errors.usedPalletCapacity ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.usedPalletCapacity}</div> : null}
             </div>
@@ -629,6 +702,7 @@ export function WarehouseLocationMasterScreen() {
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Notes</label>
               <textarea value={values.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', resize: 'vertical' }} />
+              {errors.notes ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.notes}</div> : null}
             </div>
           </div>
 
@@ -721,6 +795,8 @@ export function WarehouseLocationMasterScreen() {
               <option value="bulk">bulk</option>
               <option value="staging">staging</option>
               <option value="quarantine">quarantine</option>
+              <option value="shelves">shelves</option>
+              <option value="island">island</option>
             </select>
           </div>
 
@@ -756,7 +832,7 @@ export function WarehouseLocationMasterScreen() {
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Zone / Aisle / Level / Bin</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Type</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
-                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Capacity</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Storage Capacity</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Active</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Actions</th>
                 </tr>
@@ -797,7 +873,9 @@ export function WarehouseLocationMasterScreen() {
                     </td>
 
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      <div>Pallet: {item.usedPalletCapacity} / {item.palletCapacity}</div>
+                      <div>
+                        {getCapacityUnitLabel(item.capacityUom)}: {item.usedPalletCapacity} / {item.palletCapacity}
+                      </div>
                       <div>M3: {item.usedCubicCapacityM3} / {item.cubicCapacityM3}</div>
                     </td>
 
