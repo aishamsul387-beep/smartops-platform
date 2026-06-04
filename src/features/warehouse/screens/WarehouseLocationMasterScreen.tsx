@@ -5,6 +5,7 @@ import { PageHeaderCard, PageSectionCard, PageStatCard, PageStatsGrid } from '@/
 import { useCreateWarehouseLocation } from '../hooks/useCreateWarehouseLocation';
 import { useToggleWarehouseLocationActive } from '../hooks/useToggleWarehouseLocationActive';
 import { useWarehouseLocations } from '../hooks/useWarehouseLocations';
+import { useWarehouseSummary } from '../hooks/useWarehouseSummary';
 import {
   initialWarehouseLocationFormValues,
   mapWarehouseLocationFormToCreateRequest,
@@ -102,7 +103,7 @@ function buildWarehouseLocationTemplateCsv() {
       'Sample rack location'
     ],
     [
-      'OUT-001',
+      'OTL-001',
       'Outlet 1',
       'SH-01-01-01',
       'SH',
@@ -120,7 +121,7 @@ function buildWarehouseLocationTemplateCsv() {
       'Sample outlet shelf using pcs capacity'
     ],
     [
-      'OUT-001',
+      'OTL-001',
       'Outlet 1',
       'BF-01-01-01',
       'BF',
@@ -224,6 +225,10 @@ function getUsedStorageCapacityLabel(capacityUom: WarehouseLocationFormValues['c
   return 'Used Storage Capacity (Pallet)';
 }
 
+function formatPercent(value: number) {
+  return `${value.toFixed(2)}%`;
+}
+
 export function WarehouseLocationMasterScreen() {
   const {
     items,
@@ -232,11 +237,25 @@ export function WarehouseLocationMasterScreen() {
     isLoading,
     error,
     updateSearch,
+    updateLocationCode,
     updateStatus,
     updateType,
     updateActive,
     refresh
   } = useWarehouseLocations();
+
+  const {
+    summary: utilizationSummary,
+    isLoading: isSummaryLoading,
+    error: summaryError,
+    refresh: refreshSummary
+  } = useWarehouseSummary({
+    search: filters.search,
+    locationCode: filters.locationCode,
+    status: filters.status,
+    type: filters.type,
+    active: filters.active
+  });
 
   const { createLocation, isSubmitting, error: createError } = useCreateWarehouseLocation();
   const { toggleActive, isSubmitting: isToggling, error: toggleError } = useToggleWarehouseLocationActive();
@@ -255,7 +274,7 @@ export function WarehouseLocationMasterScreen() {
   const [isExporting, setIsExporting] = useState(false);
   const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
 
-  const summary = useMemo(() => {
+  const locationSummary = useMemo(() => {
     const activeItems = items.filter((item) => item.isActive).length;
     const emptyItems = items.filter((item) => item.status === 'empty').length;
     const occupiedItems = items.filter((item) => item.status === 'occupied').length;
@@ -268,6 +287,10 @@ export function WarehouseLocationMasterScreen() {
       blockedItems
     };
   }, [items]);
+
+  async function refreshAll() {
+    await Promise.all([refresh(), refreshSummary()]);
+  }
 
   function updateField<K extends keyof WarehouseLocationFormValues>(
     field: K,
@@ -297,7 +320,7 @@ export function WarehouseLocationMasterScreen() {
     try {
       await createLocation(mapWarehouseLocationFormToCreateRequest(values));
       setValues(initialWarehouseLocationFormValues);
-      await refresh();
+      await refreshAll();
     } catch {
       // hook error shown on screen
     }
@@ -306,7 +329,7 @@ export function WarehouseLocationMasterScreen() {
   async function handleToggle(item: WarehouseLocationRecord) {
     try {
       await toggleActive(item.id, !item.isActive);
-      await refresh();
+      await refreshAll();
     } catch {
       // hook error shown on screen
     }
@@ -351,7 +374,7 @@ export function WarehouseLocationMasterScreen() {
       setImportError(null);
       const result = await warehouseApi.importLocationsCsv(csvText);
       setImportResult(result);
-      await refresh();
+      await refreshAll();
     } catch (err: any) {
       setImportResult(null);
       setImportError(err?.message || 'Failed to import CSV');
@@ -389,7 +412,7 @@ export function WarehouseLocationMasterScreen() {
           <>
             <button
               type="button"
-              onClick={() => void refresh()}
+              onClick={() => void refreshAll()}
               style={{
                 padding: '10px 14px',
                 borderRadius: '10px',
@@ -437,6 +460,48 @@ export function WarehouseLocationMasterScreen() {
           </>
         }
       />
+
+      <PageSectionCard
+        title="Warehouse Utilization Summary"
+        description="This summary now follows your current Warehouse Location Master filters."
+      >
+        {isSummaryLoading ? (
+          <div style={{ color: '#64748b' }}>Loading warehouse utilization summary...</div>
+        ) : summaryError ? (
+          <div
+            style={{
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#fef2f2',
+              color: '#b91c1c',
+              border: '1px solid #fecaca'
+            }}
+          >
+            {summaryError}
+          </div>
+        ) : (
+          <PageStatsGrid>
+            <PageStatCard
+              label="Pallet Utilization"
+              value={formatPercent(utilizationSummary.palletUtilizationPct)}
+              helperText={`${utilizationSummary.palletCapacityUsed} / ${utilizationSummary.palletCapacityTotal}`}
+            />
+            <PageStatCard
+              label="PCS Utilization"
+              value={formatPercent(utilizationSummary.pcsUtilizationPct)}
+              helperText={`${utilizationSummary.pcsCapacityUsed} / ${utilizationSummary.pcsCapacityTotal}`}
+            />
+            <PageStatCard
+              label="Carton Utilization"
+              value={formatPercent(utilizationSummary.cartonUtilizationPct)}
+              helperText={`${utilizationSummary.cartonCapacityUsed} / ${utilizationSummary.cartonCapacityTotal}`}
+            />
+            <PageStatCard label="Total Locations" value={utilizationSummary.totalLocations} />
+            <PageStatCard label="Active Locations" value={utilizationSummary.activeLocations} />
+            <PageStatCard label="Inactive Locations" value={utilizationSummary.inactiveLocations} />
+          </PageStatsGrid>
+        )}
+      </PageSectionCard>
 
       <PageSectionCard
         title="Import Warehouse Locations CSV"
@@ -743,10 +808,10 @@ export function WarehouseLocationMasterScreen() {
       <PageSectionCard title="Warehouse Location Summary">
         <PageStatsGrid>
           <PageStatCard label="Total Locations" value={total} />
-          <PageStatCard label="Active Locations" value={summary.activeItems} />
-          <PageStatCard label="Empty Locations" value={summary.emptyItems} />
-          <PageStatCard label="Occupied Locations" value={summary.occupiedItems} />
-          <PageStatCard label="Blocked Locations" value={summary.blockedItems} />
+          <PageStatCard label="Active Locations" value={locationSummary.activeItems} />
+          <PageStatCard label="Empty Locations" value={locationSummary.emptyItems} />
+          <PageStatCard label="Occupied Locations" value={locationSummary.occupiedItems} />
+          <PageStatCard label="Blocked Locations" value={locationSummary.blockedItems} />
         </PageStatsGrid>
       </PageSectionCard>
 
@@ -764,6 +829,16 @@ export function WarehouseLocationMasterScreen() {
               value={filters.search || ''}
               onChange={(e) => updateSearch(e.target.value)}
               placeholder="Search location, zone, aisle, warehouse"
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Location Code</label>
+            <input
+              value={filters.locationCode || ''}
+              onChange={(e) => updateLocationCode(e.target.value)}
+              placeholder="Filter by exact/partial location code"
               style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
             />
           </div>
@@ -909,3 +984,4 @@ export function WarehouseLocationMasterScreen() {
     </div>
   );
 }
+

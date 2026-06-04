@@ -3,7 +3,9 @@
   WarehouseLocationListResponse,
   WarehouseLocationRecord,
   WarehouseLocationStatus,
-  WarehouseLocationType
+  WarehouseLocationType,
+  WarehouseSiteScope,
+  WarehouseUtilizationSummary
 } from './types';
 
 const allowedStatuses: WarehouseLocationStatus[] = ['empty', 'occupied', 'blocked'];
@@ -17,6 +19,7 @@ const allowedTypes: WarehouseLocationType[] = [
   'island'
 ];
 const allowedCapacityUom: WarehouseCapacityUom[] = ['pallet', 'pcs', 'carton'];
+const allowedSiteScopes: WarehouseSiteScope[] = ['all', 'warehouse', 'outlet'];
 
 function extractPayload<T = any>(value: any): T {
   if (value && typeof value === 'object' && 'data' in value && value.data !== undefined) {
@@ -28,6 +31,11 @@ function extractPayload<T = any>(value: any): T {
 
 function normalizeText(value: unknown) {
   return String(value ?? '').trim();
+}
+
+function normalizeNullableText(value: unknown) {
+  const text = String(value ?? '').trim();
+  return text ? text : null;
 }
 
 function normalizeNumber(value: unknown) {
@@ -57,6 +65,11 @@ function normalizeType(value: unknown): WarehouseLocationType {
 function normalizeCapacityUom(value: unknown): WarehouseCapacityUom {
   const normalized = String(value ?? '').trim().toLowerCase() as WarehouseCapacityUom;
   return allowedCapacityUom.includes(normalized) ? normalized : 'pallet';
+}
+
+function normalizeSiteScope(value: unknown): WarehouseSiteScope {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseSiteScope;
+  return allowedSiteScopes.includes(normalized) ? normalized : 'all';
 }
 
 export function mapWarehouseLocation(data: any): WarehouseLocationRecord {
@@ -93,5 +106,32 @@ export function mapWarehouseLocationListResponse(data: any): WarehouseLocationLi
   return {
     items,
     total
+  };
+}
+
+export function mapWarehouseUtilizationSummary(data: any): WarehouseUtilizationSummary {
+  const source = extractPayload<any>(data) ?? {};
+
+  return {
+    siteScope: normalizeSiteScope(source.siteScope),
+    warehouseCode: normalizeNullableText(source.warehouseCode),
+    totalLocations: normalizeNumber(source.totalLocations),
+    activeLocations: normalizeNumber(source.activeLocations),
+    inactiveLocations: normalizeNumber(source.inactiveLocations),
+    emptyLocations: normalizeNumber(source.emptyLocations),
+    occupiedLocations: normalizeNumber(source.occupiedLocations),
+    blockedLocations: normalizeNumber(source.blockedLocations),
+    fullLocations: normalizeNumber(source.fullLocations),
+    fullLocationPct: normalizeNumber(source.fullLocationPct),
+    palletCapacityTotal: normalizeNumber(source.palletCapacityTotal),
+    palletCapacityUsed: normalizeNumber(source.palletCapacityUsed),
+    palletUtilizationPct: normalizeNumber(source.palletUtilizationPct),
+    pcsCapacityTotal: normalizeNumber(source.pcsCapacityTotal),
+    pcsCapacityUsed: normalizeNumber(source.pcsCapacityUsed),
+    pcsUtilizationPct: normalizeNumber(source.pcsUtilizationPct),
+    cartonCapacityTotal: normalizeNumber(source.cartonCapacityTotal),
+    cartonCapacityUsed: normalizeNumber(source.cartonCapacityUsed),
+    cartonUtilizationPct: normalizeNumber(source.cartonUtilizationPct),
+    updatedAt: normalizeText(source.updatedAt)
   };
 }

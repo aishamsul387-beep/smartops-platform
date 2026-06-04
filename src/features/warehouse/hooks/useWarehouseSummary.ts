@@ -1,109 +1,102 @@
-'use client';
+﻿'use client';
 
-import { useEffect, useState } from 'react';
-import { warehouseApi } from '../api';
+import { useCallback, useEffect, useState } from 'react';
+import { warehouseApi, type WarehouseSummaryFilters } from '../api';
+import type { WarehouseSiteScope, WarehouseUtilizationSummary } from '../types';
 
-export interface WarehouseSummary {
-  totalLocations: number;
-  activeLocations: number;
-  emptyLocations: number;
-  occupiedLocations: number;
-  blockedLocations: number;
+const initialSummary: WarehouseUtilizationSummary = {
+  siteScope: 'all',
+  warehouseCode: null,
+  totalLocations: 0,
+  activeLocations: 0,
+  inactiveLocations: 0,
+  emptyLocations: 0,
+  occupiedLocations: 0,
+  blockedLocations: 0,
+  fullLocations: 0,
+  fullLocationPct: 0,
+  palletCapacityTotal: 0,
+  palletCapacityUsed: 0,
+  palletUtilizationPct: 0,
+  pcsCapacityTotal: 0,
+  pcsCapacityUsed: 0,
+  pcsUtilizationPct: 0,
+  cartonCapacityTotal: 0,
+  cartonCapacityUsed: 0,
+  cartonUtilizationPct: 0,
+  updatedAt: ''
+};
 
-  // compatibility fields for older WarehouseScreen
-  fullLocations: number;
-  utilizationPercent: number;
-  totalOccupied: number;
-  totalCapacity: number;
-}
-
-export function useWarehouseSummary() {
-  const [summary, setSummary] = useState<WarehouseSummary>({
-    totalLocations: 0,
-    activeLocations: 0,
-    emptyLocations: 0,
-    occupiedLocations: 0,
-    blockedLocations: 0,
-    fullLocations: 0,
-    utilizationPercent: 0,
-    totalOccupied: 0,
-    totalCapacity: 0
-  });
+export function useWarehouseSummary(externalFilters?: Partial<WarehouseSummaryFilters>) {
+  const [summary, setSummary] = useState<WarehouseUtilizationSummary>(initialSummary);
+  const [siteScope, setSiteScope] = useState<WarehouseSiteScope>(externalFilters?.siteScope ?? 'all');
+  const [warehouseCode, setWarehouseCode] = useState(externalFilters?.warehouseCode ?? '');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
+  const refresh = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const result = await warehouseApi.getLocations({
-        search: '',
-        status: 'all',
-        type: 'all',
-        active: 'all'
+      const resolvedSiteScope = externalFilters?.siteScope ?? siteScope;
+      const resolvedWarehouseCode =
+        externalFilters?.warehouseCode !== undefined
+          ? externalFilters.warehouseCode
+          : warehouseCode.trim() || undefined;
+
+      const data = await warehouseApi.getSummary({
+        search: externalFilters?.search,
+        locationCode: externalFilters?.locationCode,
+        status: externalFilters?.status,
+        type: externalFilters?.type,
+        active: externalFilters?.active,
+        siteScope: resolvedSiteScope,
+        warehouseCode: resolvedWarehouseCode
       });
 
-      const items = result.items || [];
-
-      const totalLocations = result.total || items.length;
-      const activeLocations = items.filter((item) => item.isActive).length;
-      const emptyLocations = items.filter((item) => item.status === 'empty').length;
-      const occupiedLocations = items.filter((item) => item.status === 'occupied').length;
-      const blockedLocations = items.filter((item) => item.status === 'blocked').length;
-
-      const totalOccupied = items.reduce(
-        (sum, item) => sum + Number(item.usedPalletCapacity || 0),
-        0
-      );
-
-      const totalCapacity = items.reduce(
-        (sum, item) => sum + Number(item.palletCapacity || 0),
-        0
-      );
-
-      const utilizationPercent =
-        totalCapacity > 0
-          ? Number(((totalOccupied / totalCapacity) * 100).toFixed(1))
-          : 0;
-
-      setSummary({
-        totalLocations,
-        activeLocations,
-        emptyLocations,
-        occupiedLocations,
-        blockedLocations,
-        fullLocations: occupiedLocations,
-        utilizationPercent,
-        totalOccupied,
-        totalCapacity
-      });
+      setSummary(data);
     } catch (err: any) {
-      setSummary({
-        totalLocations: 0,
-        activeLocations: 0,
-        emptyLocations: 0,
-        occupiedLocations: 0,
-        blockedLocations: 0,
-        fullLocations: 0,
-        utilizationPercent: 0,
-        totalOccupied: 0,
-        totalCapacity: 0
-      });
       setError(err?.message || 'Failed to load warehouse summary');
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [
+    externalFilters?.search,
+    externalFilters?.locationCode,
+    externalFilters?.status,
+    externalFilters?.type,
+    externalFilters?.active,
+    externalFilters?.siteScope,
+    externalFilters?.warehouseCode,
+    siteScope,
+    warehouseCode
+  ]);
 
   useEffect(() => {
-    void load();
-  }, []);
+    if (externalFilters?.siteScope !== undefined) {
+      setSiteScope(externalFilters.siteScope);
+    }
+  }, [externalFilters?.siteScope]);
+
+  useEffect(() => {
+    if (externalFilters?.warehouseCode !== undefined) {
+      setWarehouseCode(externalFilters.warehouseCode);
+    }
+  }, [externalFilters?.warehouseCode]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   return {
     summary,
+    siteScope,
+    warehouseCode,
     isLoading,
     error,
-    refresh: load
+    setSiteScope,
+    setWarehouseCode,
+    refresh
   };
 }

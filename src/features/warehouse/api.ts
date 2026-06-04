@@ -1,18 +1,72 @@
 ﻿import { apiClient } from '@/services/api/client';
 import { ENDPOINTS } from '@/services/api/endpoints';
-import { mapWarehouseLocation, mapWarehouseLocationListResponse } from './mapper';
+import {
+  mapWarehouseLocation,
+  mapWarehouseLocationListResponse,
+  mapWarehouseUtilizationSummary
+} from './mapper';
 import type {
   CreateWarehouseLocationRequest,
   UpdateWarehouseLocationRequest,
   WarehouseLocationImportResult,
-  WarehouseLocationListFilters
+  WarehouseLocationListFilters,
+  WarehouseSiteScope
 } from './types';
+
+export interface WarehouseSummaryFilters {
+  search?: string;
+  locationCode?: string;
+  status?: WarehouseLocationListFilters['status'];
+  type?: WarehouseLocationListFilters['type'];
+  active?: WarehouseLocationListFilters['active'];
+  siteScope?: WarehouseSiteScope;
+  warehouseCode?: string;
+}
+
+function buildWarehouseSummaryUrl(filters: WarehouseSummaryFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.locationCode && filters.locationCode.trim()) {
+    query.set('locationCode', filters.locationCode.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  if (filters.type && filters.type !== 'all') {
+    query.set('type', filters.type);
+  }
+
+  if (filters.active && filters.active !== 'all') {
+    query.set('active', filters.active);
+  }
+
+  if (filters.siteScope && filters.siteScope !== 'all') {
+    query.set('siteScope', filters.siteScope);
+  }
+
+  if (filters.warehouseCode && filters.warehouseCode.trim()) {
+    query.set('warehouseCode', filters.warehouseCode.trim());
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${ENDPOINTS.warehouse.summary}?${queryString}` : ENDPOINTS.warehouse.summary;
+}
 
 function buildWarehouseLocationListUrl(filters: WarehouseLocationListFilters = {}) {
   const query = new URLSearchParams();
 
   if (filters.search && filters.search.trim()) {
     query.set('search', filters.search.trim());
+  }
+
+  if (filters.locationCode && filters.locationCode.trim()) {
+    query.set('locationCode', filters.locationCode.trim());
   }
 
   if (filters.status && filters.status !== 'all') {
@@ -32,6 +86,11 @@ function buildWarehouseLocationListUrl(filters: WarehouseLocationListFilters = {
 }
 
 export const warehouseApi = {
+  async getSummary(filters: WarehouseSummaryFilters = {}) {
+    const response = await apiClient.get<any>(buildWarehouseSummaryUrl(filters));
+    return mapWarehouseUtilizationSummary(response.data);
+  },
+
   async getLocations(filters: WarehouseLocationListFilters = {}) {
     const response = await apiClient.get<any>(buildWarehouseLocationListUrl(filters));
     return mapWarehouseLocationListResponse(response.data);

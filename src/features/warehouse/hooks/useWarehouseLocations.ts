@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { warehouseApi } from '../api';
@@ -13,6 +13,7 @@ export function useWarehouseLocations() {
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState<WarehouseLocationListFilters>({
     search: '',
+    locationCode: '',
     status: 'all',
     type: 'all',
     active: 'all'
@@ -41,12 +42,19 @@ export function useWarehouseLocations() {
 
   useEffect(() => {
     void load();
-  }, [filters.search, filters.status, filters.type, filters.active]);
+  }, [filters.search, filters.locationCode, filters.status, filters.type, filters.active]);
 
   function updateSearch(search: string) {
     setFilters((current) => ({
       ...current,
       search
+    }));
+  }
+
+  function updateLocationCode(locationCode: string) {
+    setFilters((current) => ({
+      ...current,
+      locationCode
     }));
   }
 
@@ -78,6 +86,7 @@ export function useWarehouseLocations() {
     isLoading,
     error,
     updateSearch,
+    updateLocationCode,
     updateStatus,
     updateType,
     updateActive,

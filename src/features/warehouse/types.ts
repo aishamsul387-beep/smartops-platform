@@ -9,6 +9,7 @@ export type WarehouseLocationType =
   | 'island';
 
 export type WarehouseCapacityUom = 'pallet' | 'pcs' | 'carton';
+export type WarehouseSiteScope = 'all' | 'warehouse' | 'outlet';
 
 export interface WarehouseLocationRecord {
   id: string;
@@ -46,8 +47,32 @@ export interface WarehouseLocationImportResult {
   }>;
 }
 
+export interface WarehouseUtilizationSummary {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  totalLocations: number;
+  activeLocations: number;
+  inactiveLocations: number;
+  emptyLocations: number;
+  occupiedLocations: number;
+  blockedLocations: number;
+  fullLocations: number;
+  fullLocationPct: number;
+  palletCapacityTotal: number;
+  palletCapacityUsed: number;
+  palletUtilizationPct: number;
+  pcsCapacityTotal: number;
+  pcsCapacityUsed: number;
+  pcsUtilizationPct: number;
+  cartonCapacityTotal: number;
+  cartonCapacityUsed: number;
+  cartonUtilizationPct: number;
+  updatedAt: string;
+}
+
 export interface WarehouseLocationListFilters {
   search?: string;
+  locationCode?: string;
   status?: 'all' | WarehouseLocationStatus;
   type?: 'all' | WarehouseLocationType;
   active?: 'all' | 'active' | 'inactive';
