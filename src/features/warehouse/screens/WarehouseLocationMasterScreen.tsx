@@ -480,26 +480,68 @@ export function WarehouseLocationMasterScreen() {
             {summaryError}
           </div>
         ) : (
-          <PageStatsGrid>
-            <PageStatCard
-              label="Pallet Utilization"
-              value={formatPercent(utilizationSummary.palletUtilizationPct)}
-              helperText={`${utilizationSummary.palletCapacityUsed} / ${utilizationSummary.palletCapacityTotal}`}
-            />
-            <PageStatCard
-              label="PCS Utilization"
-              value={formatPercent(utilizationSummary.pcsUtilizationPct)}
-              helperText={`${utilizationSummary.pcsCapacityUsed} / ${utilizationSummary.pcsCapacityTotal}`}
-            />
-            <PageStatCard
-              label="Carton Utilization"
-              value={formatPercent(utilizationSummary.cartonUtilizationPct)}
-              helperText={`${utilizationSummary.cartonCapacityUsed} / ${utilizationSummary.cartonCapacityTotal}`}
-            />
-            <PageStatCard label="Total Locations" value={utilizationSummary.totalLocations} />
-            <PageStatCard label="Active Locations" value={utilizationSummary.activeLocations} />
-            <PageStatCard label="Inactive Locations" value={utilizationSummary.inactiveLocations} />
-          </PageStatsGrid>
+          <>
+            <PageStatsGrid>
+              <PageStatCard
+                label="Pallet Utilization"
+                value={formatPercent(utilizationSummary.palletUtilizationPct)}
+              />
+              <PageStatCard
+                label="PCS Utilization"
+                value={formatPercent(utilizationSummary.pcsUtilizationPct)}
+              />
+              <PageStatCard
+                label="Carton Utilization"
+                value={formatPercent(utilizationSummary.cartonUtilizationPct)}
+              />
+              <PageStatCard label="Total Locations" value={utilizationSummary.totalLocations} />
+              <PageStatCard label="Active Locations" value={utilizationSummary.activeLocations} />
+              <PageStatCard label="Inactive Locations" value={utilizationSummary.inactiveLocations} />
+            </PageStatsGrid>
+
+            <div
+              style={{
+                marginTop: '16px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '12px'
+              }}
+            >
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#334155'
+                }}
+              >
+                <strong>Pallet basis:</strong> {utilizationSummary.palletCapacityUsed} / {utilizationSummary.palletCapacityTotal}
+              </div>
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#334155'
+                }}
+              >
+                <strong>PCS basis:</strong> {utilizationSummary.pcsCapacityUsed} / {utilizationSummary.pcsCapacityTotal}
+              </div>
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#334155'
+                }}
+              >
+                <strong>Carton basis:</strong> {utilizationSummary.cartonCapacityUsed} / {utilizationSummary.cartonCapacityTotal}
+              </div>
+            </div>
+          </>
         )}
       </PageSectionCard>
 
@@ -984,4 +1026,3 @@ export function WarehouseLocationMasterScreen() {
     </div>
   );
 }
-
