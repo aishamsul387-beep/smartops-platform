@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { warehouseApi } from '../api';
 import type {
   WarehouseLocationListFilters,
@@ -24,7 +24,7 @@ export function useWarehouseLocations() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function load(nextFilters?: WarehouseLocationListFilters) {
+  const load = useCallback(async (nextFilters?: WarehouseLocationListFilters) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -41,19 +41,11 @@ export function useWarehouseLocations() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [filters]);
 
   useEffect(() => {
     void load();
-  }, [
-    filters.search,
-    filters.warehouseCode,
-    filters.siteScope,
-    filters.locationCode,
-    filters.status,
-    filters.type,
-    filters.active
-  ]);
+  }, [load]);
 
   function updateSearch(search: string) {
     setFilters((current) => ({
