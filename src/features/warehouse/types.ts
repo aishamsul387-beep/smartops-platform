@@ -11,6 +11,7 @@ export type WarehouseLocationType =
 export type WarehouseCapacityUom = 'pallet' | 'pcs' | 'carton';
 export type WarehouseSiteScope = 'all' | 'warehouse' | 'outlet';
 export type WarehouseSiteType = 'warehouse' | 'outlet';
+export type WarehouseAlertSeverity = 'near_full' | 'full';
 
 export interface WarehouseSiteRecord {
   siteCode: string;
@@ -109,6 +110,41 @@ export interface WarehouseUtilizationDrilldown {
   warehouseCode: string | null;
   byLocationType: WarehouseUtilizationDrilldownBucket[];
   byZone: WarehouseUtilizationDrilldownBucket[];
+  updatedAt: string;
+}
+
+export interface WarehouseLocationAlertRecord {
+  id: string;
+  severity: WarehouseAlertSeverity;
+  utilizationPct: number;
+  siteCode: string;
+  siteName: string;
+  siteType: WarehouseSiteType;
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  capacityUom: WarehouseCapacityUom;
+  capacityTotal: number;
+  capacityUsed: number;
+  remainingCapacity: number;
+  status: WarehouseLocationStatus;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+export interface WarehouseLocationAlertSummary {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  thresholdPct: number;
+  totalAlertLocations: number;
+  nearFullLocations: number;
+  fullLocations: number;
+  items: WarehouseLocationAlertRecord[];
   updatedAt: string;
 }
 

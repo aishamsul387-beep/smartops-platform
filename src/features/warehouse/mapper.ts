@@ -1,10 +1,14 @@
 ﻿import type {
+  WarehouseAlertSeverity,
   WarehouseCapacityUom,
+  WarehouseLocationAlertRecord,
+  WarehouseLocationAlertSummary,
   WarehouseLocationListResponse,
   WarehouseLocationRecord,
   WarehouseLocationStatus,
   WarehouseLocationType,
   WarehouseSiteScope,
+  WarehouseSiteType,
   WarehouseUtilizationDrilldown,
   WarehouseUtilizationDrilldownBucket,
   WarehouseUtilizationSummary
@@ -22,6 +26,7 @@ const allowedTypes: WarehouseLocationType[] = [
 ];
 const allowedCapacityUom: WarehouseCapacityUom[] = ['pallet', 'pcs', 'carton'];
 const allowedSiteScopes: WarehouseSiteScope[] = ['all', 'warehouse', 'outlet'];
+const allowedAlertSeverities: WarehouseAlertSeverity[] = ['near_full', 'full'];
 
 function extractPayload<T = any>(value: any): T {
   if (value && typeof value === 'object' && 'data' in value && value.data !== undefined) {
@@ -74,6 +79,16 @@ function normalizeSiteScope(value: unknown): WarehouseSiteScope {
   return allowedSiteScopes.includes(normalized) ? normalized : 'all';
 }
 
+function normalizeSiteType(value: unknown): WarehouseSiteType {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseSiteType;
+  return normalized === 'outlet' ? 'outlet' : 'warehouse';
+}
+
+function normalizeAlertSeverity(value: unknown): WarehouseAlertSeverity {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseAlertSeverity;
+  return allowedAlertSeverities.includes(normalized) ? normalized : 'near_full';
+}
+
 function mapWarehouseUtilizationDrilldownBucket(data: any): WarehouseUtilizationDrilldownBucket {
   const source = data ?? {};
 
@@ -97,6 +112,34 @@ function mapWarehouseUtilizationDrilldownBucket(data: any): WarehouseUtilization
     cartonCapacityTotal: normalizeNumber(source.cartonCapacityTotal),
     cartonCapacityUsed: normalizeNumber(source.cartonCapacityUsed),
     cartonUtilizationPct: normalizeNumber(source.cartonUtilizationPct)
+  };
+}
+
+function mapWarehouseLocationAlertRecord(data: any): WarehouseLocationAlertRecord {
+  const source = data ?? {};
+
+  return {
+    id: normalizeText(source.id),
+    severity: normalizeAlertSeverity(source.severity),
+    utilizationPct: normalizeNumber(source.utilizationPct),
+    siteCode: normalizeText(source.siteCode),
+    siteName: normalizeText(source.siteName),
+    siteType: normalizeSiteType(source.siteType),
+    warehouseCode: normalizeText(source.warehouseCode),
+    warehouseName: normalizeText(source.warehouseName),
+    locationCode: normalizeText(source.locationCode),
+    zone: normalizeText(source.zone),
+    aisle: normalizeText(source.aisle),
+    levelCode: normalizeText(source.levelCode),
+    bin: normalizeText(source.bin),
+    locationType: normalizeType(source.locationType),
+    capacityUom: normalizeCapacityUom(source.capacityUom),
+    capacityTotal: normalizeNumber(source.capacityTotal),
+    capacityUsed: normalizeNumber(source.capacityUsed),
+    remainingCapacity: normalizeNumber(source.remainingCapacity),
+    status: normalizeStatus(source.status),
+    isActive: normalizeBoolean(source.isActive),
+    updatedAt: normalizeText(source.updatedAt)
   };
 }
 
@@ -174,6 +217,22 @@ export function mapWarehouseUtilizationDrilldown(data: any): WarehouseUtilizatio
     warehouseCode: normalizeNullableText(source.warehouseCode),
     byLocationType: rawByLocationType.map(mapWarehouseUtilizationDrilldownBucket),
     byZone: rawByZone.map(mapWarehouseUtilizationDrilldownBucket),
+    updatedAt: normalizeText(source.updatedAt)
+  };
+}
+
+export function mapWarehouseLocationAlertSummary(data: any): WarehouseLocationAlertSummary {
+  const source = extractPayload<any>(data) ?? {};
+  const rawItems = Array.isArray(source.items) ? source.items : [];
+
+  return {
+    siteScope: normalizeSiteScope(source.siteScope),
+    warehouseCode: normalizeNullableText(source.warehouseCode),
+    thresholdPct: normalizeNumber(source.thresholdPct),
+    totalAlertLocations: normalizeNumber(source.totalAlertLocations),
+    nearFullLocations: normalizeNumber(source.nearFullLocations),
+    fullLocations: normalizeNumber(source.fullLocations),
+    items: rawItems.map(mapWarehouseLocationAlertRecord),
     updatedAt: normalizeText(source.updatedAt)
   };
 }

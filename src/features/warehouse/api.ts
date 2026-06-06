@@ -2,6 +2,7 @@
 import { ENDPOINTS } from '@/services/api/endpoints';
 import {
   mapWarehouseLocation,
+  mapWarehouseLocationAlertSummary,
   mapWarehouseLocationListResponse,
   mapWarehouseUtilizationDrilldown,
   mapWarehouseUtilizationSummary
@@ -9,6 +10,7 @@ import {
 import type {
   CreateWarehouseLocationRequest,
   UpdateWarehouseLocationRequest,
+  WarehouseLocationAlertSummary,
   WarehouseLocationImportResult,
   WarehouseLocationListFilters,
   WarehouseSiteListResponse,
@@ -27,7 +29,12 @@ export interface WarehouseSummaryFilters {
   warehouseCode?: string;
 }
 
+export interface WarehouseAlertFilters extends WarehouseSummaryFilters {
+  thresholdPct?: number;
+}
+
 const WAREHOUSE_DRILLDOWN_ENDPOINT = '/warehouse/drilldown';
+const WAREHOUSE_ALERTS_ENDPOINT = '/warehouse/alerts';
 
 function buildWarehouseSummaryUrl(filters: WarehouseSummaryFilters = {}) {
   const query = new URLSearchParams();
@@ -99,6 +106,45 @@ function buildWarehouseDrilldownUrl(filters: WarehouseSummaryFilters = {}) {
   return queryString ? `${WAREHOUSE_DRILLDOWN_ENDPOINT}?${queryString}` : WAREHOUSE_DRILLDOWN_ENDPOINT;
 }
 
+function buildWarehouseAlertsUrl(filters: WarehouseAlertFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.locationCode && filters.locationCode.trim()) {
+    query.set('locationCode', filters.locationCode.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  if (filters.type && filters.type !== 'all') {
+    query.set('type', filters.type);
+  }
+
+  if (filters.active && filters.active !== 'all') {
+    query.set('active', filters.active);
+  }
+
+  if (filters.siteScope && filters.siteScope !== 'all') {
+    query.set('siteScope', filters.siteScope);
+  }
+
+  if (filters.warehouseCode && filters.warehouseCode.trim()) {
+    query.set('warehouseCode', filters.warehouseCode.trim());
+  }
+
+  if (typeof filters.thresholdPct === 'number' && Number.isFinite(filters.thresholdPct)) {
+    query.set('thresholdPct', String(filters.thresholdPct));
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${WAREHOUSE_ALERTS_ENDPOINT}?${queryString}` : WAREHOUSE_ALERTS_ENDPOINT;
+}
+
 function buildWarehouseLocationListUrl(filters: WarehouseLocationListFilters = {}) {
   const query = new URLSearchParams();
 
@@ -166,6 +212,11 @@ export const warehouseApi = {
   async getDrilldown(filters: WarehouseSummaryFilters = {}): Promise<WarehouseUtilizationDrilldown> {
     const response = await apiClient.get<any>(buildWarehouseDrilldownUrl(filters));
     return mapWarehouseUtilizationDrilldown(response.data);
+  },
+
+  async getAlerts(filters: WarehouseAlertFilters = {}): Promise<WarehouseLocationAlertSummary> {
+    const response = await apiClient.get<any>(buildWarehouseAlertsUrl(filters));
+    return mapWarehouseLocationAlertSummary(response.data);
   },
 
   async getLocations(filters: WarehouseLocationListFilters = {}) {

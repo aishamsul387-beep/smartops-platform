@@ -3,10 +3,15 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/routes';
+import { useWarehouseAlerts } from '../hooks/useWarehouseAlerts';
 import { useWarehouseDrilldown } from '../hooks/useWarehouseDrilldown';
 import { useWarehouseSites } from '../hooks/useWarehouseSites';
 import { useWarehouseSummary } from '../hooks/useWarehouseSummary';
-import type { WarehouseSiteScope, WarehouseUtilizationDrilldownBucket } from '../types';
+import type {
+  WarehouseLocationAlertRecord,
+  WarehouseSiteScope,
+  WarehouseUtilizationDrilldownBucket
+} from '../types';
 
 function formatPercent(value: number) {
   return `${value.toFixed(2)}%`;
@@ -30,6 +35,26 @@ function renderUtilizationPair(label: string, used: number, total: number, pct: 
       <strong>{label}:</strong> {used} / {total} ({formatPercent(pct)})
     </div>
   );
+}
+
+function getAlertSeverityStyle(severity: WarehouseLocationAlertRecord['severity']) {
+  if (severity === 'full') {
+    return {
+      background: '#fee2e2',
+      color: '#991b1b',
+      border: '1px solid #fecaca'
+    };
+  }
+
+  return {
+    background: '#fef3c7',
+    color: '#92400e',
+    border: '1px solid #fde68a'
+  };
+}
+
+function getAlertSeverityLabel(severity: WarehouseLocationAlertRecord['severity']) {
+  return severity === 'full' ? 'Full' : 'Near Full';
 }
 
 function DrilldownTable({
@@ -135,6 +160,17 @@ export function WarehouseScreen() {
     warehouseCode: warehouseCode || undefined
   });
 
+  const {
+    alerts,
+    isLoading: isAlertsLoading,
+    error: alertsError,
+    refresh: refreshAlerts
+  } = useWarehouseAlerts({
+    siteScope,
+    warehouseCode: warehouseCode || undefined,
+    thresholdPct: 80
+  });
+
   const filteredSites = useMemo(() => {
     if (siteScope === 'all') {
       return sites;
@@ -154,7 +190,7 @@ export function WarehouseScreen() {
   const activeBase = summary.activeLocations > 0 ? summary.activeLocations : summary.totalLocations;
 
   async function handleRefresh() {
-    await Promise.all([refresh(), refreshSites(), refreshDrilldown()]);
+    await Promise.all([refresh(), refreshSites(), refreshDrilldown(), refreshAlerts()]);
   }
 
   function handleSiteScopeChange(nextScope: WarehouseSiteScope) {
@@ -188,7 +224,7 @@ export function WarehouseScreen() {
               Warehouse
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Warehouse overview now uses normalized site selection and utilization drill-down by location type and zone.
+              Warehouse overview now uses normalized site selection, utilization drill-down, and actionable near-full/full alerts.
             </div>
           </div>
 
@@ -438,6 +474,139 @@ export function WarehouseScreen() {
             </div>
           </div>
 
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>
+              Location Capacity Alerts
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
+              Near-full and full locations help operations act before capacity becomes a bottleneck. Default near-full threshold is 80%.
+            </div>
+
+            {isAlertsLoading ? (
+              <div style={{ color: '#64748b' }}>Loading warehouse alerts...</div>
+            ) : alertsError ? (
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '10px',
+                  background: '#fef2f2',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca'
+                }}
+              >
+                {alertsError}
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: '16px',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    marginBottom: '16px'
+                  }}
+                >
+                  <div style={{ background: '#fff7ed', border: '1px solid #fdba74', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#9a3412', marginBottom: '8px' }}>Near-Full Locations</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#9a3412' }}>{alerts.nearFullLocations}</div>
+                  </div>
+
+                  <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#991b1b', marginBottom: '8px' }}>Full Locations</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#991b1b' }}>{alerts.fullLocations}</div>
+                  </div>
+
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#64748b', marginBottom: '8px' }}>Total Alert Locations</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700 }}>{alerts.totalAlertLocations}</div>
+                  </div>
+
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#64748b', marginBottom: '8px' }}>Threshold</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatPercent(alerts.thresholdPct)}</div>
+                  </div>
+                </div>
+
+                {alerts.items.length === 0 ? (
+                  <div style={{ color: '#64748b' }}>No near-full or full locations found for the current filter.</div>
+                ) : (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Severity</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Site</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Location</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Zone / Type</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Utilization</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Remaining</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {alerts.items.map((item) => (
+                          <tr key={`${item.id}-${item.severity}`}>
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              <span
+                                style={{
+                                  display: 'inline-block',
+                                  padding: '6px 10px',
+                                  borderRadius: '999px',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                  ...getAlertSeverityStyle(item.severity)
+                                }}
+                              >
+                                {getAlertSeverityLabel(item.severity)}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              <div style={{ fontWeight: 700 }}>{item.siteCode}</div>
+                              <div>{item.siteName}</div>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                              {item.locationCode}
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              <div>{item.zone}</div>
+                              <div style={{ color: '#64748b', fontSize: '13px' }}>{item.locationType}</div>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              <div style={{ fontWeight: 700 }}>{formatPercent(item.utilizationPct)}</div>
+                              <div style={{ color: '#64748b', fontSize: '13px' }}>
+                                {item.capacityUsed} / {item.capacityTotal} {item.capacityUom}
+                              </div>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              {item.remainingCapacity} {item.capacityUom}
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              {item.status}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
           <div style={{ display: 'grid', gap: '24px', marginBottom: '24px' }}>
             {isDrilldownLoading ? (
               <div style={{ color: '#64748b' }}>Loading utilization drill-down...</div>
@@ -482,7 +651,7 @@ export function WarehouseScreen() {
               Current warehouse snapshot
             </div>
             <div style={{ color: '#475569', lineHeight: 1.7 }}>
-              This summary now includes drill-down by location type and zone for the selected normalized site and scope.
+              This summary now includes actionable near-full/full alerts together with drill-down by location type and zone for the selected normalized site and scope.
             </div>
           </div>
         </>
