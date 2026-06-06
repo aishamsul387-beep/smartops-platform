@@ -10,6 +10,8 @@ import {
 import type {
   CreateWarehouseLocationRequest,
   UpdateWarehouseLocationRequest,
+  WarehouseAlertThresholdListResponse,
+  WarehouseAlertThresholdRecord,
   WarehouseLocationAlertSummary,
   WarehouseLocationImportResult,
   WarehouseLocationListFilters,
@@ -35,6 +37,7 @@ export interface WarehouseAlertFilters extends WarehouseSummaryFilters {
 
 const WAREHOUSE_DRILLDOWN_ENDPOINT = '/warehouse/drilldown';
 const WAREHOUSE_ALERTS_ENDPOINT = '/warehouse/alerts';
+const WAREHOUSE_ALERT_THRESHOLDS_ENDPOINT = '/warehouse/alert-thresholds';
 
 function buildWarehouseSummaryUrl(filters: WarehouseSummaryFilters = {}) {
   const query = new URLSearchParams();
@@ -198,10 +201,56 @@ function mapWarehouseSiteListResponse(data: any): WarehouseSiteListResponse {
   };
 }
 
+function mapWarehouseAlertThresholdListResponse(data: any): WarehouseAlertThresholdListResponse {
+  const payload = data?.data ?? data ?? {};
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+
+  const items: WarehouseAlertThresholdRecord[] = rawItems.map((item: any) => ({
+    siteCode: item?.siteCode ? String(item.siteCode).trim() : null,
+    siteName: String(item?.siteName ?? '').trim(),
+    siteType: item?.siteType === 'outlet' ? 'outlet' : item?.siteType === 'all' ? 'all' : 'warehouse',
+    thresholdPct: Number.isFinite(Number(item?.thresholdPct)) ? Number(item.thresholdPct) : 0,
+    source:
+      item?.source === 'site_override' ||
+      item?.source === 'site_type_default' ||
+      item?.source === 'global_default' ||
+      item?.source === 'request_override'
+        ? item.source
+        : 'global_default'
+  }));
+
+  const total = Number.isFinite(Number(payload.total)) ? Number(payload.total) : items.length;
+
+  return {
+    items,
+    total
+  };
+}
+
 export const warehouseApi = {
   async getSites() {
     const response = await apiClient.get<any>('/warehouse/sites');
     return mapWarehouseSiteListResponse(response.data);
+  },
+
+  async getAlertThresholds() {
+    const response = await apiClient.get<any>(WAREHOUSE_ALERT_THRESHOLDS_ENDPOINT);
+    return mapWarehouseAlertThresholdListResponse(response.data);
+  },
+
+  async updateAlertThreshold(siteCode: string, thresholdPct: number) {
+    const response = await apiClient.put<any>(
+      `${WAREHOUSE_ALERT_THRESHOLDS_ENDPOINT}/${encodeURIComponent(siteCode)}`,
+      { thresholdPct }
+    );
+    return response.data?.data ?? response.data;
+  },
+
+  async clearAlertThreshold(siteCode: string) {
+    const response = await apiClient.delete<any>(
+      `${WAREHOUSE_ALERT_THRESHOLDS_ENDPOINT}/${encodeURIComponent(siteCode)}`
+    );
+    return response.data?.data ?? response.data;
   },
 
   async getSummary(filters: WarehouseSummaryFilters = {}) {

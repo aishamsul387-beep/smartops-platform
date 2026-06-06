@@ -1,13 +1,15 @@
 ﻿'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/routes';
+import { useWarehouseAlertThresholds } from '../hooks/useWarehouseAlertThresholds';
 import { useWarehouseAlerts } from '../hooks/useWarehouseAlerts';
 import { useWarehouseDrilldown } from '../hooks/useWarehouseDrilldown';
 import { useWarehouseSites } from '../hooks/useWarehouseSites';
 import { useWarehouseSummary } from '../hooks/useWarehouseSummary';
 import type {
+  WarehouseAlertThresholdRecord,
   WarehouseLocationAlertRecord,
   WarehouseSiteScope,
   WarehouseUtilizationDrilldownBucket
@@ -55,6 +57,22 @@ function getAlertSeverityStyle(severity: WarehouseLocationAlertRecord['severity'
 
 function getAlertSeverityLabel(severity: WarehouseLocationAlertRecord['severity']) {
   return severity === 'full' ? 'Full' : 'Near Full';
+}
+
+function getThresholdSourceLabel(source: string) {
+  if (source === 'site_override') {
+    return 'site override';
+  }
+
+  if (source === 'site_type_default') {
+    return 'site type default';
+  }
+
+  if (source === 'request_override') {
+    return 'request override';
+  }
+
+  return 'global default';
 }
 
 function DrilldownTable({
@@ -131,6 +149,135 @@ function DrilldownTable({
   );
 }
 
+function ThresholdConfigTable({
+  rows,
+  drafts,
+  isSaving,
+  onDraftChange,
+  onSave,
+  onClear
+}: {
+  rows: WarehouseAlertThresholdRecord[];
+  drafts: Record<string, string>;
+  isSaving: boolean;
+  onDraftChange: (siteCode: string, value: string) => void;
+  onSave: (siteCode: string) => Promise<void>;
+  onClear: (siteCode: string) => Promise<void>;
+}) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '24px',
+        marginBottom: '24px'
+      }}
+    >
+      <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>
+        Alert Threshold Configuration
+      </div>
+      <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
+        Configure near-full thresholds per site. Full locations always remain at 100%.
+      </div>
+
+      {rows.length === 0 ? (
+        <div style={{ color: '#64748b' }}>No threshold configuration rows found.</div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Site</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Type</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Current Threshold</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Source</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>New Threshold %</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const siteCode = row.siteCode ?? '';
+                const currentDraft = drafts[siteCode] ?? String(row.thresholdPct);
+
+                return (
+                  <tr key={`${row.siteCode ?? 'all'}-${row.siteType}`}>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ fontWeight: 700 }}>{row.siteCode ?? 'ALL SITES'}</div>
+                      <div>{row.siteName}</div>
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {row.siteType}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                      {formatPercent(row.thresholdPct)}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {getThresholdSourceLabel(row.source)}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <input
+                        value={currentDraft}
+                        onChange={(e) => onDraftChange(siteCode, e.target.value)}
+                        disabled={isSaving || !siteCode}
+                        placeholder="80"
+                        style={{
+                          width: '120px',
+                          padding: '10px 12px',
+                          borderRadius: '10px',
+                          border: '1px solid #cbd5e1'
+                        }}
+                      />
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          disabled={isSaving || !siteCode}
+                          onClick={() => void onSave(siteCode)}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: isSaving || !siteCode ? '#94a3b8' : '#0f172a',
+                            color: '#ffffff',
+                            fontWeight: 600,
+                            cursor: isSaving || !siteCode ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          Save
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isSaving || !siteCode || row.source !== 'site_override'}
+                          onClick={() => void onClear(siteCode)}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            color: isSaving || !siteCode || row.source !== 'site_override' ? '#94a3b8' : '#334155',
+                            fontWeight: 600,
+                            cursor: isSaving || !siteCode || row.source !== 'site_override' ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          Clear Override
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function WarehouseScreen() {
   const {
     summary,
@@ -151,6 +298,16 @@ export function WarehouseScreen() {
   } = useWarehouseSites();
 
   const {
+    items: thresholdItems,
+    isLoading: isThresholdsLoading,
+    isSaving: isThresholdSaving,
+    error: thresholdsError,
+    refresh: refreshThresholds,
+    updateThreshold,
+    clearThreshold
+  } = useWarehouseAlertThresholds();
+
+  const {
     drilldown,
     isLoading: isDrilldownLoading,
     error: drilldownError,
@@ -167,9 +324,10 @@ export function WarehouseScreen() {
     refresh: refreshAlerts
   } = useWarehouseAlerts({
     siteScope,
-    warehouseCode: warehouseCode || undefined,
-    thresholdPct: 80
+    warehouseCode: warehouseCode || undefined
   });
+
+  const [thresholdDrafts, setThresholdDrafts] = useState<Record<string, string>>({});
 
   const filteredSites = useMemo(() => {
     if (siteScope === 'all') {
@@ -187,15 +345,64 @@ export function WarehouseScreen() {
     return sites.find((site) => site.siteCode === warehouseCode) ?? null;
   }, [sites, warehouseCode]);
 
+  const visibleThresholdItems = useMemo(() => {
+    let filtered = thresholdItems;
+
+    if (siteScope !== 'all') {
+      filtered = filtered.filter((item) => item.siteType === siteScope);
+    }
+
+    if (warehouseCode) {
+      filtered = filtered.filter((item) => item.siteCode === warehouseCode);
+    }
+
+    return filtered;
+  }, [thresholdItems, siteScope, warehouseCode]);
+
   const activeBase = summary.activeLocations > 0 ? summary.activeLocations : summary.totalLocations;
 
   async function handleRefresh() {
-    await Promise.all([refresh(), refreshSites(), refreshDrilldown(), refreshAlerts()]);
+    await Promise.all([
+      refresh(),
+      refreshSites(),
+      refreshDrilldown(),
+      refreshAlerts(),
+      refreshThresholds()
+    ]);
   }
 
   function handleSiteScopeChange(nextScope: WarehouseSiteScope) {
     setSiteScope(nextScope);
     setWarehouseCode('');
+  }
+
+  function handleThresholdDraftChange(siteCode: string, value: string) {
+    setThresholdDrafts((current) => ({
+      ...current,
+      [siteCode]: value
+    }));
+  }
+
+  async function handleSaveThreshold(siteCode: string) {
+    const rawValue = thresholdDrafts[siteCode];
+    const parsedValue = Number(rawValue);
+
+    if (!Number.isFinite(parsedValue)) {
+      return;
+    }
+
+    await updateThreshold(siteCode, parsedValue);
+    await Promise.all([refreshAlerts(), refreshThresholds()]);
+  }
+
+  async function handleClearThreshold(siteCode: string) {
+    await clearThreshold(siteCode);
+    await Promise.all([refreshAlerts(), refreshThresholds()]);
+    setThresholdDrafts((current) => {
+      const next = { ...current };
+      delete next[siteCode];
+      return next;
+    });
   }
 
   return (
@@ -474,6 +681,32 @@ export function WarehouseScreen() {
             </div>
           </div>
 
+          <ThresholdConfigTable
+            rows={visibleThresholdItems}
+            drafts={thresholdDrafts}
+            isSaving={isThresholdSaving}
+            onDraftChange={handleThresholdDraftChange}
+            onSave={handleSaveThreshold}
+            onClear={handleClearThreshold}
+          />
+
+          {isThresholdsLoading ? (
+            <div style={{ color: '#64748b', marginBottom: '24px' }}>Loading threshold configuration...</div>
+          ) : thresholdsError ? (
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca',
+                marginBottom: '24px'
+              }}
+            >
+              {thresholdsError}
+            </div>
+          ) : null}
+
           <div
             style={{
               background: '#ffffff',
@@ -487,7 +720,7 @@ export function WarehouseScreen() {
               Location Capacity Alerts
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
-              Near-full and full locations help operations act before capacity becomes a bottleneck. Default near-full threshold is 80%.
+              Near-full and full locations help operations act before capacity becomes a bottleneck.
             </div>
 
             {isAlertsLoading ? (
@@ -530,9 +763,33 @@ export function WarehouseScreen() {
                   </div>
 
                   <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-                    <div style={{ color: '#64748b', marginBottom: '8px' }}>Threshold</div>
+                    <div style={{ color: '#64748b', marginBottom: '8px' }}>Requested Threshold</div>
                     <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatPercent(alerts.thresholdPct)}</div>
                   </div>
+                </div>
+
+                <div
+                  style={{
+                    marginBottom: '16px',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    color: '#334155'
+                  }}
+                >
+                  <div style={{ fontWeight: 700, marginBottom: '8px' }}>Applied Thresholds</div>
+                  {alerts.appliedThresholds.length === 0 ? (
+                    <div style={{ color: '#64748b' }}>No threshold metadata returned.</div>
+                  ) : (
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                      {alerts.appliedThresholds.map((item) => (
+                        <div key={`${item.siteCode ?? 'all'}-${item.siteType}`}>
+                          <strong>{item.siteCode ?? 'ALL SITES'}</strong> â€” {item.siteName} â€” {item.siteType} â€” {formatPercent(item.thresholdPct)} ({getThresholdSourceLabel(item.source)})
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {alerts.items.length === 0 ? (
@@ -547,6 +804,7 @@ export function WarehouseScreen() {
                           <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Location</th>
                           <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Zone / Type</th>
                           <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Utilization</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Threshold</th>
                           <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Remaining</th>
                           <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
                         </tr>
@@ -588,6 +846,10 @@ export function WarehouseScreen() {
                               <div style={{ color: '#64748b', fontSize: '13px' }}>
                                 {item.capacityUsed} / {item.capacityTotal} {item.capacityUom}
                               </div>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              {formatPercent(item.thresholdPctApplied)}
                             </td>
 
                             <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
@@ -651,7 +913,7 @@ export function WarehouseScreen() {
               Current warehouse snapshot
             </div>
             <div style={{ color: '#475569', lineHeight: 1.7 }}>
-              This summary now includes actionable near-full/full alerts together with drill-down by location type and zone for the selected normalized site and scope.
+              This summary now includes actionable near-full/full alerts, configurable thresholds, and drill-down by location type and zone for the selected normalized site and scope.
             </div>
           </div>
         </>
@@ -659,3 +921,4 @@ export function WarehouseScreen() {
     </div>
   );
 }
+
