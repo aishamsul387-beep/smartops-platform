@@ -10,6 +10,18 @@ export type WarehouseLocationType =
 
 export type WarehouseCapacityUom = 'pallet' | 'pcs' | 'carton';
 export type WarehouseSiteScope = 'all' | 'warehouse' | 'outlet';
+export type WarehouseSiteType = 'warehouse' | 'outlet';
+
+export interface WarehouseSiteRecord {
+  siteCode: string;
+  siteName: string;
+  siteType: WarehouseSiteType;
+}
+
+export interface WarehouseSiteListResponse {
+  items: WarehouseSiteRecord[];
+  total: number;
+}
 
 export interface WarehouseLocationRecord {
   id: string;
@@ -72,6 +84,8 @@ export interface WarehouseUtilizationSummary {
 
 export interface WarehouseLocationListFilters {
   search?: string;
+  warehouseCode?: string;
+  siteScope?: WarehouseSiteScope;
   locationCode?: string;
   status?: 'all' | WarehouseLocationStatus;
   type?: 'all' | WarehouseLocationType;

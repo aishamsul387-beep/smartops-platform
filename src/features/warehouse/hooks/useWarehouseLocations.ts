@@ -5,7 +5,8 @@ import { warehouseApi } from '../api';
 import type {
   WarehouseLocationListFilters,
   WarehouseLocationRecord,
-  WarehouseLocationStatus
+  WarehouseLocationStatus,
+  WarehouseSiteScope
 } from '../types';
 
 export function useWarehouseLocations() {
@@ -13,6 +14,8 @@ export function useWarehouseLocations() {
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState<WarehouseLocationListFilters>({
     search: '',
+    warehouseCode: '',
+    siteScope: 'all',
     locationCode: '',
     status: 'all',
     type: 'all',
@@ -42,12 +45,35 @@ export function useWarehouseLocations() {
 
   useEffect(() => {
     void load();
-  }, [filters.search, filters.locationCode, filters.status, filters.type, filters.active]);
+  }, [
+    filters.search,
+    filters.warehouseCode,
+    filters.siteScope,
+    filters.locationCode,
+    filters.status,
+    filters.type,
+    filters.active
+  ]);
 
   function updateSearch(search: string) {
     setFilters((current) => ({
       ...current,
       search
+    }));
+  }
+
+  function updateWarehouseCode(warehouseCode: string) {
+    setFilters((current) => ({
+      ...current,
+      warehouseCode
+    }));
+  }
+
+  function updateSiteScope(siteScope: WarehouseSiteScope) {
+    setFilters((current) => ({
+      ...current,
+      siteScope,
+      warehouseCode: ''
     }));
   }
 
@@ -86,6 +112,8 @@ export function useWarehouseLocations() {
     isLoading,
     error,
     updateSearch,
+    updateWarehouseCode,
+    updateSiteScope,
     updateLocationCode,
     updateStatus,
     updateType,

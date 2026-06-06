@@ -10,6 +10,8 @@ import type {
   UpdateWarehouseLocationRequest,
   WarehouseLocationImportResult,
   WarehouseLocationListFilters,
+  WarehouseSiteListResponse,
+  WarehouseSiteRecord,
   WarehouseSiteScope
 } from './types';
 
@@ -65,6 +67,14 @@ function buildWarehouseLocationListUrl(filters: WarehouseLocationListFilters = {
     query.set('search', filters.search.trim());
   }
 
+  if (filters.warehouseCode && filters.warehouseCode.trim()) {
+    query.set('warehouseCode', filters.warehouseCode.trim());
+  }
+
+  if (filters.siteScope && filters.siteScope !== 'all') {
+    query.set('siteScope', filters.siteScope);
+  }
+
   if (filters.locationCode && filters.locationCode.trim()) {
     query.set('locationCode', filters.locationCode.trim());
   }
@@ -85,7 +95,30 @@ function buildWarehouseLocationListUrl(filters: WarehouseLocationListFilters = {
   return queryString ? `${ENDPOINTS.warehouse.locations}?${queryString}` : ENDPOINTS.warehouse.locations;
 }
 
+function mapWarehouseSiteListResponse(data: any): WarehouseSiteListResponse {
+  const payload = data?.data ?? data ?? {};
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+
+  const items: WarehouseSiteRecord[] = rawItems.map((item: any) => ({
+    siteCode: String(item?.siteCode ?? '').trim(),
+    siteName: String(item?.siteName ?? '').trim(),
+    siteType: item?.siteType === 'outlet' ? 'outlet' : 'warehouse'
+  }));
+
+  const total = Number.isFinite(Number(payload.total)) ? Number(payload.total) : items.length;
+
+  return {
+    items,
+    total
+  };
+}
+
 export const warehouseApi = {
+  async getSites() {
+    const response = await apiClient.get<any>('/warehouse/sites');
+    return mapWarehouseSiteListResponse(response.data);
+  },
+
   async getSummary(filters: WarehouseSummaryFilters = {}) {
     const response = await apiClient.get<any>(buildWarehouseSummaryUrl(filters));
     return mapWarehouseUtilizationSummary(response.data);

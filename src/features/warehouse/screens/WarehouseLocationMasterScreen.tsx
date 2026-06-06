@@ -5,6 +5,7 @@ import { PageHeaderCard, PageSectionCard, PageStatCard, PageStatsGrid } from '@/
 import { useCreateWarehouseLocation } from '../hooks/useCreateWarehouseLocation';
 import { useToggleWarehouseLocationActive } from '../hooks/useToggleWarehouseLocationActive';
 import { useWarehouseLocations } from '../hooks/useWarehouseLocations';
+import { useWarehouseSites } from '../hooks/useWarehouseSites';
 import { useWarehouseSummary } from '../hooks/useWarehouseSummary';
 import {
   initialWarehouseLocationFormValues,
@@ -16,7 +17,8 @@ import type {
   WarehouseLocationFormErrors,
   WarehouseLocationFormValues,
   WarehouseLocationImportResult,
-  WarehouseLocationRecord
+  WarehouseLocationRecord,
+  WarehouseSiteScope
 } from '../types';
 
 function getStatusStyle(status: string) {
@@ -237,6 +239,8 @@ export function WarehouseLocationMasterScreen() {
     isLoading,
     error,
     updateSearch,
+    updateWarehouseCode,
+    updateSiteScope,
     updateLocationCode,
     updateStatus,
     updateType,
@@ -245,12 +249,21 @@ export function WarehouseLocationMasterScreen() {
   } = useWarehouseLocations();
 
   const {
+    items: sites,
+    isLoading: isSitesLoading,
+    error: sitesError,
+    refresh: refreshSites
+  } = useWarehouseSites();
+
+  const {
     summary: utilizationSummary,
     isLoading: isSummaryLoading,
     error: summaryError,
     refresh: refreshSummary
   } = useWarehouseSummary({
     search: filters.search,
+    warehouseCode: filters.warehouseCode,
+    siteScope: filters.siteScope,
     locationCode: filters.locationCode,
     status: filters.status,
     type: filters.type,
@@ -274,6 +287,24 @@ export function WarehouseLocationMasterScreen() {
   const [isExporting, setIsExporting] = useState(false);
   const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
 
+  const filteredSites = useMemo(() => {
+    const currentScope = filters.siteScope ?? 'all';
+
+    if (currentScope === 'all') {
+      return sites;
+    }
+
+    return sites.filter((site) => site.siteType === currentScope);
+  }, [sites, filters.siteScope]);
+
+  const selectedSite = useMemo(() => {
+    if (!filters.warehouseCode) {
+      return null;
+    }
+
+    return sites.find((site) => site.siteCode === filters.warehouseCode) ?? null;
+  }, [sites, filters.warehouseCode]);
+
   const locationSummary = useMemo(() => {
     const activeItems = items.filter((item) => item.isActive).length;
     const emptyItems = items.filter((item) => item.status === 'empty').length;
@@ -289,7 +320,11 @@ export function WarehouseLocationMasterScreen() {
   }, [items]);
 
   async function refreshAll() {
-    await Promise.all([refresh(), refreshSummary()]);
+    await Promise.all([refresh(), refreshSummary(), refreshSites()]);
+  }
+
+  function handleSiteScopeChange(siteScope: WarehouseSiteScope) {
+    updateSiteScope(siteScope);
   }
 
   function updateField<K extends keyof WarehouseLocationFormValues>(
@@ -463,7 +498,7 @@ export function WarehouseLocationMasterScreen() {
 
       <PageSectionCard
         title="Warehouse Utilization Summary"
-        description="This summary now follows your current Warehouse Location Master filters."
+        description="This summary follows your current normalized site and location filters."
       >
         {isSummaryLoading ? (
           <div style={{ color: '#64748b' }}>Loading warehouse utilization summary...</div>
@@ -865,6 +900,43 @@ export function WarehouseLocationMasterScreen() {
             gap: '16px'
           }}
         >
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Site Scope</label>
+            <select
+              value={filters.siteScope || 'all'}
+              onChange={(e) => handleSiteScopeChange(e.target.value as WarehouseSiteScope)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="all">all</option>
+              <option value="warehouse">warehouse</option>
+              <option value="outlet">outlet</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Site</label>
+            <select
+              value={filters.warehouseCode || ''}
+              onChange={(e) => updateWarehouseCode(e.target.value)}
+              disabled={isSitesLoading}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="">{isSitesLoading ? 'Loading sites...' : 'All sites'}</option>
+              {filteredSites.map((site) => (
+                <option key={site.siteCode} value={site.siteCode}>
+                  {site.siteCode} â€” {site.siteName}
+                </option>
+              ))}
+            </select>
+            {sitesError ? (
+              <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '13px' }}>{sitesError}</div>
+            ) : selectedSite ? (
+              <div style={{ marginTop: '8px', color: '#64748b', fontSize: '13px' }}>
+                Selected: {selectedSite.siteCode} â€” {selectedSite.siteName}
+              </div>
+            ) : null}
+          </div>
+
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Search</label>
             <input
