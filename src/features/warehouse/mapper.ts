@@ -122,6 +122,7 @@ function mapWarehouseLocationAlertRecord(data: any): WarehouseLocationAlertRecor
     id: normalizeText(source.id),
     severity: normalizeAlertSeverity(source.severity),
     utilizationPct: normalizeNumber(source.utilizationPct),
+    thresholdPctApplied: normalizeNumber(source.thresholdPctApplied),
     siteCode: normalizeText(source.siteCode),
     siteName: normalizeText(source.siteName),
     siteType: normalizeSiteType(source.siteType),
@@ -224,6 +225,7 @@ export function mapWarehouseUtilizationDrilldown(data: any): WarehouseUtilizatio
 export function mapWarehouseLocationAlertSummary(data: any): WarehouseLocationAlertSummary {
   const source = extractPayload<any>(data) ?? {};
   const rawItems = Array.isArray(source.items) ? source.items : [];
+  const rawAppliedThresholds = Array.isArray(source.appliedThresholds) ? source.appliedThresholds : [];
 
   return {
     siteScope: normalizeSiteScope(source.siteScope),
@@ -232,6 +234,19 @@ export function mapWarehouseLocationAlertSummary(data: any): WarehouseLocationAl
     totalAlertLocations: normalizeNumber(source.totalAlertLocations),
     nearFullLocations: normalizeNumber(source.nearFullLocations),
     fullLocations: normalizeNumber(source.fullLocations),
+    appliedThresholds: rawAppliedThresholds.map((item: any) => ({
+      siteCode: item?.siteCode ? String(item.siteCode).trim() : null,
+      siteName: String(item?.siteName ?? '').trim(),
+      siteType: item?.siteType === 'outlet' ? 'outlet' : item?.siteType === 'all' ? 'all' : 'warehouse',
+      thresholdPct: normalizeNumber(item?.thresholdPct),
+      source:
+        item?.source === 'site_override' ||
+        item?.source === 'site_type_default' ||
+        item?.source === 'global_default' ||
+        item?.source === 'request_override'
+          ? item.source
+          : 'global_default'
+    })),
     items: rawItems.map(mapWarehouseLocationAlertRecord),
     updatedAt: normalizeText(source.updatedAt)
   };

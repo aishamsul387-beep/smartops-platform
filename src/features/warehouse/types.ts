@@ -117,6 +117,7 @@ export interface WarehouseLocationAlertRecord {
   id: string;
   severity: WarehouseAlertSeverity;
   utilizationPct: number;
+  thresholdPctApplied: number;
   siteCode: string;
   siteName: string;
   siteType: WarehouseSiteType;
@@ -137,6 +138,14 @@ export interface WarehouseLocationAlertRecord {
   updatedAt: string;
 }
 
+export interface WarehouseAlertThresholdRecord {
+  siteCode: string | null;
+  siteName: string;
+  siteType: WarehouseSiteType | 'all';
+  thresholdPct: number;
+  source: 'site_override' | 'site_type_default' | 'global_default' | 'request_override';
+}
+
 export interface WarehouseLocationAlertSummary {
   siteScope: WarehouseSiteScope;
   warehouseCode: string | null;
@@ -144,6 +153,7 @@ export interface WarehouseLocationAlertSummary {
   totalAlertLocations: number;
   nearFullLocations: number;
   fullLocations: number;
+  appliedThresholds: WarehouseAlertThresholdRecord[];
   items: WarehouseLocationAlertRecord[];
   updatedAt: string;
 }

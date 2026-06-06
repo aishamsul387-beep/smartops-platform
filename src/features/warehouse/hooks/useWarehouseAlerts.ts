@@ -11,6 +11,7 @@ const initialAlerts: WarehouseLocationAlertSummary = {
   totalAlertLocations: 0,
   nearFullLocations: 0,
   fullLocations: 0,
+  appliedThresholds: [],
   items: [],
   updatedAt: ''
 };
