@@ -82,6 +82,36 @@ export interface WarehouseUtilizationSummary {
   updatedAt: string;
 }
 
+export interface WarehouseUtilizationDrilldownBucket {
+  key: string;
+  label: string;
+  totalLocations: number;
+  activeLocations: number;
+  inactiveLocations: number;
+  emptyLocations: number;
+  occupiedLocations: number;
+  blockedLocations: number;
+  fullLocations: number;
+  fullLocationPct: number;
+  palletCapacityTotal: number;
+  palletCapacityUsed: number;
+  palletUtilizationPct: number;
+  pcsCapacityTotal: number;
+  pcsCapacityUsed: number;
+  pcsUtilizationPct: number;
+  cartonCapacityTotal: number;
+  cartonCapacityUsed: number;
+  cartonUtilizationPct: number;
+}
+
+export interface WarehouseUtilizationDrilldown {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  byLocationType: WarehouseUtilizationDrilldownBucket[];
+  byZone: WarehouseUtilizationDrilldownBucket[];
+  updatedAt: string;
+}
+
 export interface WarehouseLocationListFilters {
   search?: string;
   warehouseCode?: string;

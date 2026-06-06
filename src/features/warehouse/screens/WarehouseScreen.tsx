@@ -1,9 +1,12 @@
 ﻿'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/routes';
+import { useWarehouseDrilldown } from '../hooks/useWarehouseDrilldown';
+import { useWarehouseSites } from '../hooks/useWarehouseSites';
 import { useWarehouseSummary } from '../hooks/useWarehouseSummary';
-import type { WarehouseSiteScope } from '../types';
+import type { WarehouseSiteScope, WarehouseUtilizationDrilldownBucket } from '../types';
 
 function formatPercent(value: number) {
   return `${value.toFixed(2)}%`;
@@ -21,6 +24,88 @@ function getScopeLabel(siteScope: WarehouseSiteScope) {
   return 'All sites';
 }
 
+function renderUtilizationPair(label: string, used: number, total: number, pct: number) {
+  return (
+    <div style={{ fontSize: '13px', color: '#475569' }}>
+      <strong>{label}:</strong> {used} / {total} ({formatPercent(pct)})
+    </div>
+  );
+}
+
+function DrilldownTable({
+  title,
+  description,
+  rows
+}: {
+  title: string;
+  description: string;
+  rows: WarehouseUtilizationDrilldownBucket[];
+}) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '24px'
+      }}
+    >
+      <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>{title}</div>
+      <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>{description}</div>
+
+      {rows.length === 0 ? (
+        <div style={{ color: '#64748b' }}>No drill-down data found for the current filter.</div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Group</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Locations</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Full %</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Pallet</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>PCS</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Carton</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.key}>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                    {row.label}
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    <div>Total: {row.totalLocations}</div>
+                    <div>Active: {row.activeLocations}</div>
+                    <div>Occupied: {row.occupiedLocations}</div>
+                    <div>Empty: {row.emptyLocations}</div>
+                    <div>Blocked: {row.blockedLocations}</div>
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 700 }}>{formatPercent(row.fullLocationPct)}</div>
+                    <div style={{ color: '#64748b', fontSize: '13px' }}>
+                      {row.fullLocations} full
+                    </div>
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    {renderUtilizationPair('Utilization', row.palletCapacityUsed, row.palletCapacityTotal, row.palletUtilizationPct)}
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    {renderUtilizationPair('Utilization', row.pcsCapacityUsed, row.pcsCapacityTotal, row.pcsUtilizationPct)}
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    {renderUtilizationPair('Utilization', row.cartonCapacityUsed, row.cartonCapacityTotal, row.cartonUtilizationPct)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function WarehouseScreen() {
   const {
     summary,
@@ -33,7 +118,49 @@ export function WarehouseScreen() {
     refresh
   } = useWarehouseSummary();
 
+  const {
+    items: sites,
+    isLoading: isSitesLoading,
+    error: sitesError,
+    refresh: refreshSites
+  } = useWarehouseSites();
+
+  const {
+    drilldown,
+    isLoading: isDrilldownLoading,
+    error: drilldownError,
+    refresh: refreshDrilldown
+  } = useWarehouseDrilldown({
+    siteScope,
+    warehouseCode: warehouseCode || undefined
+  });
+
+  const filteredSites = useMemo(() => {
+    if (siteScope === 'all') {
+      return sites;
+    }
+
+    return sites.filter((site) => site.siteType === siteScope);
+  }, [sites, siteScope]);
+
+  const selectedSite = useMemo(() => {
+    if (!warehouseCode) {
+      return null;
+    }
+
+    return sites.find((site) => site.siteCode === warehouseCode) ?? null;
+  }, [sites, warehouseCode]);
+
   const activeBase = summary.activeLocations > 0 ? summary.activeLocations : summary.totalLocations;
+
+  async function handleRefresh() {
+    await Promise.all([refresh(), refreshSites(), refreshDrilldown()]);
+  }
+
+  function handleSiteScopeChange(nextScope: WarehouseSiteScope) {
+    setSiteScope(nextScope);
+    setWarehouseCode('');
+  }
 
   return (
     <div className="container">
@@ -61,7 +188,7 @@ export function WarehouseScreen() {
               Warehouse
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Warehouse overview now supports site-aware utilization prep for warehouse and outlet filtering.
+              Warehouse overview now uses normalized site selection and utilization drill-down by location type and zone.
             </div>
           </div>
 
@@ -96,7 +223,7 @@ export function WarehouseScreen() {
 
             <button
               type="button"
-              onClick={() => void refresh()}
+              onClick={() => void handleRefresh()}
               style={{
                 padding: '10px 14px',
                 borderRadius: '10px',
@@ -125,7 +252,7 @@ export function WarehouseScreen() {
           Warehouse Overview Filters
         </div>
         <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
-          Filter utilization by site scope and optional warehouse/outlet code so each site can be measured on its own.
+          Filter utilization by normalized site scope and site selection so each warehouse or outlet can be measured on its own.
         </div>
 
         <div
@@ -139,7 +266,7 @@ export function WarehouseScreen() {
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Site Scope</label>
             <select
               value={siteScope}
-              onChange={(e) => setSiteScope(e.target.value as WarehouseSiteScope)}
+              onChange={(e) => handleSiteScopeChange(e.target.value as WarehouseSiteScope)}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -156,22 +283,40 @@ export function WarehouseScreen() {
 
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-              Warehouse / Outlet Code
+              Site
             </label>
-            <input
+            <select
               value={warehouseCode}
               onChange={(e) => setWarehouseCode(e.target.value)}
-              placeholder="Example: WH-001 or OTL-001"
+              disabled={isSitesLoading}
               style={{
                 width: '100%',
                 padding: '12px',
                 borderRadius: '10px',
-                border: '1px solid #cbd5e1'
+                border: '1px solid #cbd5e1',
+                background: '#ffffff'
               }}
-            />
+            >
+              <option value="">
+                {isSitesLoading ? 'Loading sites...' : 'All sites'}
+              </option>
+
+              {filteredSites.map((site) => (
+                <option key={site.siteCode} value={site.siteCode}>
+                  {site.siteCode} â€” {site.siteName}
+                </option>
+              ))}
+            </select>
+
             <div style={{ marginTop: '8px', color: '#64748b', fontSize: '13px' }}>
-              Leave blank to include all sites within the selected scope.
+              Choose a normalized site from the master list instead of typing a code manually.
             </div>
+
+            {sitesError ? (
+              <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '13px' }}>
+                {sitesError}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -186,7 +331,9 @@ export function WarehouseScreen() {
           }}
         >
           <strong>Current filter:</strong> {getScopeLabel(siteScope)}
-          {summary.warehouseCode ? ` â€¢ ${summary.warehouseCode}` : ' â€¢ all codes'}
+          {selectedSite
+            ? ` â€¢ ${selectedSite.siteCode} â€” ${selectedSite.siteName}`
+            : ' â€¢ all sites'}
         </div>
       </div>
 
@@ -291,6 +438,38 @@ export function WarehouseScreen() {
             </div>
           </div>
 
+          <div style={{ display: 'grid', gap: '24px', marginBottom: '24px' }}>
+            {isDrilldownLoading ? (
+              <div style={{ color: '#64748b' }}>Loading utilization drill-down...</div>
+            ) : drilldownError ? (
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '10px',
+                  background: '#fef2f2',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca'
+                }}
+              >
+                {drilldownError}
+              </div>
+            ) : (
+              <>
+                <DrilldownTable
+                  title="Utilization by Location Type"
+                  description="Breakdown of location capacity and fullness by location type for the current site filter."
+                  rows={drilldown.byLocationType}
+                />
+
+                <DrilldownTable
+                  title="Utilization by Zone"
+                  description="Breakdown of location capacity and fullness by zone for the current site filter."
+                  rows={drilldown.byZone}
+                />
+              </>
+            )}
+          </div>
+
           <div
             style={{
               background: '#ffffff',
@@ -303,8 +482,7 @@ export function WarehouseScreen() {
               Current warehouse snapshot
             </div>
             <div style={{ color: '#475569', lineHeight: 1.7 }}>
-              This summary is now measured by the selected site scope and optional warehouse/outlet code.
-              Use the filters above to inspect each warehouse or outlet on its own instead of mixing all sites together.
+              This summary now includes drill-down by location type and zone for the selected normalized site and scope.
             </div>
           </div>
         </>
@@ -312,4 +490,3 @@ export function WarehouseScreen() {
     </div>
   );
 }
-

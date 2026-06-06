@@ -3,6 +3,7 @@ import { ENDPOINTS } from '@/services/api/endpoints';
 import {
   mapWarehouseLocation,
   mapWarehouseLocationListResponse,
+  mapWarehouseUtilizationDrilldown,
   mapWarehouseUtilizationSummary
 } from './mapper';
 import type {
@@ -12,7 +13,8 @@ import type {
   WarehouseLocationListFilters,
   WarehouseSiteListResponse,
   WarehouseSiteRecord,
-  WarehouseSiteScope
+  WarehouseSiteScope,
+  WarehouseUtilizationDrilldown
 } from './types';
 
 export interface WarehouseSummaryFilters {
@@ -24,6 +26,8 @@ export interface WarehouseSummaryFilters {
   siteScope?: WarehouseSiteScope;
   warehouseCode?: string;
 }
+
+const WAREHOUSE_DRILLDOWN_ENDPOINT = '/warehouse/drilldown';
 
 function buildWarehouseSummaryUrl(filters: WarehouseSummaryFilters = {}) {
   const query = new URLSearchParams();
@@ -58,6 +62,41 @@ function buildWarehouseSummaryUrl(filters: WarehouseSummaryFilters = {}) {
 
   const queryString = query.toString();
   return queryString ? `${ENDPOINTS.warehouse.summary}?${queryString}` : ENDPOINTS.warehouse.summary;
+}
+
+function buildWarehouseDrilldownUrl(filters: WarehouseSummaryFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.locationCode && filters.locationCode.trim()) {
+    query.set('locationCode', filters.locationCode.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  if (filters.type && filters.type !== 'all') {
+    query.set('type', filters.type);
+  }
+
+  if (filters.active && filters.active !== 'all') {
+    query.set('active', filters.active);
+  }
+
+  if (filters.siteScope && filters.siteScope !== 'all') {
+    query.set('siteScope', filters.siteScope);
+  }
+
+  if (filters.warehouseCode && filters.warehouseCode.trim()) {
+    query.set('warehouseCode', filters.warehouseCode.trim());
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${WAREHOUSE_DRILLDOWN_ENDPOINT}?${queryString}` : WAREHOUSE_DRILLDOWN_ENDPOINT;
 }
 
 function buildWarehouseLocationListUrl(filters: WarehouseLocationListFilters = {}) {
@@ -122,6 +161,11 @@ export const warehouseApi = {
   async getSummary(filters: WarehouseSummaryFilters = {}) {
     const response = await apiClient.get<any>(buildWarehouseSummaryUrl(filters));
     return mapWarehouseUtilizationSummary(response.data);
+  },
+
+  async getDrilldown(filters: WarehouseSummaryFilters = {}): Promise<WarehouseUtilizationDrilldown> {
+    const response = await apiClient.get<any>(buildWarehouseDrilldownUrl(filters));
+    return mapWarehouseUtilizationDrilldown(response.data);
   },
 
   async getLocations(filters: WarehouseLocationListFilters = {}) {

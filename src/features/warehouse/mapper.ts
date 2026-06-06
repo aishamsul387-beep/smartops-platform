@@ -5,6 +5,8 @@
   WarehouseLocationStatus,
   WarehouseLocationType,
   WarehouseSiteScope,
+  WarehouseUtilizationDrilldown,
+  WarehouseUtilizationDrilldownBucket,
   WarehouseUtilizationSummary
 } from './types';
 
@@ -72,6 +74,32 @@ function normalizeSiteScope(value: unknown): WarehouseSiteScope {
   return allowedSiteScopes.includes(normalized) ? normalized : 'all';
 }
 
+function mapWarehouseUtilizationDrilldownBucket(data: any): WarehouseUtilizationDrilldownBucket {
+  const source = data ?? {};
+
+  return {
+    key: normalizeText(source.key),
+    label: normalizeText(source.label),
+    totalLocations: normalizeNumber(source.totalLocations),
+    activeLocations: normalizeNumber(source.activeLocations),
+    inactiveLocations: normalizeNumber(source.inactiveLocations),
+    emptyLocations: normalizeNumber(source.emptyLocations),
+    occupiedLocations: normalizeNumber(source.occupiedLocations),
+    blockedLocations: normalizeNumber(source.blockedLocations),
+    fullLocations: normalizeNumber(source.fullLocations),
+    fullLocationPct: normalizeNumber(source.fullLocationPct),
+    palletCapacityTotal: normalizeNumber(source.palletCapacityTotal),
+    palletCapacityUsed: normalizeNumber(source.palletCapacityUsed),
+    palletUtilizationPct: normalizeNumber(source.palletUtilizationPct),
+    pcsCapacityTotal: normalizeNumber(source.pcsCapacityTotal),
+    pcsCapacityUsed: normalizeNumber(source.pcsCapacityUsed),
+    pcsUtilizationPct: normalizeNumber(source.pcsUtilizationPct),
+    cartonCapacityTotal: normalizeNumber(source.cartonCapacityTotal),
+    cartonCapacityUsed: normalizeNumber(source.cartonCapacityUsed),
+    cartonUtilizationPct: normalizeNumber(source.cartonUtilizationPct)
+  };
+}
+
 export function mapWarehouseLocation(data: any): WarehouseLocationRecord {
   const source = extractPayload<any>(data) ?? {};
 
@@ -132,6 +160,20 @@ export function mapWarehouseUtilizationSummary(data: any): WarehouseUtilizationS
     cartonCapacityTotal: normalizeNumber(source.cartonCapacityTotal),
     cartonCapacityUsed: normalizeNumber(source.cartonCapacityUsed),
     cartonUtilizationPct: normalizeNumber(source.cartonUtilizationPct),
+    updatedAt: normalizeText(source.updatedAt)
+  };
+}
+
+export function mapWarehouseUtilizationDrilldown(data: any): WarehouseUtilizationDrilldown {
+  const source = extractPayload<any>(data) ?? {};
+  const rawByLocationType = Array.isArray(source.byLocationType) ? source.byLocationType : [];
+  const rawByZone = Array.isArray(source.byZone) ? source.byZone : [];
+
+  return {
+    siteScope: normalizeSiteScope(source.siteScope),
+    warehouseCode: normalizeNullableText(source.warehouseCode),
+    byLocationType: rawByLocationType.map(mapWarehouseUtilizationDrilldownBucket),
+    byZone: rawByZone.map(mapWarehouseUtilizationDrilldownBucket),
     updatedAt: normalizeText(source.updatedAt)
   };
 }
