@@ -1,11 +1,26 @@
-import type { CSSProperties, ReactNode } from 'react';
+﻿import type { CSSProperties, ReactNode } from 'react';
+
+const COLORS = {
+  cardBg: '#FFFFFF',
+  tintBlue: '#EFF6FF',
+  tintTeal: '#F0FDFA',
+  border: '#E2E8F0',
+  borderStrong: '#CBD5E1',
+  text: '#111827',
+  textSoft: '#475569',
+  textMuted: '#64748B',
+  navy: '#0F172A',
+  blue: '#1D4ED8',
+  teal: '#0F766E'
+} as const;
 
 const shellStyle: CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #e2e8f0',
-  borderRadius: '16px',
+  background: COLORS.cardBg,
+  border: '1px solid ' + COLORS.border,
+  borderRadius: '20px',
   padding: '24px',
-  marginBottom: '24px'
+  marginBottom: '24px',
+  boxShadow: '0 2px 12px rgba(15, 23, 42, 0.04)'
 };
 
 export function PageHeaderCard({
@@ -20,7 +35,13 @@ export function PageHeaderCard({
   children?: ReactNode;
 }) {
   return (
-    <div style={{ ...shellStyle, marginTop: '24px' }}>
+    <div
+      style={{
+        ...shellStyle,
+        marginTop: '24px',
+        background: 'linear-gradient(135deg, ' + COLORS.tintBlue + ' 0%, ' + COLORS.tintTeal + ' 100%)'
+      }}
+    >
       <div
         style={{
           display: 'flex',
@@ -31,11 +52,21 @@ export function PageHeaderCard({
         }}
       >
         <div>
-          <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+          <div
+            style={{
+              fontSize: '32px',
+              fontWeight: 800,
+              marginBottom: '8px',
+              color: COLORS.navy,
+              letterSpacing: '-0.02em'
+            }}
+          >
             {title}
           </div>
           {description ? (
-            <div style={{ color: '#475569', lineHeight: 1.6 }}>{description}</div>
+            <div style={{ color: COLORS.textSoft, lineHeight: 1.7, maxWidth: '780px' }}>
+              {description}
+            </div>
           ) : null}
         </div>
 
@@ -61,23 +92,32 @@ export function PageSectionCard({
   return (
     <div
       style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '16px',
+        background: COLORS.cardBg,
+        border: '1px solid ' + COLORS.border,
+        borderRadius: '20px',
         marginBottom: '24px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)'
       }}
     >
       {title || description ? (
         <div style={{ padding: '24px 24px 0 24px' }}>
           {title ? (
-            <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: description ? '8px' : '16px' }}>
+            <div
+              style={{
+                fontSize: '22px',
+                fontWeight: 800,
+                marginBottom: description ? '8px' : '16px',
+                color: COLORS.navy,
+                letterSpacing: '-0.01em'
+              }}
+            >
               {title}
             </div>
           ) : null}
 
           {description ? (
-            <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
+            <div style={{ color: COLORS.textSoft, lineHeight: 1.7, marginBottom: '16px' }}>
               {description}
             </div>
           ) : null}
@@ -115,14 +155,16 @@ export function PageStatCard({
   return (
     <div
       style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '16px',
-        padding: '20px'
+        background: COLORS.cardBg,
+        border: '1px solid ' + COLORS.border,
+        borderTop: '4px solid ' + COLORS.tintTeal,
+        borderRadius: '18px',
+        padding: '20px',
+        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)'
       }}
     >
-      <div style={{ color: '#64748b', marginBottom: '8px' }}>{label}</div>
-      <div style={{ fontSize: '28px', fontWeight: 700 }}>{value}</div>
+      <div style={{ color: COLORS.textMuted, marginBottom: '8px', fontWeight: 700 }}>{label}</div>
+      <div style={{ fontSize: '28px', fontWeight: 800, color: COLORS.text }}>{value}</div>
     </div>
   );
 }

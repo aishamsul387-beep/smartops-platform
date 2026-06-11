@@ -43,7 +43,7 @@ function getAlertSeverityStyle(severity: WarehouseLocationAlertRecord['severity'
   if (severity === 'full') {
     return {
       background: '#fee2e2',
-      color: '#991b1b',
+      color: '#1D4ED8',
       border: '1px solid #fecaca'
     };
   }
@@ -431,7 +431,7 @@ export function WarehouseScreen() {
               Warehouse
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Warehouse overview now uses normalized site selection, utilization drill-down, and actionable near-full/full alerts.
+              Warehouse overview brings together normalized site filters, clear utilization signals, and actionable capacity alerts in a calm enterprise workspace.
             </div>
           </div>
 
@@ -495,7 +495,7 @@ export function WarehouseScreen() {
           Warehouse Overview Filters
         </div>
         <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
-          Filter utilization by normalized site scope and site selection so each warehouse or outlet can be measured on its own.
+          Filter by site scope and selected site to review each warehouse or outlet with clearer, eye-friendly operational visibility.
         </div>
 
         <div
@@ -587,7 +587,7 @@ export function WarehouseScreen() {
           style={{
             padding: '12px',
             borderRadius: '10px',
-            background: '#fef2f2',
+            background: '#EFF6FF',
             color: '#b91c1c',
             border: '1px solid #fecaca'
           }}
@@ -697,7 +697,7 @@ export function WarehouseScreen() {
               style={{
                 padding: '12px',
                 borderRadius: '10px',
-                background: '#fef2f2',
+                background: '#EFF6FF',
                 color: '#b91c1c',
                 border: '1px solid #fecaca',
                 marginBottom: '24px'
@@ -730,7 +730,7 @@ export function WarehouseScreen() {
                 style={{
                   padding: '12px',
                   borderRadius: '10px',
-                  background: '#fef2f2',
+                  background: '#EFF6FF',
                   color: '#b91c1c',
                   border: '1px solid #fecaca'
                 }}
@@ -747,14 +747,14 @@ export function WarehouseScreen() {
                     marginBottom: '16px'
                   }}
                 >
-                  <div style={{ background: '#fff7ed', border: '1px solid #fdba74', borderRadius: '16px', padding: '20px' }}>
-                    <div style={{ color: '#9a3412', marginBottom: '8px' }}>Near-Full Locations</div>
-                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#9a3412' }}>{alerts.nearFullLocations}</div>
+                  <div style={{ background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#0F766E', marginBottom: '8px' }}>Near-Full Locations</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#0F766E' }}>{alerts.nearFullLocations}</div>
                   </div>
 
-                  <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '16px', padding: '20px' }}>
-                    <div style={{ color: '#991b1b', marginBottom: '8px' }}>Full Locations</div>
-                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#991b1b' }}>{alerts.fullLocations}</div>
+                  <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#1D4ED8', marginBottom: '8px' }}>Full Locations</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#1D4ED8' }}>{alerts.fullLocations}</div>
                   </div>
 
                   <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
@@ -877,7 +877,7 @@ export function WarehouseScreen() {
                 style={{
                   padding: '12px',
                   borderRadius: '10px',
-                  background: '#fef2f2',
+                  background: '#EFF6FF',
                   color: '#b91c1c',
                   border: '1px solid #fecaca'
                 }}
@@ -913,7 +913,7 @@ export function WarehouseScreen() {
               Current warehouse snapshot
             </div>
             <div style={{ color: '#475569', lineHeight: 1.7 }}>
-              This summary now includes actionable near-full/full alerts, configurable thresholds, and drill-down by location type and zone for the selected normalized site and scope.
+              This overview combines calmer visual hierarchy, configurable thresholds, actionable alerts, and drill-down by location type and zone for the selected site.
             </div>
           </div>
         </>
@@ -921,4 +921,5 @@ export function WarehouseScreen() {
     </div>
   );
 }
+
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { usePathname } from 'next/navigation';
 import { useLogout } from '@/features/auth/hooks/useLogout';
@@ -7,6 +7,20 @@ import type { AuthUser } from '@/types/auth';
 interface TopbarProps {
   user: AuthUser;
 }
+
+const COLORS = {
+  cardBg: '#FFFFFF',
+  tintBlue: '#EFF6FF',
+  tintTeal: '#F0FDFA',
+  border: '#E2E8F0',
+  borderStrong: '#CBD5E1',
+  text: '#111827',
+  textSoft: '#475569',
+  textMuted: '#64748B',
+  navy: '#0F172A',
+  blue: '#1D4ED8',
+  teal: '#0F766E'
+} as const;
 
 function getPageTitle(pathname: string | null) {
   if (!pathname) return 'SmartOps WMS AI';
@@ -45,24 +59,33 @@ export function Topbar({ user }: TopbarProps) {
   return (
     <header
       style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '16px',
+        background: 'linear-gradient(135deg, ' + COLORS.tintBlue + ' 0%, ' + COLORS.tintTeal + ' 100%)',
+        border: '1px solid ' + COLORS.border,
+        borderRadius: '20px',
         padding: '18px 20px',
         marginBottom: '24px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         gap: '16px',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        boxShadow: '0 2px 12px rgba(15, 23, 42, 0.04)'
       }}
     >
       <div>
-        <div style={{ fontSize: '26px', fontWeight: 800, marginBottom: '4px' }}>
+        <div
+          style={{
+            fontSize: '28px',
+            fontWeight: 800,
+            marginBottom: '4px',
+            color: COLORS.navy,
+            letterSpacing: '-0.02em'
+          }}
+        >
           {getPageTitle(pathname)}
         </div>
-        <div style={{ color: '#64748b' }}>
-          Signed in as <strong>{user.name}</strong> Â· {user.email}
+        <div style={{ color: COLORS.textSoft, lineHeight: 1.6 }}>
+          Signed in as <strong style={{ color: COLORS.navy }}>{user.name}</strong> â€¢ {user.email}
         </div>
       </div>
 
@@ -71,12 +94,13 @@ export function Topbar({ user }: TopbarProps) {
           type="button"
           onClick={() => void logout()}
           style={{
-            padding: '10px 14px',
-            borderRadius: '10px',
-            border: '1px solid #cbd5e1',
+            padding: '10px 16px',
+            borderRadius: '12px',
+            border: '1px solid ' + COLORS.borderStrong,
             background: '#ffffff',
             cursor: 'pointer',
-            fontWeight: 600
+            fontWeight: 700,
+            color: COLORS.navy
           }}
         >
           Logout

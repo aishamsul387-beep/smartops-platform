@@ -1,0 +1,1134 @@
+﻿T2 Step 2 - Issue Commit Path Inspection
+Generated At: 2026-06-10 17:46:58
+
+IMPORTANT:
+- No code was changed
+- Paste the generated output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+============================================================
+FRONTEND STOCK ISSUE TREE
+============================================================
+
+
+FullName                                                                                                                              
+--------                                                                                                                              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\components                              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks                                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\api.ts                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\types.ts                                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\components\StockIssueAllocationTable.tsx
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\components\StockIssueHistoryTable.tsx   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\components\StockIssueSummaryCard.tsx    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks\useStockIssue.ts                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks\useStockIssueContext.ts           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks\useStockIssueDetail.ts            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks\useStockIssueHistory.ts           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens\StockIssueDetailScreen.tsx      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens\StockIssueHistoryScreen.tsx     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens\StockIssuePrintScreen.tsx       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens\StockIssueScreen.tsx            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\history                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\[issueId]                                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\page.tsx                                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\history\page.tsx                            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\[issueId]\print                             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\[issueId]\page.tsx                          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\[issueId]\print\page.tsx                    
+
+
+
+
+============================================================
+FILE HEAD: src\features\stock-issue\api.ts
+============================================================
+
+
+============================================================
+FILE HEAD: src\features\stock-issue\hooks\useStockIssue.ts
+============================================================
+
+'use client';
+
+import { useState } from 'react';
+import { stockControlApi } from '@/features/stock-control/api';
+import type { StockIssuePreviewResult, StockIssueResult } from '@/features/stock-control/types';
+
+export function useStockIssue() {
+  const [preview, setPreview] = useState<StockIssuePreviewResult | null>(null);
+  const [result, setResult] = useState<StockIssueResult | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function previewIssue(inventoryItemId: string, requestedQty: number) {
+    try {
+      setIsPreviewLoading(true);
+      setError(null);
+      const data = await stockControlApi.getIssuePreview(inventoryItemId, requestedQty);
+      setPreview(data);
+      return data;
+    } catch (err: any) {
+      setPreview(null);
+      setError(err?.message || 'Failed to preview issue allocation');
+      throw err;
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  }
+
+  async function submitIssue(payload: {
+    inventoryItemId: string;
+    requestedQty: number;
+    reason: string;
+  }) {
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      const data = await stockControlApi.createIssue(payload);
+      setResult(data);
+      return data;
+    } catch (err: any) {
+      setResult(null);
+      setError(err?.message || 'Failed to create stock issue');
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return {
+    preview,
+    result,
+    isPreviewLoading,
+    isSubmitting,
+    error,
+    previewIssue,
+    submitIssue
+  };
+}
+
+============================================================
+FILE HEAD: src\features\stock-issue\screens\StockIssueScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { inventoryApi } from '@/features/inventory/api';
+import type { InventoryItem } from '@/features/inventory/types';
+import { useStockIssue } from '../hooks/useStockIssue';
+
+export function StockIssueScreen() {
+  const router = useRouter();
+  const { preview, result, isPreviewLoading, isSubmitting, error, previewIssue, submitIssue } =
+    useStockIssue();
+
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [isInventoryLoading, setIsInventoryLoading] = useState(true);
+
+  const [inventoryItemId, setInventoryItemId] = useState('');
+  const [requestedQty, setRequestedQty] = useState('1');
+  const [reason, setReason] = useState('');
+
+  useEffect(() => {
+    async function loadInventory() {
+      try {
+        setIsInventoryLoading(true);
+        const response = await inventoryApi.getInventoryList({ search: '', status: 'all' });
+        setInventoryItems(response.items.filter((item) => item.isActive));
+      } catch {
+        setInventoryItems([]);
+      } finally {
+        setIsInventoryLoading(false);
+      }
+    }
+
+    void loadInventory();
+  }, []);
+
+  const selectedInventory = useMemo(
+    () => inventoryItems.find((item) => item.id === inventoryItemId) || null,
+    [inventoryItems, inventoryItemId]
+  );
+
+  async function handlePreview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const qty = Number(requestedQty);
+
+    if (!inventoryItemId.trim() || Number.isNaN(qty) || qty <= 0) {
+      return;
+    }
+
+    try {
+      await previewIssue(inventoryItemId, qty);
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  async function handleCommit() {
+    const qty = Number(requestedQty);
+
+    if (!inventoryItemId.trim() || Number.isNaN(qty) || qty <= 0) {
+      return;
+    }
+
+    try {
+      const response = await submitIssue({
+        inventoryItemId,
+        requestedQty: qty,
+        reason: reason.trim()
+      });
+
+      router.push('/stock-movements');
+      router.refresh();
+      return response;
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  const hasShortfall = (preview?.remainingUnallocatedQty || 0) > 0;
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Inventory Issue + FEFO Allocation
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Preview and commit outbound issue allocation using FEFO from available batches.
+            </div>
+          </div>
+
+          <Link
+            href="/stock-control"
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              background: '#ffffff',
+              fontWeight: 600
+            }}
+          >
+            Back to Stock Control
+          </Link>
+        </div>
+      </div>
+
+      <form
+        onSubmit={handlePreview}
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px'
+          }}
+        >
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Product Name
+            </label>
+            <select
+              value={inventoryItemId}
+              onChange={(e) => setInventoryItemId(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff'
+              }}
+            >
+              <option value="">
+                {isInventoryLoading ? 'Loading inventory...' : 'Select product'}
+              </option>
+              {inventoryItems.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>SKU</label>
+            <div style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+              {selectedInventory?.sku || '-'}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Barcode</label>
+            <div style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+              {selectedInventory?.barcode || '-'}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Requested Qty</label>
+            <input
+              value={requestedQty}
+              onChange={(e) => setRequestedQty(e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
+          </div>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Reason</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', resize: 'vertical' }}
+            />
+          </div>
+        </div>
+
+        {error ? (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#fef2f2',
+              color: '#b91c1c',
+              border: '1px solid #fecaca'
+            }}
+          >
+            {error}
+          </div>
+        ) : null}
+
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '16px' }}>
+          <button
+            type="submit"
+            disabled={isPreviewLoading}
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: 'none',
+              background: isPreviewLoading ? '#94a3b8' : '#0f172a',
+              color: '#ffffff',
+              fontWeight: 600
+            }}
+          >
+            {isPreviewLoading ? 'Previewing...' : 'Preview FEFO Allocation'}
+          </button>
+
+          {preview ? (
+            <button
+              type="button"
+              disabled={isSubmitting || hasShortfall}
+              onClick={() => void handleCommit()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isSubmitting || hasShortfall ? '#94a3b8' : '#7c3aed',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              {isSubmitting ? 'Issuing...' : 'Commit Issue'}
+            </button>
+          ) : null}
+        </div>
+      </form>
+
+      {preview ? (
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+
+============================================================
+FILE MATCHES: src\features\stock-issue\types.ts
+============================================================
+
+--- pattern: reason ---
+no match
+
+--- pattern: inventoryItemId ---
+no match
+
+--- pattern: requestedQty ---
+no match
+
+--- pattern: allocation ---
+no match
+
+--- pattern: issue ---
+no match
+
+
+============================================================
+FILE HEAD: src\modules\stock-control\routes.ts
+============================================================
+
+import { Router } from 'express';
+import { created, ok } from '../../common/http/api-response';
+import { asyncHandler } from '../../common/utils/async-handler';
+import { AppError } from '../../common/errors/app-error';
+import {
+  createDraftPurchaseOrderFromSuggestion,
+  getProcurementActionQueue,
+  getReorderSuggestions,
+  getStockControlAlerts,
+  getStockControlSummary
+} from './service';
+import {
+  getBatchStockMovements,
+  getInventoryStockMovements,
+  getStockMovements
+} from './movement-service';
+import { commitIssueAllocation, previewIssueAllocation } from '../batches/repository';
+
+export const stockControlRouter = Router();
+
+function readSingle(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+
+  return value ?? '';
+}
+
+stockControlRouter.get(
+  '/summary',
+  asyncHandler(async (_request, response) => {
+    const summary = await getStockControlSummary();
+    return ok(response, summary, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/alerts',
+  asyncHandler(async (_request, response) => {
+    const alerts = await getStockControlAlerts();
+    return ok(response, alerts, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/reorder-suggestions',
+  asyncHandler(async (_request, response) => {
+    const suggestions = await getReorderSuggestions();
+    return ok(response, suggestions, 200);
+  })
+);
+
+stockControlRouter.post(
+  '/reorder-suggestions/:inventoryItemId/create-po-draft',
+  asyncHandler(async (request, response) => {
+    const inventoryItemId = readSingle(
+      request.params.inventoryItemId as string | string[] | undefined
+    );
+
+    const result = await createDraftPurchaseOrderFromSuggestion(inventoryItemId);
+
+    if (!result) {
+      throw new AppError({
+        status: 404,
+        code: 'REORDER_SUGGESTION_NOT_FOUND',
+        message: 'Reorder suggestion not found for the given inventory item'
+      });
+    }
+
+    return created(response, result);
+  })
+);
+
+stockControlRouter.get(
+  '/procurement-actions',
+  asyncHandler(async (_request, response) => {
+    const actions = await getProcurementActionQueue();
+    return ok(response, actions, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/movements',
+  asyncHandler(async (_request, response) => {
+    const items = await getStockMovements();
+    return ok(response, items, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/movements/inventory/:inventoryItemId',
+  asyncHandler(async (request, response) => {
+    const inventoryItemId = readSingle(
+      request.params.inventoryItemId as string | string[] | undefined
+    );
+
+    const items = await getInventoryStockMovements(inventoryItemId);
+    return ok(response, items, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/movements/batch/:batchId',
+  asyncHandler(async (request, response) => {
+    const batchId = readSingle(request.params.batchId as string | string[] | undefined);
+    const items = await getBatchStockMovements(batchId);
+    return ok(response, items, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/issue-preview',
+  asyncHandler(async (request, response) => {
+    const inventoryItemId = readSingle(request.query.inventoryItemId as string | string[] | undefined);
+    const requestedQty = Number(readSingle(request.query.requestedQty as string | string[] | undefined));
+
+    if (!inventoryItemId) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'inventoryItemId is required'
+      });
+    }
+
+    if (Number.isNaN(requestedQty) || requestedQty <= 0) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'requestedQty must be greater than 0'
+      });
+    }
+
+    const result = await previewIssueAllocation(inventoryItemId, requestedQty);
+    return ok(response, result, 200);
+  })
+);
+
+stockControlRouter.post(
+  '/issues',
+  asyncHandler(async (request, response) => {
+    const inventoryItemId = String(request.body?.inventoryItemId ?? '').trim();
+    const requestedQty = Number(request.body?.requestedQty);
+    const reason = String(request.body?.reason ?? '').trim();
+
+    if (!inventoryItemId) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'inventoryItemId is required'
+      });
+    }
+
+    if (Number.isNaN(requestedQty) || requestedQty <= 0) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'requestedQty must be greater than 0'
+      });
+    }
+
+    const result = await commitIssueAllocation({
+      inventoryItemId,
+      requestedQty,
+      reason
+    });
+
+    if (!result) {
+      throw new AppError({
+        status: 400,
+        code: 'NO_AVAILABLE_BATCH_STOCK',
+        message: 'No available batch stock found for issue allocation'
+      });
+    }
+
+    return created(response, result);
+  })
+);
+
+============================================================
+FILE HEAD: src\modules\batches\repository.ts
+============================================================
+
+export type BatchStatus =
+  | 'available'
+  | 'blocked'
+  | 'quarantine'
+  | 'expired'
+  | 'consumed';
+
+export interface BatchRecord {
+  id: string;
+  inventoryItemId: string;
+  batchNumber: string;
+  lotNumber: string;
+  supplierLotNumber: string;
+  manufactureDate: string | null;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  supplierName: string;
+  purchaseOrderNo: string;
+  goodsReceivedNoteNo: string;
+  unitCost: number;
+  currency: string;
+  receivedQty: number;
+  availableQty: number;
+  reservedQty: number;
+  blockedQty: number;
+  qaHoldQty: number;
+  batchStatus: BatchStatus;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface BatchStatusHistoryRecord {
+  id: string;
+  batchId: string;
+  inventoryItemId: string;
+  batchNumber: string;
+  previousStatus: BatchStatus;
+  nextStatus: BatchStatus;
+  notes: string;
+  changedAt: string;
+}
+
+export interface StockIssueAllocationRecord {
+  batchId: string;
+  batchNumber: string;
+  inventoryItemId: string;
+  availableQtyBefore: number;
+  issuedQty: number;
+  availableQtyAfter: number;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  unitCost: number;
+  currency: string;
+}
+
+export interface StockIssueRecord {
+  id: string;
+  issueNo: string;
+  inventoryItemId: string;
+  requestedQty: number;
+  issuedQty: number;
+  reason: string;
+  issueDate: string;
+  allocations: StockIssueAllocationRecord[];
+}
+
+export interface CreateBatchInput {
+  inventoryItemId: string;
+  batchNumber: string;
+  lotNumber: string;
+  supplierLotNumber: string;
+  manufactureDate: string | null;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  supplierName: string;
+  purchaseOrderNo: string;
+  goodsReceivedNoteNo: string;
+  unitCost: number;
+  currency: string;
+  receivedQty: number;
+  availableQty: number;
+  reservedQty: number;
+  blockedQty: number;
+  qaHoldQty: number;
+  batchStatus: BatchStatus;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  notes: string;
+}
+
+let batchStore: BatchRecord[] = [
+  {
+    id: 'bat-001',
+    inventoryItemId: 'inv-001',
+    batchNumber: 'BATCH-STEEL-001',
+    lotNumber: 'LOT-STEEL-001',
+    supplierLotNumber: 'SUP-LOT-STEEL-001',
+    manufactureDate: null,
+    expiryDate: null,
+    receivedDate: '2026-05-20',
+    supplierName: 'Prime Steel Supply',
+    purchaseOrderNo: 'PO-2026-001',
+    goodsReceivedNoteNo: 'GRN-2026-001',
+    unitCost: 52.08,
+    currency: 'USD',
+    receivedQty: 240,
+    availableQty: 220,
+    reservedQty: 20,
+    blockedQty: 0,
+    qaHoldQty: 0,
+    batchStatus: 'available',
+    warehouseLocation: 'A-01-01',
+    zone: 'A',
+    aisle: '01',
+    levelCode: '01',
+    bin: '01',
+    notes: 'Seeded batch record',
+    updatedAt: '2026-05-21T14:30:00.000Z'
+  },
+  {
+    id: 'bat-002',
+    inventoryItemId: 'inv-003',
+    batchNumber: 'BATCH-VALVE-001',
+    lotNumber: 'LOT-VALVE-001',
+    supplierLotNumber: 'SUP-LOT-VALVE-001',
+    manufactureDate: '2026-04-15',
+    expiryDate: '2027-04-15',
+    receivedDate: '2026-05-18',
+    supplierName: 'ValveCore Manufacturing',
+    purchaseOrderNo: 'PO-2026-003',
+    goodsReceivedNoteNo: 'GRN-2026-002',
+    unitCost: 110.71,
+    currency: 'USD',
+    receivedQty: 30,
+    availableQty: 0,
+    reservedQty: 0,
+    blockedQty: 0,
+    qaHoldQty: 30,
+    batchStatus: 'quarantine',
+    warehouseLocation: 'C-03-02',
+    zone: 'C',
+    aisle: '03',
+    levelCode: '02',
+    bin: '02',
+    notes: 'Seeded batch record',
+    updatedAt: '2026-05-21T15:10:00.000Z'
+  }
+];
+
+let batchStatusHistoryStore: BatchStatusHistoryRecord[] = [
+  {
+    id: 'bsh-001',
+    batchId: 'bat-001',
+    inventoryItemId: 'inv-001',
+    batchNumber: 'BATCH-STEEL-001',
+    previousStatus: 'available',
+    nextStatus: 'available',
+    notes: 'Seeded initial status',
+    changedAt: '2026-05-21T14:30:00.000Z'
+  },
+  {
+    id: 'bsh-002',
+    batchId: 'bat-002',
+    inventoryItemId: 'inv-003',
+    batchNumber: 'BATCH-VALVE-001',
+    previousStatus: 'available',
+    nextStatus: 'quarantine',
+    notes: 'Seeded initial quarantine status',
+    changedAt: '2026-05-21T15:10:00.000Z'
+  }
+];
+
+let stockIssueStore: StockIssueRecord[] = [];
+
+function matchesSearch(values: string[], search?: string) {
+  const normalized = String(search ?? '').trim().toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return values.some((value) => value.toLowerCase().includes(normalized));
+}
+
+function nextIssueNumber() {
+  return `ISS-${new Date().getFullYear()}-${String(stockIssueStore.length + 1).padStart(3, '0')}`;
+}
+
+function sortBatchesForFefo(items: BatchRecord[]) {
+  return [...items].sort((a, b) => {
+    const aExpiry = a.expiryDate ? new Date(a.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const bExpiry = b.expiryDate ? new Date(b.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (aExpiry !== bExpiry) {
+      return aExpiry - bExpiry;
+    }
+
+    const aReceived = a.receivedDate ? new Date(a.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const bReceived = b.receivedDate ? new Date(b.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (aReceived !== bReceived) {
+      return aReceived - bReceived;
+    }
+
+    return a.batchNumber.localeCompare(b.batchNumber);
+  });
+}
+
+export function __setBatchStore(items: BatchRecord[]) {
+  batchStore = items;
+}
+
+export function getBatchPersistenceMode() {
+  return 'memory';
+}
+
+export async function listBatches(filters?: {
+  inventoryItemId?: string;
+  status?: string;
+  search?: string;
+}) {
+  return batchStore.filter((item) => {
+    const inventoryItemId = String(filters?.inventoryItemId ?? '').trim();
+    const status = String(filters?.status ?? '').trim();
+
+    const okInventory = !inventoryItemId || item.inventoryItemId === inventoryItemId;
+    const okStatus = !status || status === 'all' || item.batchStatus === status;
+
+    const okSearch = matchesSearch(
+      [
+        item.batchNumber,
+        item.lotNumber,
+        item.supplierLotNumber,
+        item.supplierName,
+        item.purchaseOrderNo,
+        item.goodsReceivedNoteNo,
+        item.batchStatus,
+        item.inventoryItemId
+      ],
+      filters?.search
+    );
+
+    return okInventory && okStatus && okSearch;
+  });
+}
+
+export async function getBatchById(id: string) {
+  return batchStore.find((item) => item.id === id) ?? null;
+}
+
+export function listBatchStatusHistory(batchId: string) {
+  return [...batchStatusHistoryStore]
+    .filter((item) => item.batchId === batchId)
+    .sort((a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime());
+}
+
+export function listStockIssueEvents() {
+  return [...stockIssueStore].sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
+}
+
+export async function createBatch(input: CreateBatchInput) {
+  const record: BatchRecord = {
+    id: 'bat-' + Date.now(),
+    inventoryItemId: input.inventoryItemId,
+    batchNumber: input.batchNumber,
+    lotNumber: input.lotNumber,
+    supplierLotNumber: input.supplierLotNumber,
+    manufactureDate: input.manufactureDate,
+    expiryDate: input.expiryDate,
+    receivedDate: input.receivedDate,
+    supplierName: input.supplierName,
+    purchaseOrderNo: input.purchaseOrderNo,
+    goodsReceivedNoteNo: input.goodsReceivedNoteNo,
+    unitCost: input.unitCost,
+    currency: input.currency,
+    receivedQty: input.receivedQty,
+    availableQty: input.availableQty,
+    reservedQty: input.reservedQty,
+    blockedQty: input.blockedQty,
+    qaHoldQty: input.qaHoldQty,
+    batchStatus: input.batchStatus,
+    warehouseLocation: input.warehouseLocation,
+    zone: input.zone,
+    aisle: input.aisle,
+    levelCode: input.levelCode,
+    bin: input.bin,
+    notes: input.notes,
+    updatedAt: new Date().toISOString()
+  };
+
+  batchStore = [record, ...batchStore];
+
+  batchStatusHistoryStore = [
+    {
+      id: 'bsh-' + Date.now(),
+      batchId: record.id,
+      inventoryItemId: record.inventoryItemId,
+      batchNumber: record.batchNumber,
+      previousStatus: record.batchStatus,
+      nextStatus: record.batchStatus,
+      notes: record.notes || 'Batch created',
+      changedAt: record.updatedAt
+    },
+    ...batchStatusHistoryStore
+  ];
+
+  return record;
+}
+
+export async function updateBatchStatus(
+  id: string,
+  nextStatus: BatchStatus,
+  notes?: string
+) {
+  const index = batchStore.findIndex((item) => item.id === id);
+
+  if (index === -1) {
+    return null;
+  }
+
+  const current = batchStore[index];
+
+  const mergedNotes = [current.notes, notes]
+    .filter((value) => String(value ?? '').trim())
+    .join(' | ');
+
+  const updated: BatchRecord = {
+    ...current,
+    batchStatus: nextStatus,
+    notes: mergedNotes,
+    updatedAt: new Date().toISOString()
+  };
+
+  batchStore[index] = updated;
+
+  batchStatusHistoryStore = [
+    {
+      id: 'bsh-' + Date.now(),
+      batchId: updated.id,
+      inventoryItemId: updated.inventoryItemId,
+      batchNumber: updated.batchNumber,
+      previousStatus: current.batchStatus,
+      nextStatus,
+      notes: notes || `Status changed to ${nextStatus}`,
+      changedAt: updated.updatedAt
+    },
+    ...batchStatusHistoryStore
+  ];
+
+  return updated;
+}
+
+export async function previewIssueAllocation(inventoryItemId: string, requestedQty: number) {
+  const candidates = sortBatchesForFefo(
+    batchStore.filter(
+      (item) =>
+        item.inventoryItemId === inventoryItemId &&
+        item.batchStatus === 'available' &&
+        item.availableQty > 0
+    )
+  );
+
+  let remaining = requestedQty;
+
+  const allocations = candidates
+    .filter(() => remaining > 0)
+    .map((batch) => {
+      const issueQty = Math.min(batch.availableQty, remaining);
+      remaining -= issueQty;
+
+      return {
+        batchId: batch.id,
+        batchNumber: batch.batchNumber,
+        inventoryItemId: batch.inventoryItemId,
+        availableQtyBefore: batch.availableQty,
+        issuedQty: issueQty,
+        availableQtyAfter: batch.availableQty - issueQty,
+        expiryDate: batch.expiryDate,
+        receivedDate: batch.receivedDate,
+        warehouseLocation: batch.warehouseLocation,
+        zone: batch.zone,
+        aisle: batch.aisle,
+        levelCode: batch.levelCode,
+        bin: batch.bin,
+        unitCost: batch.unitCost,
+        currency: batch.currency
+      };
+    })
+    .filter((row) => row.issuedQty > 0);
+
+  return {
+    requestedQty,
+    totalAvailableQty: candidates.reduce((sum, item) => sum + item.availableQty, 0),
+    allocatedQty: allocations.reduce((sum, item) => sum + item.issuedQty, 0),
+    remainingUnallocatedQty: remaining > 0 ? remaining : 0,
+    allocations
+  };
+}
+
+export async function commitIssueAllocation(input: {
+  inventoryItemId: string;
+  requestedQty: number;
+  reason: string;
+}) {
+  const preview = await previewIssueAllocation(input.inventoryItemId, input.requestedQty);
+
+  if (preview.allocatedQty <= 0) {
+    return null;
+  }
+
+  const updatedBatches = batchStore.map((batch) => {
+    const allocation = preview.allocations.find((item) => item.batchId === batch.id);
+
+    if (!allocation) {
+      return batch;
+    }
+
+    const nextAvailableQty = allocation.availableQtyAfter;
+
+    return {
+      ...batch,
+      availableQty: nextAvailableQty,
+      batchStatus:
+        nextAvailableQty <= 0 && batch.reservedQty <= 0 && batch.blockedQty <= 0 && batch.qaHoldQty <= 0
+          ? 'consumed'
+          : batch.batchStatus,
+      updatedAt: new Date().toISOString()
+    };
+  });
+
+  batchStore = updatedBatches;
+
+  const issueRecord: StockIssueRecord = {
+    id: 'iss-' + Date.now(),
+    issueNo: nextIssueNumber(),
+    inventoryItemId: input.inventoryItemId,
+    requestedQty: input.requestedQty,
+    issuedQty: preview.allocatedQty,
+    reason: input.reason,
+    issueDate: new Date().toISOString(),
+    allocations: preview.allocations
+  };
+
+  stockIssueStore = [issueRecord, ...stockIssueStore];
+
+  return {
+    issue: issueRecord,
+    preview
+  };
+}
+
+============================================================
+FILE MATCHES: src\modules\batches\repository.ts
+============================================================
+
+--- pattern: commitIssueAllocation ---
+Line 413: export async function commitIssueAllocation(input: {
+
+--- pattern: previewIssueAllocation ---
+Line 366: export async function previewIssueAllocation(inventoryItemId: string, requestedQty: number) {
+Line 418:   const preview = await previewIssueAllocation(input.inventoryItemId, input.requestedQty);
+
+--- pattern: StockIssueRecord ---
+Line 66: export interface StockIssueRecord {
+Line 186: let stockIssueStore: StockIssueRecord[] = [];
+Line 446:   const issueRecord: StockIssueRecord = {
+
+--- pattern: warehouseLocation ---
+Line 28:   warehouseLocation: string;
+Line 57:   warehouseLocation: string;
+Line 96:   warehouseLocation: string;
+Line 125:     warehouseLocation: 'A-01-01',
+Line 153:     warehouseLocation: 'C-03-02',
+Line 295:     warehouseLocation: input.warehouseLocation,
+Line 393:         warehouseLocation: batch.warehouseLocation,
+
+--- pattern: availableQtyAfter ---
+Line 54:   availableQtyAfter: number;
+Line 390:         availableQtyAfter: batch.availableQty - issueQty,
+Line 431:     const nextAvailableQty = allocation.availableQtyAfter;
+
+--- pattern: issueNo ---
+Line 68:   issueNo: string;
+Line 448:     issueNo: nextIssueNumber(),
+
+
+============================================================
+FILE MATCHES: src\modules\inventory\location-balance-store.ts
+============================================================
+
+--- pattern: commitInventoryTransfer ---
+Line 34: export interface CommitInventoryTransferInput {
+Line 476: export async function commitInventoryTransfer(input: CommitInventoryTransferInput) {
+
+--- pattern: InventoryTransferRecord ---
+Line 21: export interface InventoryTransferRecord {
+Line 58: let inventoryTransferStore: InventoryTransferRecord[] = [];
+Line 90: function sortTransfers(items: InventoryTransferRecord[]) {
+Line 519:   const transferRecord: InventoryTransferRecord = {
+
+--- pattern: fromWarehouseLocation ---
+Line 26:   fromWarehouseLocation: string;
+Line 36:   fromWarehouseLocation: string;
+Line 49:   recommendedFromWarehouseLocation: string;
+Line 222:       item.fromWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+Line 228:       item.fromWarehouseLocation.toLowerCase().includes(normalizedLocation) ||
+Line 287:   recommendedFromWarehouseLocation: string;
+Line 335:       recommendedFromWarehouseLocation: chosen.warehouseLocation,
+Line 368:       recommendedFromWarehouseLocation: chosen.warehouseLocation,
+Line 405:     recommendedFromWarehouseLocation: chosen.warehouseLocation,
+Line 417:   fromWarehouseLocation: string;
+Line 435:   const fromWarehouseLocation = normalizeLocation(input.fromWarehouseLocation);
+Line 438:   if (!fromWarehouseLocation) {
+Line 439:     throw new Error('fromWarehouseLocation is required');
+Line 446:   if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+Line 447:     throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+Line 451:     (await getInventoryLocationBalanceByLocation(input.inventoryItemId, fromWarehouseLocation)) ??
+Line 468:     fromWarehouseLocation,
+Line 524:     fromWarehouseLocation: draft.fromWarehouseLocation,
+
+--- pattern: toWarehouseLocation ---
+Line 27:   toWarehouseLocation: string;
+Line 37:   toWarehouseLocation: string;
+Line 223:       item.toWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+Line 229:       item.toWarehouseLocation.toLowerCase().includes(normalizedLocation);
+Line 418:   toWarehouseLocation: string;
+Line 436:   const toWarehouseLocation = normalizeLocation(input.toWarehouseLocation);
+Line 442:   if (!toWarehouseLocation) {
+Line 443:     throw new Error('toWarehouseLocation is required');
+Line 446:   if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+Line 447:     throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+Line 469:     toWarehouseLocation,
+Line 486:     (await getInventoryLocationBalanceByLocation(input.inventoryItemId, input.toWarehouseLocation)) ??
+Line 504:         id: makeBalanceId(input.inventoryItemId, input.toWarehouseLocation),
+Line 508:         warehouseLocation: normalizeLocation(input.toWarehouseLocation),
+Line 525:     toWarehouseLocation: draft.toWarehouseLocation,
+

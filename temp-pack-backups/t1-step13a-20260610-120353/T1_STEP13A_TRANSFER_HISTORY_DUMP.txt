@@ -1,0 +1,1806 @@
+﻿T1 Step 13A - Transfer History and Location Balance Visibility Inspection
+Generated At: 2026-06-10 12:03:53
+
+IMPORTANT:
+- No code was changed
+- Paste the generated output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+============================================================
+FRONTEND GIT STATUS
+============================================================
+
+ M src/components/layout/PageShell.tsx
+ M src/components/layout/Sidebar.tsx
+ M src/components/layout/Topbar.tsx
+ M src/features/inventory/api.ts
+ M src/features/inventory/screens/InventoryDetailScreen.tsx
+ M src/features/inventory/screens/InventoryListScreen.tsx
+ M src/features/inventory/types.ts
+ M src/features/warehouse/screens/WarehouseLocationMasterScreen.tsx
+ M src/features/warehouse/screens/WarehouseScreen.tsx
+ M src/lib/routes.ts
+?? H11B_EASY_SANDBOX_NOTES.txt
+?? src/app/inventory/transfers/
+?? src/app/stock-issues-h11b/
+?? src/app/stock-issues/[issueId]/
+?? src/app/stock-issues/history/
+?? src/features/inventory/hooks/useInventoryTransferCommit.ts
+?? src/features/inventory/hooks/useInventoryTransferDraft.ts
+?? src/features/inventory/screens/InventoryTransferScreen.tsx
+?? src/features/stock-issue-h11b/
+?? src/features/stock-issue/api.ts
+?? src/features/stock-issue/components/
+?? src/features/stock-issue/hooks/useStockIssueContext.ts
+?? src/features/stock-issue/hooks/useStockIssueDetail.ts
+?? src/features/stock-issue/hooks/useStockIssueHistory.ts
+?? src/features/stock-issue/screens/StockIssueDetailScreen.tsx
+?? src/features/stock-issue/screens/StockIssueHistoryScreen.tsx
+?? src/features/stock-issue/screens/StockIssuePrintScreen.tsx
+?? src/features/stock-issue/types.ts
+?? temp-pack-backups/
+?? temp-run-pack.ps1
+?? w22-files/
+
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryTransferScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { useInventoryList } from '../hooks/useInventoryList';
+import { useInventoryTransferCommit } from '../hooks/useInventoryTransferCommit';
+import { useInventoryTransferDraft } from '../hooks/useInventoryTransferDraft';
+
+export function InventoryTransferScreen() {
+  const {
+    items: inventoryItems,
+    isLoading: isInventoryLoading,
+    error: inventoryLoadError
+  } = useInventoryList();
+
+  const {
+    draft,
+    isLoading: isPreviewLoading,
+    error: transferPreviewError,
+    previewTransfer,
+    clearDraft
+  } = useInventoryTransferDraft();
+
+  const {
+    result: commitResult,
+    isLoading: isCommitLoading,
+    error: transferCommitError,
+    commitTransfer,
+    clearResult
+  } = useInventoryTransferCommit();
+
+  const [inventoryItemId, setInventoryItemId] = useState('');
+  const [fromWarehouseLocation, setFromWarehouseLocation] = useState('');
+  const [toWarehouseLocation, setToWarehouseLocation] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [reason, setReason] = useState('inventory_transfer');
+  const [notes, setNotes] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const selectedItem = useMemo(() => {
+    if (!inventoryItemId) {
+      return null;
+    }
+
+    return inventoryItems.find((item) => item.id === inventoryItemId) ?? null;
+  }, [inventoryItems, inventoryItemId]);
+
+  useEffect(() => {
+    if (!selectedItem) {
+      return;
+    }
+
+    setFromWarehouseLocation(selectedItem.warehouseLocation || '');
+    setQuantity(selectedItem.quantity > 0 ? '1' : '0');
+  }, [selectedItem]);
+
+  async function handlePreviewTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const qty = Number(quantity);
+
+    if (!inventoryItemId.trim()) {
+      setFormError('Inventory item is required');
+      return;
+    }
+
+    if (!fromWarehouseLocation.trim()) {
+      setFormError('From Location is required');
+      return;
+    }
+
+    if (!toWarehouseLocation.trim()) {
+      setFormError('To Location is required');
+      return;
+    }
+
+    if (!reason.trim()) {
+      setFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setFormError(null);
+    clearResult();
+
+    try {
+      await previewTransfer({
+        inventoryItemId: inventoryItemId.trim(),
+        fromWarehouseLocation: fromWarehouseLocation.trim(),
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: reason.trim(),
+        notes: notes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  async function handlePostTransfer() {
+    const qty = Number(quantity);
+
+    if (!inventoryItemId.trim()) {
+      setFormError('Inventory item is required');
+      return;
+    }
+
+    if (!fromWarehouseLocation.trim()) {
+      setFormError('From Location is required');
+      return;
+    }
+
+    if (!toWarehouseLocation.trim()) {
+      setFormError('To Location is required');
+      return;
+    }
+
+    if (!reason.trim()) {
+      setFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setFormError(null);
+
+    try {
+      await commitTransfer({
+        inventoryItemId: inventoryItemId.trim(),
+        fromWarehouseLocation: fromWarehouseLocation.trim(),
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: reason.trim(),
+        notes: notes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleClearPreview() {
+    clearDraft();
+    clearResult();
+    setFormError(null);
+    setInventoryItemId('');
+    setFromWarehouseLocation('');
+    setToWarehouseLocation('');
+    setQuantity('1');
+    setReason('inventory_transfer');
+    setNotes('');
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Stock Transfer Preview
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Preview and then post location-to-location or plant-to-plant stock transfer.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              href={ROUTES.inventory}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Back to inventory
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>
+          Transfer Request
+        </div>
+        <div style={{ color: '#475569', lineHeight: 1.7, marginBottom: '16px' }}>
+          Start with a preview to validate source balance before posting the transfer.
+        </div>
+
+        <form onSubmit={handlePreviewTransfer}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '16px',
+              marginBottom: '16px'
+            }}
+          >
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Inventory Item
+              </label>
+              <select
+                value={inventoryItemId}
+                onChange={(e) => setInventoryItemId(e.target.value)}
+                disabled={isInventoryLoading}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff'
+                }}
+              >
+                <option value="">
+                  {isInventoryLoading ? 'Loading inventory...' : 'Select inventory item'}
+                </option>
+
+                {inventoryItems.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.sku} - {item.name}
+                  </option>
+                ))}
+              </select>
+
+              {inventoryLoadError ? (
+                <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '13px' }}>
+                  {inventoryLoadError}
+                </div>
+              ) : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                From Location
+              </label>
+              <input
+                value={fromWarehouseLocation}
+                onChange={(e) => setFromWarehouseLocation(e.target.value)}
+                placeholder="Example: A-01-01"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: selectedItem ? '#f8fafc' : '#ffffff'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                To Location
+              </label>
+              <input
+                value={toWarehouseLocation}
+                onChange={(e) => setToWarehouseLocation(e.target.value)}
+                placeholder="Example: B-02-01 or TRANSIT-01"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Quantity
+              </label>
+              <input
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="1"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Reason
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryDetailScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState, type FormEvent } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { useBatchList } from '@/features/batches/hooks/useBatchList';
+import { useInventoryDetail } from '../hooks/useInventoryDetail';
+import { useInventoryTransferDraft } from '../hooks/useInventoryTransferDraft';
+
+function getStatusColor(status: string) {
+  if (status === 'in_stock') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'low_stock') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+function getBatchStatusStyle(status: string) {
+  if (status === 'available') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'quarantine') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  if (status === 'blocked') {
+    return {
+      background: '#fee2e2',
+      color: '#991b1b',
+      border: '1px solid #fecaca'
+    };
+  }
+
+  if (status === 'expired') {
+    return {
+      background: '#e0e7ff',
+      color: '#3730a3',
+      border: '1px solid #c7d2fe'
+    };
+  }
+
+  return {
+    background: '#e2e8f0',
+    color: '#334155',
+    border: '1px solid #cbd5e1'
+  };
+}
+
+export function InventoryDetailScreen({ id }: { id: string }) {
+  const { item, isLoading, error, refresh } = useInventoryDetail(id);
+
+  const {
+    items: batches,
+    total: batchTotal,
+    persistenceMode: batchPersistenceMode,
+    isLoading: isBatchLoading,
+    error: batchError
+  } = useBatchList({ inventoryItemId: id, status: 'all', search: '' });
+
+  const {
+    draft,
+    isLoading: isPreviewLoading,
+    error: transferPreviewError,
+    previewTransfer,
+    clearDraft
+  } = useInventoryTransferDraft();
+
+  const [toWarehouseLocation, setToWarehouseLocation] = useState('');
+  const [transferQty, setTransferQty] = useState('1');
+  const [transferReason, setTransferReason] = useState('inventory_transfer');
+  const [transferNotes, setTransferNotes] = useState('');
+  const [transferFormError, setTransferFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!item) {
+      return;
+    }
+
+    setTransferQty(item.quantity > 0 ? '1' : '0');
+  }, [item]);
+
+  async function handlePreviewTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!item) {
+      return;
+    }
+
+    const qty = Number(transferQty);
+
+    if (!toWarehouseLocation.trim()) {
+      setTransferFormError('Destination location is required');
+      return;
+    }
+
+    if (!transferReason.trim()) {
+      setTransferFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setTransferFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setTransferFormError(null);
+
+    try {
+      await previewTransfer({
+        inventoryItemId: item.id,
+        fromWarehouseLocation: item.warehouseLocation,
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: transferReason.trim(),
+        notes: transferNotes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleClearPreview() {
+    clearDraft();
+    setTransferFormError(null);
+    setToWarehouseLocation('');
+    setTransferNotes('');
+    if (item) {
+      setTransferQty(item.quantity > 0 ? '1' : '0');
+    } else {
+      setTransferQty('1');
+    }
+    setTransferReason('inventory_transfer');
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container">
+        <div style={{ padding: '24px', color: '#64748b' }}>Loading inventory item...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+          <div style={{ color: '#b91c1c', marginBottom: '16px' }}>{error}</div>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f172a', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!item) {
+    return (
+      <div className="container">
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>
+            Inventory item not found
+          </div>
+          <div style={{ color: '#475569', marginBottom: '16px' }}>
+            The requested inventory item could not be found.
+          </div>
+          <Link href={ROUTES.inventory} style={{ color: '#2563eb', fontWeight: 600 }}>
+            Back to inventory
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container">
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              {item.name}
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Inventory master detail now includes UOM policy, tracking flags, stock thresholds, related batches, and transfer preview.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link href={ROUTES.inventory} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', fontWeight: 600 }}>
+              Back to inventory
+            </Link>
+            <Link href={ROUTES.batches} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: '#ffffff', fontWeight: 600 }}>
+              Open batches
+            </Link>
+            <Link href={ROUTES.inventoryCreate} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f766e', color: '#ffffff', fontWeight: 600 }}>
+              Create another
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: '24px' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>SKU</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.sku}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Barcode</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.barcode || '-'}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Category</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.category}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Quantity</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.quantity} {item.unit}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Reorder / Min / Max</div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            {item.reorderLevel} / {item.minimumStockLevel} / {item.maximumStockLevel}
+          </div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Warehouse Location</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.warehouseLocation}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>UOM Group</div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>{item.uomConversionGroupCode || '-'}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Status</div>
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '6px 10px',
+              borderRadius: '999px',
+              fontSize: '12px',
+              fontWeight: 700,
+              ...getStatusColor(item.status)
+            }}
+          >
+            {item.statusLabel}
+          </span>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '20px',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>
+          Inventory Transfer Preview
+        </div>
+        <div style={{ color: '#475569', lineHeight: 1.7, marginBottom: '16px' }}>
+          Preview a location-to-location transfer before we add the final transfer posting action.
+        </div>
+
+        <form onSubmit={handlePreviewTransfer}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '16px',
+              marginBottom: '16px'
+            }}
+          >
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                From Location
+              </label>
+              <input
+                value={item.warehouseLocation}
+                readOnly
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#f8fafc'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+
+============================================================
+FILE HEAD: src\features\inventory\api.ts
+============================================================
+
+import { apiClient } from '@/services/api/client';
+import { ENDPOINTS } from '@/services/api/endpoints';
+import { mapInventoryItem, mapInventoryListResponse } from './mapper';
+import type {
+  CreateInventoryRequest,
+  CreateInventoryTransferDraftRequest,
+  InventoryDetailResponse,
+  InventoryItemDto,
+  InventoryListFilters,
+  InventoryListResponse,
+  InventoryLocationBalanceListResponse,
+  InventoryLocationBalanceRecord,
+  InventoryLocationBalanceSummary,
+  InventoryTransferDraft,
+  UpdateInventoryRequest
+} from './types';
+
+function buildInventoryListUrl(filters: InventoryListFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${ENDPOINTS.inventory.list}?${queryString}` : ENDPOINTS.inventory.list;
+}
+
+function buildInventoryLocationBalancesUrl(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const query = new URLSearchParams();
+
+  if (filters?.inventoryItemId && filters.inventoryItemId.trim()) {
+    query.set('inventoryItemId', filters.inventoryItemId.trim());
+  }
+
+  if (filters?.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters?.warehouseLocation && filters.warehouseLocation.trim()) {
+    query.set('warehouseLocation', filters.warehouseLocation.trim());
+  }
+
+  const queryString = query.toString();
+  return queryString
+    ? '/inventory/location-balances?' + queryString
+    : '/inventory/location-balances';
+}
+
+function mapInventoryLocationBalanceListResponse(data: any): InventoryLocationBalanceListResponse {
+  const payload = data?.data ?? data ?? {};
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+
+  const items: InventoryLocationBalanceRecord[] = rawItems.map((item: any) => ({
+    id: String(item?.id ?? '').trim(),
+    inventoryItemId: String(item?.inventoryItemId ?? '').trim(),
+    sku: String(item?.sku ?? '').trim(),
+    itemName: String(item?.itemName ?? '').trim(),
+    warehouseLocation: String(item?.warehouseLocation ?? '').trim(),
+    onHandQty: Number(item?.onHandQty ?? 0),
+    reservedQty: Number(item?.reservedQty ?? 0),
+    availableQty: Number(item?.availableQty ?? 0),
+    unit: String(item?.unit ?? '').trim(),
+    updatedAt: String(item?.updatedAt ?? '').trim()
+  }));
+
+  const total = Number.isFinite(Number(payload.total)) ? Number(payload.total) : items.length;
+
+  return {
+    items,
+    total
+  };
+}
+
+function mapInventoryLocationBalanceSummary(data: any): InventoryLocationBalanceSummary {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    totalLines: Number(payload?.totalLines ?? 0),
+    totalOnHandQty: Number(payload?.totalOnHandQty ?? 0),
+    totalAvailableQty: Number(payload?.totalAvailableQty ?? 0)
+  };
+}
+
+function mapInventoryTransferDraft(data: any): InventoryTransferDraft {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    inventoryItemId: String(payload?.inventoryItemId ?? '').trim(),
+    sku: String(payload?.sku ?? '').trim(),
+    itemName: String(payload?.itemName ?? '').trim(),
+    unit: String(payload?.unit ?? '').trim(),
+    quantity: Number(payload?.quantity ?? 0),
+    fromWarehouseLocation: String(payload?.fromWarehouseLocation ?? '').trim(),
+    toWarehouseLocation: String(payload?.toWarehouseLocation ?? '').trim(),
+    reason: String(payload?.reason ?? '').trim(),
+    notes: String(payload?.notes ?? '').trim(),
+    availableSourceBalance: payload?.availableSourceBalance
+      ? {
+          id: String(payload.availableSourceBalance.id ?? '').trim(),
+          inventoryItemId: String(payload.availableSourceBalance.inventoryItemId ?? '').trim(),
+          sku: String(payload.availableSourceBalance.sku ?? '').trim(),
+          itemName: String(payload.availableSourceBalance.itemName ?? '').trim(),
+          warehouseLocation: String(payload.availableSourceBalance.warehouseLocation ?? '').trim(),
+          onHandQty: Number(payload.availableSourceBalance.onHandQty ?? 0),
+          reservedQty: Number(payload.availableSourceBalance.reservedQty ?? 0),
+          availableQty: Number(payload.availableSourceBalance.availableQty ?? 0),
+          unit: String(payload.availableSourceBalance.unit ?? '').trim(),
+          updatedAt: String(payload.availableSourceBalance.updatedAt ?? '').trim()
+        }
+      : null
+  };
+}
+
+export const inventoryApi = {
+  async getInventoryList(filters: InventoryListFilters = {}): Promise<InventoryListResponse> {
+    const response = await apiClient.get<any>(buildInventoryListUrl(filters));
+    return mapInventoryListResponse(response.data);
+  },
+
+  async getInventoryById(id: string): Promise<InventoryDetailResponse> {
+    const response = await apiClient.get<any>(ENDPOINTS.inventory.detail(id));
+    return mapInventoryItem(response.data);
+  },
+
+  async getInventoryDetail(id: string): Promise<InventoryDetailResponse> {
+    return this.getInventoryById(id);
+  },
+
+  async createInventory(payload: CreateInventoryRequest): Promise<InventoryItemDto> {
+    const response = await apiClient.post<any>(ENDPOINTS.inventory.create, payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async updateInventory(
+    id: string,
+    payload: Omit<UpdateInventoryRequest, 'id'>
+  ): Promise<InventoryItemDto> {
+    const response = await apiClient.put<any>(ENDPOINTS.inventory.update(id), payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async toggleActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    const response = await apiClient.patch<any>(ENDPOINTS.inventory.toggleActive(id), {
+      isActive
+    });
+    return mapInventoryItem(response.data);
+  },
+
+  async setInventoryActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    return this.toggleActive(id, isActive);
+  },
+
+  async getLocationBalanceSummary(): Promise<InventoryLocationBalanceSummary> {
+    const response = await apiClient.get<any>('/inventory/location-balance-summary');
+    return mapInventoryLocationBalanceSummary(response.data);
+  },
+
+  async getLocationBalances(filters?: {
+    inventoryItemId?: string;
+    search?: string;
+    warehouseLocation?: string;
+  }): Promise<InventoryLocationBalanceListResponse> {
+    const response = await apiClient.get<any>(buildInventoryLocationBalancesUrl(filters));
+    return mapInventoryLocationBalanceListResponse(response.data);
+  },
+
+  async getLocationBalancesByInventoryItem(
+    inventoryItemId: string
+  ): Promise<InventoryLocationBalanceListResponse> {
+    const response = await apiClient.get<any>(`/inventory/location-balances/${encodeURIComponent(inventoryItemId)}`);
+    return mapInventoryLocationBalanceListResponse(response.data);
+  },
+
+  async createTransferDraft(
+    payload: CreateInventoryTransferDraftRequest
+  ): Promise<InventoryTransferDraft> {
+    const response = await apiClient.post<any>('/inventory/transfers/draft', payload);
+    return mapInventoryTransferDraft(response.data);
+  },
+
+  async commitTransfer(
+    payload: CreateInventoryTransferDraftRequest
+  ): Promise<any> {
+    const response = await apiClient.post<any>('/inventory/transfers/commit', payload);
+    return response.data?.data ?? response.data;
+  }
+};
+
+
+============================================================
+FILE HEAD: src\features\inventory\types.ts
+============================================================
+
+export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+export type InventoryItemType =
+  | 'raw_material'
+  | 'finished_goods'
+  | 'packaging'
+  | 'spare_part'
+  | 'consumable';
+
+export type InventoryPersistenceMode = 'memory' | 'postgres' | string;
+
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  statusLabel: string;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface InventoryListResponse {
+  items: InventoryItem[];
+  total: number;
+  persistenceMode?: InventoryPersistenceMode;
+}
+
+export interface CreateInventoryRequest {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export interface UpdateInventoryRequest extends CreateInventoryRequest {
+  id: string;
+}
+
+export interface InventoryListFilters {
+  search?: string;
+  status?: 'all' | InventoryStatus;
+}
+
+export interface InventoryFormValues {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType?: InventoryItemType;
+  brand?: string;
+  model?: string;
+  preferredSupplierName?: string;
+  standardCost?: string;
+  averageCost?: string;
+  currency?: string;
+  quantity: string;
+  reorderLevel: string;
+  minimumStockLevel: string;
+  maximumStockLevel: string;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export type InventoryFormErrors = Partial<Record<keyof InventoryFormValues, string>>;
+
+export type InventoryTrackingFlag = 'batch' | 'expiry' | 'serial';
+
+export interface InventoryDetailResponse extends InventoryItem {
+  trackingFlags: InventoryTrackingFlag[];
+}
+
+export interface InventoryItemDto extends InventoryItem {}
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryLocationBalanceListResponse {
+  items: InventoryLocationBalanceRecord[];
+  total: number;
+}
+
+export interface InventoryLocationBalanceSummary {
+  totalLines: number;
+  totalOnHandQty: number;
+  totalAvailableQty: number;
+}
+
+export interface InventoryTransferDraft {
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  unit: string;
+  quantity: number;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  reason: string;
+  notes: string;
+  availableSourceBalance: InventoryLocationBalanceRecord | null;
+}
+
+export interface CreateInventoryTransferDraftRequest {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+============================================================
+FILE MATCHES: src\features\inventory\screens\InventoryTransferScreen.tsx
+============================================================
+
+--- pattern: Draft Preview ---
+Line 478:               Draft Preview
+
+--- pattern: Transfer Posted ---
+Line 506:               Transfer Posted
+
+--- pattern: Source Balance ---
+Line 220:           Start with a preview to validate source balance before posting the transfer.
+Line 487:               <strong>Source Balance:</strong>{' '}
+Line 490:                 : 'No source balance found'}
+Line 514:               <strong>Updated Source Balance:</strong>{' '}
+
+--- pattern: Destination Balance ---
+Line 520:               <strong>Updated Destination Balance:</strong>{' '}
+
+--- pattern: history ---
+no match
+
+--- pattern: balance ---
+Line 220:           Start with a preview to validate source balance before posting the transfer.
+Line 487:               <strong>Source Balance:</strong>{' '}
+Line 488:               {draft.availableSourceBalance
+Line 489:                 ? `${draft.availableSourceBalance.availableQty} ${draft.availableSourceBalance.unit} available at ${draft.availableSourceBalance.warehouseLocation}`
+Line 490:                 : 'No source balance found'}
+Line 514:               <strong>Updated Source Balance:</strong>{' '}
+Line 515:               {commitResult.sourceBalance
+Line 516:                 ? `${commitResult.sourceBalance.availableQty} ${commitResult.sourceBalance.unit} available at ${commitResult.sourceBalance.warehouseLocation}`
+Line 520:               <strong>Updated Destination Balance:</strong>{' '}
+Line 521:               {commitResult.destinationBalance
+Line 522:                 ? `${commitResult.destinationBalance.availableQty} ${commitResult.destinationBalance.unit} available at ${commitResult.destinationBalance.warehouseLocation}`
+
+
+============================================================
+BACKEND GIT STATUS
+============================================================
+
+ M src/modules/inventory/routes.ts
+?? H11B_MANUAL_PATCH_backend.txt
+?? data/
+?? src/modules/inventory/location-balance-store.ts
+?? src/modules/stock-control/h11b-issue-repository.ts
+?? src/modules/stock-control/h11b-issue-service.ts
+?? src/modules/stock-control/h11b-types.ts
+?? src/modules/stock-control/issue-repository.ts
+?? src/modules/stock-control/issue-service.ts
+?? src/modules/stock-control/types.ts
+?? temp-pack-backups/
+
+
+============================================================
+FILE HEAD: src\modules\inventory\location-balance-store.ts
+============================================================
+
+import {
+  getInventoryById,
+  listInventory,
+  type InventoryRecord
+} from './repository';
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryTransferRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface CommitInventoryTransferInput {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+let inventoryTransferStore: InventoryTransferRecord[] = [];
+let inventoryLocationBalanceOverrides: InventoryLocationBalanceRecord[] = [];
+
+function toLocationBalanceRecord(item: InventoryRecord): InventoryLocationBalanceRecord {
+  const onHandQty = Number(item.quantity ?? 0);
+  const reservedQty = 0;
+  const availableQty = Math.max(0, onHandQty - reservedQty);
+
+  return {
+    id: `bal-${item.id}-${String(item.warehouseLocation ?? '').trim().toUpperCase()}`,
+    inventoryItemId: item.id,
+    sku: String(item.sku ?? '').trim(),
+    itemName: String(item.name ?? '').trim(),
+    warehouseLocation: String(item.warehouseLocation ?? '').trim(),
+    onHandQty,
+    reservedQty,
+    availableQty,
+    unit: String(item.unit ?? '').trim(),
+    updatedAt: String(item.updatedAt ?? new Date().toISOString())
+  };
+}
+
+function sortBalances(items: InventoryLocationBalanceRecord[]) {
+  return [...items].sort((a, b) => {
+    if (a.sku !== b.sku) {
+      return a.sku.localeCompare(b.sku);
+    }
+
+    return a.warehouseLocation.localeCompare(b.warehouseLocation);
+  });
+}
+
+function sortTransfers(items: InventoryTransferRecord[]) {
+  return [...items].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
+function normalizeLocation(value: string) {
+  return String(value ?? '').trim();
+}
+
+function makeBalanceId(inventoryItemId: string, warehouseLocation: string) {
+  return `bal-${inventoryItemId}-${normalizeLocation(warehouseLocation).toUpperCase()}`;
+}
+
+function recalculateAvailableQty(balance: InventoryLocationBalanceRecord) {
+  return Math.max(0, balance.onHandQty - balance.reservedQty);
+}
+
+async function buildBaseBalances(): Promise<InventoryLocationBalanceRecord[]> {
+  const inventoryItems = await listInventory({
+    search: '',
+    status: 'all'
+  });
+
+  return inventoryItems.map(toLocationBalanceRecord);
+}
+
+async function getEffectiveBalances(): Promise<InventoryLocationBalanceRecord[]> {
+  const baseBalances = await buildBaseBalances();
+  const effective = [...baseBalances];
+
+  for (const override of inventoryLocationBalanceOverrides) {
+    const index = effective.findIndex((item) => item.id === override.id);
+
+    if (index >= 0) {
+      effective[index] = { ...override };
+    } else {
+      effective.push({ ...override });
+    }
+  }
+
+  return effective;
+}
+
+function saveBalanceOverride(balance: InventoryLocationBalanceRecord) {
+  const index = inventoryLocationBalanceOverrides.findIndex((item) => item.id === balance.id);
+
+  if (index >= 0) {
+    inventoryLocationBalanceOverrides[index] = { ...balance };
+  } else {
+    inventoryLocationBalanceOverrides.push({ ...balance });
+  }
+}
+
+export async function listInventoryLocationBalances(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const balances = await getEffectiveBalances();
+
+  const normalizedSearch = String(filters?.search ?? '').trim().toLowerCase();
+  const normalizedLocation = String(filters?.warehouseLocation ?? '').trim().toLowerCase();
+
+  const filtered = balances.filter((item) => {
+    const matchesInventoryItem =
+      !filters?.inventoryItemId || item.inventoryItemId === filters.inventoryItemId;
+
+    const matchesSearch =
+      !normalizedSearch ||
+      item.sku.toLowerCase().includes(normalizedSearch) ||
+      item.itemName.toLowerCase().includes(normalizedSearch) ||
+      item.warehouseLocation.toLowerCase().includes(normalizedSearch);
+
+    const matchesLocation =
+      !normalizedLocation ||
+      item.warehouseLocation.toLowerCase().includes(normalizedLocation);
+
+    return matchesInventoryItem && matchesSearch && matchesLocation;
+  });
+
+  return sortBalances(filtered);
+}
+
+export async function getInventoryLocationBalancesByItem(inventoryItemId: string) {
+  return listInventoryLocationBalances({ inventoryItemId });
+}
+
+export async function getInventoryLocationBalanceSummary() {
+  const balances = await listInventoryLocationBalances();
+
+  const totalLines = balances.length;
+  const totalOnHandQty = balances.reduce((sum, item) => sum + item.onHandQty, 0);
+  const totalAvailableQty = balances.reduce((sum, item) => sum + item.availableQty, 0);
+
+  return {
+    totalLines,
+    totalOnHandQty,
+    totalAvailableQty
+  };
+}
+
+export async function getInventoryLocationBalanceByLocation(
+  inventoryItemId: string,
+  warehouseLocation: string
+) {
+  const normalizedLocation = normalizeLocation(warehouseLocation).toLowerCase();
+  const balances = await getInventoryLocationBalancesByItem(inventoryItemId);
+
+  return (
+    balances.find(
+      (item) => item.warehouseLocation.trim().toLowerCase() === normalizedLocation
+    ) ?? null
+  );
+}
+
+export function listInventoryTransfers(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const normalizedSearch = String(filters?.search ?? '').trim().toLowerCase();
+  const normalizedLocation = String(filters?.warehouseLocation ?? '').trim().toLowerCase();
+
+  const items = inventoryTransferStore.filter((item) => {
+    const matchesInventoryItem =
+      !filters?.inventoryItemId || item.inventoryItemId === filters.inventoryItemId;
+
+    const matchesSearch =
+      !normalizedSearch ||
+      item.sku.toLowerCase().includes(normalizedSearch) ||
+      item.itemName.toLowerCase().includes(normalizedSearch) ||
+      item.fromWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+      item.toWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+      item.reason.toLowerCase().includes(normalizedSearch);
+
+    const matchesLocation =
+      !normalizedLocation ||
+      item.fromWarehouseLocation.toLowerCase().includes(normalizedLocation) ||
+      item.toWarehouseLocation.toLowerCase().includes(normalizedLocation);
+
+    return matchesInventoryItem && matchesSearch && matchesLocation;
+  });
+
+  return sortTransfers(items);
+}
+
+export function getInventoryTransferById(id: string) {
+  return inventoryTransferStore.find((item) => item.id === id) ?? null;
+}
+
+export async function createInventoryTransferDraft(input: {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}) {
+  const inventoryItem = await getInventoryById(input.inventoryItemId);
+
+  if (!inventoryItem) {
+    throw new Error('Inventory item not found');
+  }
+
+  const quantity = Number(input.quantity);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new Error('quantity must be greater than 0');
+  }
+
+  const fromWarehouseLocation = normalizeLocation(input.fromWarehouseLocation);
+  const toWarehouseLocation = normalizeLocation(input.toWarehouseLocation);
+
+  if (!fromWarehouseLocation) {
+    throw new Error('fromWarehouseLocation is required');
+  }
+
+  if (!toWarehouseLocation) {
+    throw new Error('toWarehouseLocation is required');
+  }
+
+  if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+    throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+  }
+
+  const availableSourceBalance =
+    (await getInventoryLocationBalanceByLocation(input.inventoryItemId, fromWarehouseLocation)) ??
+    null;
+
+  if (!availableSourceBalance) {
+    throw new Error('Source balance not found for the selected location');
+  }
+
+  if (availableSourceBalance.availableQty < quantity) {
+    throw new Error('Insufficient available quantity at source location');
+  }
+
+  return {
+    inventoryItemId: inventoryItem.id,
+    sku: inventoryItem.sku,
+    itemName: inventoryItem.name,
+    unit: inventoryItem.unit,
+    quantity,
+    fromWarehouseLocation,
+    toWarehouseLocation,
+    reason: String(input.reason ?? '').trim(),
+    notes: String(input.notes ?? '').trim(),
+    availableSourceBalance
+  };
+}
+
+export async function commitInventoryTransfer(input: CommitInventoryTransferInput) {
+  const draft = await createInventoryTransferDraft(input);
+  const now = new Date().toISOString();
+
+  const sourceBalance = draft.availableSourceBalance;
+  if (!sourceBalance) {
+    throw new Error('Source balance not found');
+  }
+
+  const destinationBalance =
+    (await getInventoryLocationBalanceByLocation(input.inventoryItemId, input.toWarehouseLocation)) ??
+    null;
+
+  const updatedSource: InventoryLocationBalanceRecord = {
+    ...sourceBalance,
+    onHandQty: sourceBalance.onHandQty - draft.quantity,
+    availableQty: Math.max(0, sourceBalance.availableQty - draft.quantity),
+    updatedAt: now
+  };
+
+  const updatedDestination: InventoryLocationBalanceRecord = destinationBalance
+    ? {
+        ...destinationBalance,
+        onHandQty: destinationBalance.onHandQty + draft.quantity,
+        availableQty: destinationBalance.availableQty + draft.quantity,
+        updatedAt: now
+      }
+    : {
+        id: makeBalanceId(input.inventoryItemId, input.toWarehouseLocation),
+        inventoryItemId: draft.inventoryItemId,
+        sku: draft.sku,
+        itemName: draft.itemName,
+        warehouseLocation: normalizeLocation(input.toWarehouseLocation),
+        onHandQty: draft.quantity,
+        reservedQty: 0,
+        availableQty: draft.quantity,
+        unit: draft.unit,
+        updatedAt: now
+      };
+
+  saveBalanceOverride(updatedSource);
+  saveBalanceOverride(updatedDestination);
+
+  const transferRecord: InventoryTransferRecord = {
+    id: `trf-${Date.now()}`,
+    inventoryItemId: draft.inventoryItemId,
+    sku: draft.sku,
+    itemName: draft.itemName,
+    fromWarehouseLocation: draft.fromWarehouseLocation,
+    toWarehouseLocation: draft.toWarehouseLocation,
+    quantity: draft.quantity,
+    reason: draft.reason,
+    notes: draft.notes,
+    createdAt: now
+  };
+
+  inventoryTransferStore = [transferRecord, ...inventoryTransferStore];
+
+  return {
+    transfer: transferRecord,
+    sourceBalance: updatedSource,
+    destinationBalance: updatedDestination
+  };
+}
+
+============================================================
+FILE HEAD: src\modules\inventory\routes.ts
+============================================================
+
+import { Router } from 'express';
+import { created, ok } from '../../common/http/api-response';
+import { asyncHandler } from '../../common/utils/async-handler';
+import { AppError } from '../../common/errors/app-error';
+import {
+  createInventory,
+  getInventoryById,
+  getInventoryPersistenceMode,
+  listInventory,
+  setInventoryActiveStatus,
+  updateInventory,
+  type InventoryItemType,
+  type InventoryStatus
+} from './repository';
+import { listConversionGroups, listUoms } from '../uom/store';
+import {
+  commitInventoryTransfer,
+  createInventoryTransferDraft,
+  getInventoryLocationBalanceSummary,
+  getInventoryLocationBalancesByItem,
+  listInventoryLocationBalances
+} from './location-balance-store';
+
+export const inventoryRouter = Router();
+
+function readSingle(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+
+  return value ?? '';
+}
+
+const allowedStatuses: InventoryStatus[] = ['in_stock', 'low_stock', 'out_of_stock'];
+const allowedItemTypes: InventoryItemType[] = [
+  'raw_material',
+  'finished_goods',
+  'packaging',
+  'spare_part',
+  'consumable'
+];
+
+function requireText(value: unknown, field: string, min = 1, max = 150) {
+  const text = String(value ?? '').trim();
+
+  if (!text) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} is required`
+    });
+  }
+
+  if (text.length < min || text.length > max) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} must be between ${min} and ${max} characters`
+    });
+  }
+
+  return text;
+}
+
+function optionalText(value: unknown, max = 250) {
+  const text = String(value ?? '').trim();
+
+  if (!text) {
+    return '';
+  }
+
+  if (text.length > max) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `Text length must be ${max} characters or less`
+    });
+  }
+
+  return text;
+}
+
+function requireNumber(value: unknown, field: string, min = 0) {
+  const parsed = Number(value);
+
+  if (Number.isNaN(parsed) || parsed < min) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} must be a valid number ${min} or greater`
+    });
+  }
+
+  return parsed;
+}
+
+function normalizeStatus(value: unknown) {
+  const status = String(value ?? '').trim() as InventoryStatus;
+
+  if (!allowedStatuses.includes(status)) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'status must be one of: in_stock, low_stock, out_of_stock'
+    });
+  }
+
+  return status;
+}
+
+function normalizeItemType(value: unknown) {
+  const itemType = String(value ?? '').trim() as InventoryItemType;
+
+  if (!allowedItemTypes.includes(itemType)) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message:
+        'itemType must be one of: raw_material, finished_goods, packaging, spare_part, consumable'
+    });
+  }
+
+  return itemType;
+}
+
+function requireCurrency(value: unknown) {
+  const currency = requireText(value, 'currency', 3, 10).toUpperCase();
+  return currency;
+}
+
+function requireActiveUomCode(value: unknown, field: string) {
+  const code = requireText(value, field, 1, 20).toUpperCase();
+
+  const uom = listUoms({ search: '', type: 'all' }).find(
+    (item) => item.uomCode.toUpperCase() === code
+  );
+
+  if (!uom) {
+    throw new AppError({
+      status: 400,
+      code: 'INVALID_UOM',
+      message: `${field} does not exist`
+    });
+  }
+
+  if (!uom.isActive) {
+    throw new AppError({
+      status: 400,
+      code: 'INACTIVE_UOM',
+      message: `${field} is inactive and cannot be used`
+    });
+  }
+
+  return code;
+}
+
+function optionalActiveConversionGroupCode(value: unknown) {
+  const code = String(value ?? '').trim().toUpperCase();
+
+  if (!code) {
+    return '';
+  }
+
+  const group = listConversionGroups({ search: '' }).find(
+    (item) => item.groupCode.toUpperCase() === code
+  );
+
+  if (!group) {
+    throw new AppError({
+      status: 400,
+      code: 'INVALID_UOM_CONVERSION_GROUP',
+      message: 'uomConversionGroupCode does not exist'
+    });
+  }
+
+  if (!group.isActive) {
+    throw new AppError({
+      status: 400,
+      code: 'INACTIVE_UOM_CONVERSION_GROUP',
+      message: 'uomConversionGroupCode is inactive and cannot be used'
+    });
+  }
+
+  return code;
+}
+
+function buildInventoryInput(body: any) {
+  const minimumStockLevel = requireNumber(body?.minimumStockLevel, 'minimumStockLevel', 0);
+  const maximumStockLevel = requireNumber(body?.maximumStockLevel, 'maximumStockLevel', 0);
+
+  if (maximumStockLevel > 0 && maximumStockLevel < minimumStockLevel) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'maximumStockLevel must be greater than or equal to minimumStockLevel'
+    });
+  }
+
+  return {
+    sku: requireText(body?.sku, 'sku', 2, 50),
+    barcode: optionalText(body?.barcode, 60),
+    name: requireText(body?.name, 'name', 2, 120),
+    description: optionalText(body?.description, 500),
+    category: requireText(body?.category, 'category', 2, 80),
+    itemType: normalizeItemType(body?.itemType),
+    brand: optionalText(body?.brand, 80),
+    model: optionalText(body?.model, 80),
+    preferredSupplierName: optionalText(body?.preferredSupplierName, 120),
+    standardCost: requireNumber(body?.standardCost, 'standardCost', 0),
+    averageCost: requireNumber(body?.averageCost, 'averageCost', 0),
+    currency: requireCurrency(body?.currency ?? 'USD'),
+    quantity: requireNumber(body?.quantity, 'quantity', 0),
+    reorderLevel: requireNumber(body?.reorderLevel, 'reorderLevel', 0),
+    minimumStockLevel,
+    maximumStockLevel,
+    unit: requireText(body?.unit, 'unit', 1, 20),
+    warehouseLocation: requireText(body?.warehouseLocation, 'warehouseLocation', 3, 30),
+    status: normalizeStatus(body?.status ?? 'in_stock'),
+    isActive: body?.isActive === undefined ? true : Boolean(body?.isActive),
+    isBatchTracked: Boolean(body?.isBatchTracked),
+    isExpiryTracked: Boolean(body?.isExpiryTracked),
+    isSerialTracked: Boolean(body?.isSerialTracked),
+    baseUomCode: requireActiveUomCode(body?.baseUomCode, 'baseUomCode'),
+    purchaseUomCode: requireActiveUomCode(body?.purchaseUomCode, 'purchaseUomCode'),
+    salesUomCode: requireActiveUomCode(body?.salesUomCode, 'salesUomCode'),
+    issueUomCode: requireActiveUomCode(body?.issueUomCode, 'issueUomCode'),
+    uomConversionGroupCode: optionalActiveConversionGroupCode(body?.uomConversionGroupCode),
+    allowsFraction: Boolean(body?.allowsFraction),
+    notes: optionalText(body?.notes, 1000)
+  };
+}
+
+
+inventoryRouter.get(
+  '/location-balance-summary',
+  asyncHandler(async (_request, response) => {
+    const summary = await getInventoryLocationBalanceSummary();
+    return ok(response, summary, 200);
+  })
+);
+
+inventoryRouter.get(
+  '/location-balances',
+  asyncHandler(async (request, response) => {
+    const items = await listInventoryLocationBalances({
+      inventoryItemId: readSingle(request.query.inventoryItemId as string | string[] | undefined),
+      search: readSingle(request.query.search as string | string[] | undefined),
+      warehouseLocation: readSingle(request.query.warehouseLocation as string | string[] | undefined)
+    });
+
+    return ok(
+      response,
+      {
+        items,
+        total: items.length
+      },
+      200
+    );
+  })
+);
+
+============================================================
+FILE MATCHES: src\modules\inventory\location-balance-store.ts
+============================================================
+
+--- pattern: listInventoryTransfers ---
+Line 190: export function listInventoryTransfers(filters?: {
+
+--- pattern: getInventoryTransferById ---
+Line 221: export function getInventoryTransferById(id: string) {
+
+--- pattern: getInventoryLocationBalancesByItem ---
+Line 158: export async function getInventoryLocationBalancesByItem(inventoryItemId: string) {
+Line 181:   const balances = await getInventoryLocationBalancesByItem(inventoryItemId);
+
+--- pattern: getInventoryLocationBalanceSummary ---
+Line 162: export async function getInventoryLocationBalanceSummary() {
+
+--- pattern: commitInventoryTransfer ---
+Line 33: export interface CommitInventoryTransferInput {
+Line 286: export async function commitInventoryTransfer(input: CommitInventoryTransferInput) {
+
+--- pattern: inventoryTransferStore ---
+Line 42: let inventoryTransferStore: InventoryTransferRecord[] = [];
+Line 198:   const items = inventoryTransferStore.filter((item) => {
+Line 222:   return inventoryTransferStore.find((item) => item.id === id) ?? null;
+Line 342:   inventoryTransferStore = [transferRecord, ...inventoryTransferStore];
+
+
+============================================================
+FILE MATCHES: src\modules\inventory\routes.ts
+============================================================
+
+--- pattern: location-balance-summary ---
+Line 235:   '/location-balance-summary',
+
+--- pattern: location-balances ---
+Line 243:   '/location-balances',
+Line 263:   '/location-balances/:inventoryItemId',
+
+--- pattern: transfers/draft ---
+Line 324:   '/transfers/draft',
+
+--- pattern: transfers/commit ---
+Line 292:   '/transfers/commit',
+
+--- pattern: history ---
+no match
+

@@ -1,0 +1,8 @@
+﻿REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend
+LABEL: backend_diff_routes
+COMMAND: git diff -- src/modules/warehouse/routes.ts
+TIME: 2026-06-02 12:17:48
+
+----- OUTPUT START -----
+
+----- OUTPUT END -----

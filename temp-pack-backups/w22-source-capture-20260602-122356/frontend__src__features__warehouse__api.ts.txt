@@ -1,0 +1,80 @@
+﻿REPO ROOT: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+RELATIVE PATH: src/features/warehouse/api.ts
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\api.ts
+CAPTURED AT: 2026-06-02 12:23:56
+
+================ FILE CONTENT START ================
+import { apiClient } from '@/services/api/client';
+import { ENDPOINTS } from '@/services/api/endpoints';
+import { mapWarehouseLocation, mapWarehouseLocationListResponse } from './mapper';
+import type {
+  CreateWarehouseLocationRequest,
+  UpdateWarehouseLocationRequest,
+  WarehouseLocationImportResult,
+  WarehouseLocationListFilters
+} from './types';
+
+function buildWarehouseLocationListUrl(filters: WarehouseLocationListFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  if (filters.type && filters.type !== 'all') {
+    query.set('type', filters.type);
+  }
+
+  if (filters.active && filters.active !== 'all') {
+    query.set('active', filters.active);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${ENDPOINTS.warehouse.locations}?${queryString}` : ENDPOINTS.warehouse.locations;
+}
+
+export const warehouseApi = {
+  async getLocations(filters: WarehouseLocationListFilters = {}) {
+    const response = await apiClient.get<any>(buildWarehouseLocationListUrl(filters));
+    return mapWarehouseLocationListResponse(response.data);
+  },
+
+  async getLocationById(id: string) {
+    const response = await apiClient.get<any>(ENDPOINTS.warehouse.locationDetail(id));
+    return mapWarehouseLocation(response.data);
+  },
+
+  async createLocation(payload: CreateWarehouseLocationRequest) {
+    const response = await apiClient.post<any>(ENDPOINTS.warehouse.createLocation, payload);
+    return mapWarehouseLocation(response.data);
+  },
+
+  async updateLocation(id: string, payload: Omit<UpdateWarehouseLocationRequest, 'id'>) {
+    const response = await apiClient.put<any>(ENDPOINTS.warehouse.updateLocation(id), payload);
+    return mapWarehouseLocation(response.data);
+  },
+
+  async toggleLocationActive(id: string, isActive: boolean) {
+    const response = await apiClient.patch<any>(ENDPOINTS.warehouse.toggleLocationActive(id), {
+      isActive
+    });
+    return mapWarehouseLocation(response.data);
+  },
+
+  async importLocationsCsv(csvText: string): Promise<WarehouseLocationImportResult> {
+    const response = await apiClient.post<any>(ENDPOINTS.warehouse.importCsv, {
+      csvText
+    });
+    return response.data;
+  },
+
+  async exportLocationsCsv(): Promise<string> {
+    const response = await apiClient.get<any>(ENDPOINTS.warehouse.exportCsv);
+    return typeof response.data === 'string' ? response.data : String(response.data ?? '');
+  }
+};
+================ FILE CONTENT END ==================

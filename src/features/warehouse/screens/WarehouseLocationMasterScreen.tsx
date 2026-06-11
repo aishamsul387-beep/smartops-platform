@@ -442,7 +442,7 @@ export function WarehouseLocationMasterScreen() {
     <div className="container">
       <PageHeaderCard
         title="Warehouse Location Master"
-        description="Master location setup for storage, inventory control, receiving, and future capacity analytics."
+        description="Calm and practical workspace for storage setup, inventory control, receiving, and warehouse capacity visibility."
         actions={
           <>
             <button
@@ -451,7 +451,7 @@ export function WarehouseLocationMasterScreen() {
               style={{
                 padding: '10px 14px',
                 borderRadius: '10px',
-                border: '1px solid #cbd5e1',
+                border: '1px solid #C7DDE8',
                 background: '#ffffff',
                 cursor: 'pointer',
                 fontWeight: 600
@@ -467,7 +467,7 @@ export function WarehouseLocationMasterScreen() {
               style={{
                 padding: '10px 14px',
                 borderRadius: '10px',
-                border: '1px solid #cbd5e1',
+                border: '1px solid #C7DDE8',
                 background: '#ffffff',
                 cursor: isDownloadingTemplate ? 'not-allowed' : 'pointer',
                 fontWeight: 600
@@ -484,7 +484,7 @@ export function WarehouseLocationMasterScreen() {
                 padding: '10px 14px',
                 borderRadius: '10px',
                 border: 'none',
-                background: isExporting ? '#94a3b8' : '#0f172a',
+                background: isExporting ? '#94A3B8' : '#0F766E',
                 color: '#ffffff',
                 cursor: isExporting ? 'not-allowed' : 'pointer',
                 fontWeight: 600
@@ -501,7 +501,7 @@ export function WarehouseLocationMasterScreen() {
         description="This summary follows your current normalized site and location filters."
       >
         {isSummaryLoading ? (
-          <div style={{ color: '#64748b' }}>Loading warehouse utilization summary...</div>
+          <div style={{ color: '#5B6B7A' }}>Loading warehouse utilization summary...</div>
         ) : summaryError ? (
           <div
             style={{
@@ -546,9 +546,9 @@ export function WarehouseLocationMasterScreen() {
                 style={{
                   padding: '12px',
                   borderRadius: '12px',
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  color: '#334155'
+                  background: '#F0FDFA',
+                  border: '1px solid #DCEFEA',
+                  color: '#46606F'
                 }}
               >
                 <strong>Pallet basis:</strong> {utilizationSummary.palletCapacityUsed} / {utilizationSummary.palletCapacityTotal}
@@ -557,9 +557,9 @@ export function WarehouseLocationMasterScreen() {
                 style={{
                   padding: '12px',
                   borderRadius: '12px',
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  color: '#334155'
+                  background: '#F0FDFA',
+                  border: '1px solid #DCEFEA',
+                  color: '#46606F'
                 }}
               >
                 <strong>PCS basis:</strong> {utilizationSummary.pcsCapacityUsed} / {utilizationSummary.pcsCapacityTotal}
@@ -568,9 +568,9 @@ export function WarehouseLocationMasterScreen() {
                 style={{
                   padding: '12px',
                   borderRadius: '12px',
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  color: '#334155'
+                  background: '#F0FDFA',
+                  border: '1px solid #DCEFEA',
+                  color: '#46606F'
                 }}
               >
                 <strong>Carton basis:</strong> {utilizationSummary.cartonCapacityUsed} / {utilizationSummary.cartonCapacityTotal}
@@ -582,7 +582,7 @@ export function WarehouseLocationMasterScreen() {
 
       <PageSectionCard
         title="Import Warehouse Locations CSV"
-        description="Upload or paste CSV content to create/update location master records in bulk."
+        description="Upload or paste CSV content to create or update warehouse locations in bulk with a guided and operator-friendly workflow."
       >
         <div style={{ display: 'grid', gap: '16px' }}>
           <div>
@@ -606,7 +606,7 @@ export function WarehouseLocationMasterScreen() {
                   padding: '10px 14px',
                   borderRadius: '10px',
                   border: 'none',
-                  background: !pendingCsvText.trim() ? '#94a3b8' : '#0f172a',
+                  background: !pendingCsvText.trim() ? '#94A3B8' : '#0F766E',
                   color: '#ffffff',
                   cursor: !pendingCsvText.trim() ? 'not-allowed' : 'pointer',
                   fontWeight: 600
@@ -622,9 +622,9 @@ export function WarehouseLocationMasterScreen() {
                 style={{
                   padding: '10px 14px',
                   borderRadius: '10px',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid #C7DDE8',
                   background: '#ffffff',
-                  color: !selectedCsvFileName ? '#94a3b8' : '#334155',
+                  color: !selectedCsvFileName ? '#94A3B8' : '#46606F',
                   cursor: !selectedCsvFileName ? 'not-allowed' : 'pointer',
                   fontWeight: 600
                 }}
@@ -634,7 +634,7 @@ export function WarehouseLocationMasterScreen() {
             </div>
 
             {selectedCsvFileName ? (
-              <div style={{ marginTop: '8px', color: '#475569', fontSize: '14px' }}>
+              <div style={{ marginTop: '8px', color: '#46606F', fontSize: '14px' }}>
                 Attached file: <strong>{selectedCsvFileName}</strong>
               </div>
             ) : null}
@@ -653,7 +653,7 @@ export function WarehouseLocationMasterScreen() {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '10px',
-                border: '1px solid #cbd5e1',
+                border: '1px solid #C7DDE8',
                 resize: 'vertical'
               }}
             />
@@ -668,7 +668,7 @@ export function WarehouseLocationMasterScreen() {
                 padding: '10px 14px',
                 borderRadius: '10px',
                 border: 'none',
-                background: isImporting || !csvText.trim() ? '#94a3b8' : '#0f172a',
+                background: isImporting || !csvText.trim() ? '#94A3B8' : '#0F766E',
                 color: '#ffffff',
                 cursor: isImporting || !csvText.trim() ? 'not-allowed' : 'pointer',
                 fontWeight: 600
@@ -697,9 +697,9 @@ export function WarehouseLocationMasterScreen() {
               style={{
                 padding: '12px',
                 borderRadius: '10px',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                color: '#334155'
+                background: '#F0FDFA',
+                border: '1px solid #DCEFEA',
+                color: '#46606F'
               }}
             >
               <div><strong>Inserted:</strong> {importResult.inserted}</div>
@@ -730,49 +730,49 @@ export function WarehouseLocationMasterScreen() {
           >
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Warehouse Code</label>
-              <input value={values.warehouseCode} onChange={(e) => updateField('warehouseCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.warehouseCode} onChange={(e) => updateField('warehouseCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.warehouseCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.warehouseCode}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Warehouse Name</label>
-              <input value={values.warehouseName} onChange={(e) => updateField('warehouseName', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.warehouseName} onChange={(e) => updateField('warehouseName', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.warehouseName ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.warehouseName}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Location Code</label>
-              <input value={values.locationCode} onChange={(e) => updateField('locationCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.locationCode} onChange={(e) => updateField('locationCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.locationCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.locationCode}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Zone</label>
-              <input value={values.zone} onChange={(e) => updateField('zone', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.zone} onChange={(e) => updateField('zone', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.zone ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.zone}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Aisle</label>
-              <input value={values.aisle} onChange={(e) => updateField('aisle', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.aisle} onChange={(e) => updateField('aisle', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.aisle ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.aisle}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Level</label>
-              <input value={values.levelCode} onChange={(e) => updateField('levelCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.levelCode} onChange={(e) => updateField('levelCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.levelCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.levelCode}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Bin</label>
-              <input value={values.bin} onChange={(e) => updateField('bin', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.bin} onChange={(e) => updateField('bin', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.bin ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.bin}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Location Type</label>
-              <select value={values.locationType} onChange={(e) => updateField('locationType', e.target.value as WarehouseLocationFormValues['locationType'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+              <select value={values.locationType} onChange={(e) => updateField('locationType', e.target.value as WarehouseLocationFormValues['locationType'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', background: '#ffffff' }}>
                 <option value="rack">rack</option>
                 <option value="floor">floor</option>
                 <option value="bulk">bulk</option>
@@ -786,7 +786,7 @@ export function WarehouseLocationMasterScreen() {
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Status</label>
-              <select value={values.status} onChange={(e) => updateField('status', e.target.value as WarehouseLocationFormValues['status'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+              <select value={values.status} onChange={(e) => updateField('status', e.target.value as WarehouseLocationFormValues['status'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', background: '#ffffff' }}>
                 <option value="empty">empty</option>
                 <option value="occupied">occupied</option>
                 <option value="blocked">blocked</option>
@@ -796,12 +796,12 @@ export function WarehouseLocationMasterScreen() {
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Capacity Unit</label>
-              <select value={values.capacityUom} onChange={(e) => updateField('capacityUom', e.target.value as WarehouseLocationFormValues['capacityUom'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+              <select value={values.capacityUom} onChange={(e) => updateField('capacityUom', e.target.value as WarehouseLocationFormValues['capacityUom'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', background: '#ffffff' }}>
                 <option value="pallet">pallet</option>
                 <option value="pcs">pcs</option>
                 <option value="carton">carton</option>
               </select>
-              <div style={{ marginTop: '8px', color: '#64748b', fontSize: '13px' }}>
+              <div style={{ marginTop: '8px', color: '#5B6B7A', fontSize: '13px' }}>
                 Use <strong>pcs</strong> for outlet shelves, and <strong>carton</strong> for outlet buffer stock.
               </div>
               {errors.capacityUom ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.capacityUom}</div> : null}
@@ -809,25 +809,25 @@ export function WarehouseLocationMasterScreen() {
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>{getStorageCapacityLabel(values.capacityUom)}</label>
-              <input value={values.palletCapacity} onChange={(e) => updateField('palletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.palletCapacity} onChange={(e) => updateField('palletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.palletCapacity ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.palletCapacity}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>{getUsedStorageCapacityLabel(values.capacityUom)}</label>
-              <input value={values.usedPalletCapacity} onChange={(e) => updateField('usedPalletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.usedPalletCapacity} onChange={(e) => updateField('usedPalletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.usedPalletCapacity ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.usedPalletCapacity}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Cubic Capacity (m3)</label>
-              <input value={values.cubicCapacityM3} onChange={(e) => updateField('cubicCapacityM3', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.cubicCapacityM3} onChange={(e) => updateField('cubicCapacityM3', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.cubicCapacityM3 ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.cubicCapacityM3}</div> : null}
             </div>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Used Cubic Capacity (m3)</label>
-              <input value={values.usedCubicCapacityM3} onChange={(e) => updateField('usedCubicCapacityM3', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              <input value={values.usedCubicCapacityM3} onChange={(e) => updateField('usedCubicCapacityM3', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }} />
               {errors.usedCubicCapacityM3 ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.usedCubicCapacityM3}</div> : null}
             </div>
 
@@ -843,7 +843,7 @@ export function WarehouseLocationMasterScreen() {
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Notes</label>
-              <textarea value={values.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', resize: 'vertical' }} />
+              <textarea value={values.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', resize: 'vertical' }} />
               {errors.notes ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.notes}</div> : null}
             </div>
           </div>
@@ -871,7 +871,7 @@ export function WarehouseLocationMasterScreen() {
                 padding: '12px 16px',
                 borderRadius: '10px',
                 border: 'none',
-                background: isSubmitting ? '#94a3b8' : '#0f172a',
+                background: isSubmitting ? '#94A3B8' : '#0F766E',
                 color: '#ffffff',
                 fontWeight: 600
               }}
@@ -892,7 +892,7 @@ export function WarehouseLocationMasterScreen() {
         </PageStatsGrid>
       </PageSectionCard>
 
-      <PageSectionCard title="Search & Filter">
+      <PageSectionCard title="Filter and Find Locations">
         <div
           style={{
             display: 'grid',
@@ -905,7 +905,7 @@ export function WarehouseLocationMasterScreen() {
             <select
               value={filters.siteScope || 'all'}
               onChange={(e) => handleSiteScopeChange(e.target.value as WarehouseSiteScope)}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', background: '#ffffff' }}
             >
               <option value="all">all</option>
               <option value="warehouse">warehouse</option>
@@ -919,7 +919,7 @@ export function WarehouseLocationMasterScreen() {
               value={filters.warehouseCode || ''}
               onChange={(e) => updateWarehouseCode(e.target.value)}
               disabled={isSitesLoading}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', background: '#ffffff' }}
             >
               <option value="">{isSitesLoading ? 'Loading sites...' : 'All sites'}</option>
               {filteredSites.map((site) => (
@@ -931,8 +931,8 @@ export function WarehouseLocationMasterScreen() {
             {sitesError ? (
               <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '13px' }}>{sitesError}</div>
             ) : selectedSite ? (
-              <div style={{ marginTop: '8px', color: '#64748b', fontSize: '13px' }}>
-                Selected: {selectedSite.siteCode} â€” {selectedSite.siteName}
+              <div style={{ marginTop: '8px', color: '#5B6B7A', fontSize: '13px' }}>
+                Current site: {selectedSite.siteCode} â€” {selectedSite.siteName}
               </div>
             ) : null}
           </div>
@@ -943,7 +943,7 @@ export function WarehouseLocationMasterScreen() {
               value={filters.search || ''}
               onChange={(e) => updateSearch(e.target.value)}
               placeholder="Search location, zone, aisle, warehouse"
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }}
             />
           </div>
 
@@ -952,8 +952,8 @@ export function WarehouseLocationMasterScreen() {
             <input
               value={filters.locationCode || ''}
               onChange={(e) => updateLocationCode(e.target.value)}
-              placeholder="Filter by exact/partial location code"
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+              placeholder="Filter by exact or partial location code"
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8' }}
             />
           </div>
 
@@ -962,7 +962,7 @@ export function WarehouseLocationMasterScreen() {
             <select
               value={filters.status || 'all'}
               onChange={(e) => updateStatus(e.target.value as any)}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', background: '#ffffff' }}
             >
               <option value="all">All</option>
               <option value="empty">empty</option>
@@ -976,7 +976,7 @@ export function WarehouseLocationMasterScreen() {
             <select
               value={filters.type || 'all'}
               onChange={(e) => updateType(e.target.value as any)}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', background: '#ffffff' }}
             >
               <option value="all">All</option>
               <option value="rack">rack</option>
@@ -994,7 +994,7 @@ export function WarehouseLocationMasterScreen() {
             <select
               value={filters.active || 'all'}
               onChange={(e) => updateActive(e.target.value as any)}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #C7DDE8', background: '#ffffff' }}
             >
               <option value="all">All</option>
               <option value="active">active</option>
@@ -1006,16 +1006,16 @@ export function WarehouseLocationMasterScreen() {
 
       <PageSectionCard title="Warehouse Location List" noPadding>
         {isLoading ? (
-          <div style={{ padding: '24px', color: '#64748b' }}>Loading warehouse locations...</div>
+          <div style={{ padding: '24px', color: '#5B6B7A' }}>Loading warehouse locations...</div>
         ) : error ? (
           <div style={{ padding: '24px', color: '#b91c1c' }}>{error}</div>
         ) : items.length === 0 ? (
-          <div style={{ padding: '24px', color: '#64748b' }}>No warehouse locations found.</div>
+          <div style={{ padding: '24px', color: '#5B6B7A' }}>No warehouse locations found.</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                <tr style={{ background: '#F0FDFA', textAlign: 'left' }}>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Warehouse</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Location Code</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Zone / Aisle / Level / Bin</th>
@@ -1080,7 +1080,7 @@ export function WarehouseLocationMasterScreen() {
                         style={{
                           padding: '8px 10px',
                           borderRadius: '8px',
-                          border: '1px solid #cbd5e1',
+                          border: '1px solid #C7DDE8',
                           background: '#ffffff',
                           fontWeight: 600
                         }}
@@ -1098,3 +1098,6 @@ export function WarehouseLocationMasterScreen() {
     </div>
   );
 }
+
+
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -130,6 +130,19 @@ export function InventoryListScreen() {
               }}
             >
               Create item
+            </Link>
+            <Link
+              href={ROUTES.inventoryTransfers}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#1d4ed8',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Stock transfer
             </Link>
 
             <button
@@ -275,7 +288,9 @@ export function InventoryListScreen() {
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Barcode</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Name</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Category</th>
-                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Qty / Min / Max</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Qty</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Min</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Max</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Base UOM</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Tracking</th>
                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Active</th>
@@ -294,9 +309,9 @@ export function InventoryListScreen() {
                       </Link>
                     </td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.category}</td>
-                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
-                      {item.quantity} / {item.minimumStockLevel} / {item.maximumStockLevel}
-                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.quantity}</td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.minimumStockLevel}</td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.maximumStockLevel}</td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>{item.baseUomCode || '-'}</td>
                     <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
                       {[
@@ -377,3 +392,4 @@ export function InventoryListScreen() {
     </div>
   );
 }
+

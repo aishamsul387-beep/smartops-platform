@@ -1,0 +1,2339 @@
+﻿T1 Step 1 - Standalone Stock Transfer Foundation Inspection
+Generated At: 2026-06-09 15:28:29
+
+IMPORTANT:
+- No code was changed
+- Paste the generated output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+============================================================
+FRONTEND GIT STATUS
+============================================================
+
+ M src/components/layout/PageShell.tsx
+ M src/components/layout/Sidebar.tsx
+ M src/components/layout/Topbar.tsx
+ M src/features/inventory/api.ts
+ M src/features/inventory/screens/InventoryDetailScreen.tsx
+ M src/features/inventory/screens/InventoryListScreen.tsx
+ M src/features/inventory/types.ts
+ M src/features/warehouse/screens/WarehouseLocationMasterScreen.tsx
+ M src/features/warehouse/screens/WarehouseScreen.tsx
+?? H11B_EASY_SANDBOX_NOTES.txt
+?? src/app/stock-issues-h11b/
+?? src/app/stock-issues/[issueId]/
+?? src/app/stock-issues/history/
+?? src/features/inventory/hooks/useInventoryTransferDraft.ts
+?? src/features/stock-issue-h11b/
+?? src/features/stock-issue/api.ts
+?? src/features/stock-issue/components/
+?? src/features/stock-issue/hooks/useStockIssueContext.ts
+?? src/features/stock-issue/hooks/useStockIssueDetail.ts
+?? src/features/stock-issue/hooks/useStockIssueHistory.ts
+?? src/features/stock-issue/screens/StockIssueDetailScreen.tsx
+?? src/features/stock-issue/screens/StockIssueHistoryScreen.tsx
+?? src/features/stock-issue/screens/StockIssuePrintScreen.tsx
+?? src/features/stock-issue/types.ts
+?? temp-pack-backups/
+?? temp-run-pack.ps1
+?? w22-files/
+
+
+============================================================
+FRONTEND INVENTORY/WAREHOUSE APP TREE
+============================================================
+
+
+FullName                                                                                                  
+--------                                                                                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\create             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\page.tsx           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\create\page.tsx    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\edit          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\page.tsx      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\edit\page.tsx 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\locations          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\tasks              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\page.tsx           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\locations\page.tsx 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\tasks\[id]         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\tasks\page.tsx     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\tasks\[id]\page.tsx
+
+
+
+
+============================================================
+FRONTEND INVENTORY/WAREHOUSE FEATURE TREE
+============================================================
+
+
+FullName                                                                                                                              
+--------                                                                                                                              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory                                           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse                                           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\batches\hooks\useBatchInventorySummary.ts           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens                                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\api.ts                                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\mapper.ts                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\schema.ts                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\types.ts                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useCreateInventory.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryActiveToggle.ts         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryDetail.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryList.ts                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryMasterOptions.ts        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryTransferDraft.ts        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useUpdateInventory.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryCreateScreen.tsx         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryDetailScreen.tsx         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryEditScreen.tsx           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryListScreen.tsx           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\orders\hooks\useGRNInventorySummary.ts              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\orders\hooks\usePurchaseOrderLineInventorySummary.ts
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens                                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\api.ts                                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\mapper.ts                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\schema.ts                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\types.ts                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useCreateWarehouseLocation.ts       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useToggleWarehouseLocationActive.ts 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseAlerts.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseAlertThresholds.ts      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseDrilldown.ts            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseLocations.ts            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseSites.ts                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseSummary.ts              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseLocationMasterScreen.tsx 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseLocationsScreen.tsx      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseScreen.tsx               
+
+
+
+
+============================================================
+FILE HEAD: src\app\inventory\page.tsx
+============================================================
+
+import { ProtectedLayout } from '@/components/layout/ProtectedLayout';
+import { InventoryListScreen } from '@/features/inventory/screens/InventoryListScreen';
+import { PERMISSIONS } from '@/types/permissions';
+
+export default function InventoryPage() {
+  return (
+    <ProtectedLayout permissions={[PERMISSIONS.INVENTORY_VIEW]}>
+      <InventoryListScreen />
+    </ProtectedLayout>
+  );
+}
+
+============================================================
+FILE HEAD: src\features\inventory\api.ts
+============================================================
+
+import { apiClient } from '@/services/api/client';
+import { ENDPOINTS } from '@/services/api/endpoints';
+import { mapInventoryItem, mapInventoryListResponse } from './mapper';
+import type {
+  CreateInventoryRequest,
+  CreateInventoryTransferDraftRequest,
+  InventoryDetailResponse,
+  InventoryItemDto,
+  InventoryListFilters,
+  InventoryListResponse,
+  InventoryLocationBalanceListResponse,
+  InventoryLocationBalanceRecord,
+  InventoryLocationBalanceSummary,
+  InventoryTransferDraft,
+  UpdateInventoryRequest
+} from './types';
+
+function buildInventoryListUrl(filters: InventoryListFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${ENDPOINTS.inventory.list}?${queryString}` : ENDPOINTS.inventory.list;
+}
+
+function buildInventoryLocationBalancesUrl(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const query = new URLSearchParams();
+
+  if (filters?.inventoryItemId && filters.inventoryItemId.trim()) {
+    query.set('inventoryItemId', filters.inventoryItemId.trim());
+  }
+
+  if (filters?.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters?.warehouseLocation && filters.warehouseLocation.trim()) {
+    query.set('warehouseLocation', filters.warehouseLocation.trim());
+  }
+
+  const queryString = query.toString();
+  return queryString
+    ? '/inventory/location-balances?' + queryString
+    : '/inventory/location-balances';
+}
+
+function mapInventoryLocationBalanceListResponse(data: any): InventoryLocationBalanceListResponse {
+  const payload = data?.data ?? data ?? {};
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+
+  const items: InventoryLocationBalanceRecord[] = rawItems.map((item: any) => ({
+    id: String(item?.id ?? '').trim(),
+    inventoryItemId: String(item?.inventoryItemId ?? '').trim(),
+    sku: String(item?.sku ?? '').trim(),
+    itemName: String(item?.itemName ?? '').trim(),
+    warehouseLocation: String(item?.warehouseLocation ?? '').trim(),
+    onHandQty: Number(item?.onHandQty ?? 0),
+    reservedQty: Number(item?.reservedQty ?? 0),
+    availableQty: Number(item?.availableQty ?? 0),
+    unit: String(item?.unit ?? '').trim(),
+    updatedAt: String(item?.updatedAt ?? '').trim()
+  }));
+
+  const total = Number.isFinite(Number(payload.total)) ? Number(payload.total) : items.length;
+
+  return {
+    items,
+    total
+  };
+}
+
+function mapInventoryLocationBalanceSummary(data: any): InventoryLocationBalanceSummary {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    totalLines: Number(payload?.totalLines ?? 0),
+    totalOnHandQty: Number(payload?.totalOnHandQty ?? 0),
+    totalAvailableQty: Number(payload?.totalAvailableQty ?? 0)
+  };
+}
+
+function mapInventoryTransferDraft(data: any): InventoryTransferDraft {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    inventoryItemId: String(payload?.inventoryItemId ?? '').trim(),
+    sku: String(payload?.sku ?? '').trim(),
+    itemName: String(payload?.itemName ?? '').trim(),
+    unit: String(payload?.unit ?? '').trim(),
+    quantity: Number(payload?.quantity ?? 0),
+    fromWarehouseLocation: String(payload?.fromWarehouseLocation ?? '').trim(),
+    toWarehouseLocation: String(payload?.toWarehouseLocation ?? '').trim(),
+    reason: String(payload?.reason ?? '').trim(),
+    notes: String(payload?.notes ?? '').trim(),
+    availableSourceBalance: payload?.availableSourceBalance
+      ? {
+          id: String(payload.availableSourceBalance.id ?? '').trim(),
+          inventoryItemId: String(payload.availableSourceBalance.inventoryItemId ?? '').trim(),
+          sku: String(payload.availableSourceBalance.sku ?? '').trim(),
+          itemName: String(payload.availableSourceBalance.itemName ?? '').trim(),
+          warehouseLocation: String(payload.availableSourceBalance.warehouseLocation ?? '').trim(),
+          onHandQty: Number(payload.availableSourceBalance.onHandQty ?? 0),
+          reservedQty: Number(payload.availableSourceBalance.reservedQty ?? 0),
+          availableQty: Number(payload.availableSourceBalance.availableQty ?? 0),
+          unit: String(payload.availableSourceBalance.unit ?? '').trim(),
+          updatedAt: String(payload.availableSourceBalance.updatedAt ?? '').trim()
+        }
+      : null
+  };
+}
+
+export const inventoryApi = {
+  async getInventoryList(filters: InventoryListFilters = {}): Promise<InventoryListResponse> {
+    const response = await apiClient.get<any>(buildInventoryListUrl(filters));
+    return mapInventoryListResponse(response.data);
+  },
+
+  async getInventoryById(id: string): Promise<InventoryDetailResponse> {
+    const response = await apiClient.get<any>(ENDPOINTS.inventory.detail(id));
+    return mapInventoryItem(response.data);
+  },
+
+  async getInventoryDetail(id: string): Promise<InventoryDetailResponse> {
+    return this.getInventoryById(id);
+  },
+
+  async createInventory(payload: CreateInventoryRequest): Promise<InventoryItemDto> {
+    const response = await apiClient.post<any>(ENDPOINTS.inventory.create, payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async updateInventory(
+    id: string,
+    payload: Omit<UpdateInventoryRequest, 'id'>
+  ): Promise<InventoryItemDto> {
+    const response = await apiClient.put<any>(ENDPOINTS.inventory.update(id), payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async toggleActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    const response = await apiClient.patch<any>(ENDPOINTS.inventory.toggleActive(id), {
+      isActive
+    });
+    return mapInventoryItem(response.data);
+  },
+
+  async setInventoryActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    return this.toggleActive(id, isActive);
+  },
+
+  async getLocationBalanceSummary(): Promise<InventoryLocationBalanceSummary> {
+    const response = await apiClient.get<any>('/inventory/location-balance-summary');
+    return mapInventoryLocationBalanceSummary(response.data);
+  },
+
+  async getLocationBalances(filters?: {
+    inventoryItemId?: string;
+    search?: string;
+    warehouseLocation?: string;
+  }): Promise<InventoryLocationBalanceListResponse> {
+    const response = await apiClient.get<any>(buildInventoryLocationBalancesUrl(filters));
+    return mapInventoryLocationBalanceListResponse(response.data);
+  },
+
+  async getLocationBalancesByInventoryItem(
+    inventoryItemId: string
+  ): Promise<InventoryLocationBalanceListResponse> {
+    const response = await apiClient.get<any>(`/inventory/location-balances/${encodeURIComponent(inventoryItemId)}`);
+    return mapInventoryLocationBalanceListResponse(response.data);
+  },
+
+  async createTransferDraft(
+    payload: CreateInventoryTransferDraftRequest
+  ): Promise<InventoryTransferDraft> {
+    const response = await apiClient.post<any>('/inventory/transfers/draft', payload);
+    return mapInventoryTransferDraft(response.data);
+  }
+};
+
+============================================================
+FILE HEAD: src\features\inventory\types.ts
+============================================================
+
+export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+export type InventoryItemType =
+  | 'raw_material'
+  | 'finished_goods'
+  | 'packaging'
+  | 'spare_part'
+  | 'consumable';
+
+export type InventoryPersistenceMode = 'memory' | 'postgres' | string;
+
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  statusLabel: string;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface InventoryListResponse {
+  items: InventoryItem[];
+  total: number;
+  persistenceMode?: InventoryPersistenceMode;
+}
+
+export interface CreateInventoryRequest {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export interface UpdateInventoryRequest extends CreateInventoryRequest {
+  id: string;
+}
+
+export interface InventoryListFilters {
+  search?: string;
+  status?: 'all' | InventoryStatus;
+}
+
+export interface InventoryFormValues {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType?: InventoryItemType;
+  brand?: string;
+  model?: string;
+  preferredSupplierName?: string;
+  standardCost?: string;
+  averageCost?: string;
+  currency?: string;
+  quantity: string;
+  reorderLevel: string;
+  minimumStockLevel: string;
+  maximumStockLevel: string;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export type InventoryFormErrors = Partial<Record<keyof InventoryFormValues, string>>;
+
+export type InventoryTrackingFlag = 'batch' | 'expiry' | 'serial';
+
+export interface InventoryDetailResponse extends InventoryItem {
+  trackingFlags: InventoryTrackingFlag[];
+}
+
+export interface InventoryItemDto extends InventoryItem {}
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryLocationBalanceListResponse {
+  items: InventoryLocationBalanceRecord[];
+  total: number;
+}
+
+export interface InventoryLocationBalanceSummary {
+  totalLines: number;
+  totalOnHandQty: number;
+  totalAvailableQty: number;
+}
+
+export interface InventoryTransferDraft {
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  unit: string;
+  quantity: number;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  reason: string;
+  notes: string;
+  availableSourceBalance: InventoryLocationBalanceRecord | null;
+}
+
+export interface CreateInventoryTransferDraftRequest {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryListScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useState } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { useInventoryList } from '../hooks/useInventoryList';
+import { useInventoryActiveToggle } from '../hooks/useInventoryActiveToggle';
+import type { InventoryItem } from '../types';
+
+function getStatusColor(status: string) {
+  if (status === 'in_stock') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'low_stock') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+function getActiveStyle(isActive: boolean) {
+  if (isActive) {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+export function InventoryListScreen() {
+  const {
+    items,
+    filters,
+    isLoading,
+    error,
+    totalItems,
+    lowStockCount,
+    outOfStockCount,
+    updateSearch,
+    updateStatus,
+    refresh
+  } = useInventoryList();
+
+  const { toggleInventory } = useInventoryActiveToggle();
+  const [rowActionError, setRowActionError] = useState<string | null>(null);
+
+  async function handleToggle(item: InventoryItem) {
+    try {
+      setRowActionError(null);
+      await toggleInventory(item);
+      await refresh();
+    } catch (err: any) {
+      setRowActionError(err?.message || 'Failed to update item active status');
+    }
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Inventory
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Inventory master now supports governance actions such as edit and activate/deactivate.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              href={ROUTES.dashboard}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Back to dashboard
+            </Link>
+
+            <Link
+              href={ROUTES.inventoryCreate}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#0f766e',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Create item
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#0f172a',
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {rowActionError ? (
+        <div
+          style={{
+            marginBottom: '16px',
+            padding: '12px',
+            borderRadius: '10px',
+            background: '#fef2f2',
+            color: '#b91c1c',
+            border: '1px solid #fecaca'
+          }}
+        >
+          {rowActionError}
+        </div>
+      ) : null}
+
+      <div
+        style={{
+          display: 'grid',
+          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Total items</div>
+          <div style={{ fontSize: '28px', fontWeight: 700 }}>{totalItems}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Low stock</div>
+          <div style={{ fontSize: '28px', fontWeight: 700 }}>{lowStockCount}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Out of stock</div>
+          <div style={{ fontSize: '28px', fontWeight: 700 }}>{outOfStockCount}</div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '20px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px'
+          }}
+        >
+          <div>
+            <label htmlFor="inventory-search" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Search
+            </label>
+            <input
+              id="inventory-search"
+              type="text"
+              value={filters.search || ''}
+              onChange={(event) => updateSearch(event.target.value)}
+              placeholder="Search by SKU, barcode, name or category"
+              style={{
+                width: '100%',
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryDetailScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState, type FormEvent } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { useBatchList } from '@/features/batches/hooks/useBatchList';
+import { useInventoryDetail } from '../hooks/useInventoryDetail';
+import { useInventoryTransferDraft } from '../hooks/useInventoryTransferDraft';
+
+function getStatusColor(status: string) {
+  if (status === 'in_stock') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'low_stock') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+function getBatchStatusStyle(status: string) {
+  if (status === 'available') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'quarantine') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  if (status === 'blocked') {
+    return {
+      background: '#fee2e2',
+      color: '#991b1b',
+      border: '1px solid #fecaca'
+    };
+  }
+
+  if (status === 'expired') {
+    return {
+      background: '#e0e7ff',
+      color: '#3730a3',
+      border: '1px solid #c7d2fe'
+    };
+  }
+
+  return {
+    background: '#e2e8f0',
+    color: '#334155',
+    border: '1px solid #cbd5e1'
+  };
+}
+
+export function InventoryDetailScreen({ id }: { id: string }) {
+  const { item, isLoading, error, refresh } = useInventoryDetail(id);
+
+  const {
+    items: batches,
+    total: batchTotal,
+    persistenceMode: batchPersistenceMode,
+    isLoading: isBatchLoading,
+    error: batchError
+  } = useBatchList({ inventoryItemId: id, status: 'all', search: '' });
+
+  const {
+    draft,
+    isLoading: isPreviewLoading,
+    error: transferPreviewError,
+    previewTransfer,
+    clearDraft
+  } = useInventoryTransferDraft();
+
+  const [toWarehouseLocation, setToWarehouseLocation] = useState('');
+  const [transferQty, setTransferQty] = useState('1');
+  const [transferReason, setTransferReason] = useState('inventory_transfer');
+  const [transferNotes, setTransferNotes] = useState('');
+  const [transferFormError, setTransferFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!item) {
+      return;
+    }
+
+    setTransferQty(item.quantity > 0 ? '1' : '0');
+  }, [item]);
+
+  async function handlePreviewTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!item) {
+      return;
+    }
+
+    const qty = Number(transferQty);
+
+    if (!toWarehouseLocation.trim()) {
+      setTransferFormError('Destination location is required');
+      return;
+    }
+
+    if (!transferReason.trim()) {
+      setTransferFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setTransferFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setTransferFormError(null);
+
+    try {
+      await previewTransfer({
+        inventoryItemId: item.id,
+        fromWarehouseLocation: item.warehouseLocation,
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: transferReason.trim(),
+        notes: transferNotes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleClearPreview() {
+    clearDraft();
+    setTransferFormError(null);
+    setToWarehouseLocation('');
+    setTransferNotes('');
+    if (item) {
+      setTransferQty(item.quantity > 0 ? '1' : '0');
+    } else {
+      setTransferQty('1');
+    }
+    setTransferReason('inventory_transfer');
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container">
+        <div style={{ padding: '24px', color: '#64748b' }}>Loading inventory item...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+          <div style={{ color: '#b91c1c', marginBottom: '16px' }}>{error}</div>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f172a', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!item) {
+    return (
+      <div className="container">
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>
+            Inventory item not found
+          </div>
+          <div style={{ color: '#475569', marginBottom: '16px' }}>
+            The requested inventory item could not be found.
+          </div>
+          <Link href={ROUTES.inventory} style={{ color: '#2563eb', fontWeight: 600 }}>
+            Back to inventory
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container">
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              {item.name}
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Inventory master detail now includes UOM policy, tracking flags, stock thresholds, related batches, and transfer preview.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link href={ROUTES.inventory} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', fontWeight: 600 }}>
+              Back to inventory
+            </Link>
+            <Link href={ROUTES.batches} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: '#ffffff', fontWeight: 600 }}>
+              Open batches
+            </Link>
+            <Link href={ROUTES.inventoryCreate} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f766e', color: '#ffffff', fontWeight: 600 }}>
+              Create another
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: '24px' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>SKU</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.sku}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Barcode</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.barcode || '-'}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Category</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.category}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Quantity</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.quantity} {item.unit}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Reorder / Min / Max</div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            {item.reorderLevel} / {item.minimumStockLevel} / {item.maximumStockLevel}
+          </div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Warehouse Location</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.warehouseLocation}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>UOM Group</div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>{item.uomConversionGroupCode || '-'}</div>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+
+============================================================
+FILE HEAD: src\features\inventory\hooks\useInventoryTransferDraft.ts
+============================================================
+
+'use client';
+
+import { useState } from 'react';
+import { inventoryApi } from '../api';
+import type {
+  CreateInventoryTransferDraftRequest,
+  InventoryTransferDraft
+} from '../types';
+
+export function useInventoryTransferDraft() {
+  const [draft, setDraft] = useState<InventoryTransferDraft | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function previewTransfer(payload: CreateInventoryTransferDraftRequest) {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await inventoryApi.createTransferDraft(payload);
+      setDraft(result);
+
+      return result;
+    } catch (err: any) {
+      setDraft(null);
+      setError(err?.message || 'Failed to preview inventory transfer');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function clearDraft() {
+    setDraft(null);
+    setError(null);
+  }
+
+  return {
+    draft,
+    isLoading,
+    error,
+    previewTransfer,
+    clearDraft
+  };
+}
+
+============================================================
+FILE MATCHES: src\services\api\endpoints.ts
+============================================================
+
+--- pattern: inventory ---
+Line 11:   inventory: {
+Line 12:     list: '/inventory',
+Line 13:     detail: (id: string) => `/inventory/${id}`,
+Line 14:     create: '/inventory',
+Line 15:     update: (id: string) => `/inventory/${id}`,
+Line 16:     toggleActive: (id: string) => `/inventory/${id}/active`
+Line 28:     createDraftPurchaseOrderFromSuggestion: (inventoryItemId: string) =>
+Line 29:       `/stock-control/reorder-suggestions/${inventoryItemId}/create-po-draft`,
+Line 31:     movementsByInventory: (inventoryItemId: string) =>
+Line 32:       `/stock-control/movements/inventory/${inventoryItemId}`,
+
+--- pattern: warehouse ---
+Line 37:   warehouse: {
+Line 38:     summary: '/warehouse/summary',
+Line 39:     locations: '/warehouse/locations',
+Line 40:     locationDetail: (id: string) => `/warehouse/locations/${id}`,
+Line 41:     createLocation: '/warehouse/locations',
+Line 42:     updateLocation: (id: string) => `/warehouse/locations/${id}`,
+Line 43:     toggleLocationActive: (id: string) => `/warehouse/locations/${id}/active`,
+Line 44:     importCsv: '/warehouse/locations/import-csv',
+Line 45:     exportCsv: '/warehouse/locations/export-csv'
+
+--- pattern: stockControl ---
+Line 23:   stockControl: {
+
+--- pattern: movements ---
+Line 30:     movements: '/stock-control/movements',
+Line 31:     movementsByInventory: (inventoryItemId: string) =>
+Line 32:       `/stock-control/movements/inventory/${inventoryItemId}`,
+Line 33:     movementsByBatch: (batchId: string) => `/stock-control/movements/batch/${batchId}`,
+
+
+============================================================
+BACKEND GIT STATUS
+============================================================
+
+?? H11B_MANUAL_PATCH_backend.txt
+?? data/
+?? src/modules/inventory/location-balance-store.ts
+?? src/modules/stock-control/h11b-issue-repository.ts
+?? src/modules/stock-control/h11b-issue-service.ts
+?? src/modules/stock-control/h11b-types.ts
+?? src/modules/stock-control/issue-repository.ts
+?? src/modules/stock-control/issue-service.ts
+?? src/modules/stock-control/types.ts
+?? temp-pack-backups/
+
+
+============================================================
+BACKEND INVENTORY/WAREHOUSE/STOCK-CONTROL TREE
+============================================================
+
+
+FullName                                                                                                                         
+--------                                                                                                                         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory                             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control                         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\warehouse                             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory\location-balance-store.ts   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory\repository.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory\routes.ts                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory\store.ts                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\h11b-issue-repository.ts
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\h11b-issue-routes.ts    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\h11b-issue-service.ts   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\h11b-types.ts           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\issue-repository.ts     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\issue-service.ts        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\movement-service.ts     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\routes.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\service.ts              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\types.ts                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\warehouse\routes.ts                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\warehouse\store.ts                    
+
+
+
+
+============================================================
+FILE HEAD: src\modules\inventory\repository.ts
+============================================================
+
+import { execute, isPostgresEnabled, queryRows } from '../../infrastructure/db/postgres';
+
+export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+export type InventoryItemType =
+  | 'raw_material'
+  | 'finished_goods'
+  | 'packaging'
+  | 'spare_part'
+  | 'consumable';
+
+export interface InventoryRecord {
+  id: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface CreateInventoryInput {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export interface UpdateInventoryInput extends CreateInventoryInput {
+  id: string;
+}
+
+let initialized = false;
+
+let memoryInventoryStore: InventoryRecord[] = [
+  {
+    id: 'inv-001',
+    sku: 'RM-STEEL-001',
+    barcode: '9555000000011',
+    name: 'Steel Sheet A',
+    description: 'Primary steel sheet material for fabrication use.',
+    category: 'Raw Material',
+    itemType: 'raw_material',
+    brand: 'PrimeSteel',
+    model: 'Sheet-A',
+    preferredSupplierName: 'Prime Steel Supply',
+    standardCost: 15.5,
+    averageCost: 15.2,
+    currency: 'USD',
+    quantity: 240,
+    reorderLevel: 80,
+    minimumStockLevel: 60,
+    maximumStockLevel: 500,
+    unit: 'pcs',
+    warehouseLocation: 'A-01-01',
+    status: 'in_stock',
+    isActive: true,
+    isBatchTracked: true,
+    isExpiryTracked: false,
+    isSerialTracked: false,
+    baseUomCode: 'PCS',
+    purchaseUomCode: 'CTN',
+    salesUomCode: 'PCS',
+    issueUomCode: 'PCS',
+    uomConversionGroupCode: 'PK_STD_001',
+    allowsFraction: false,
+    notes: 'Standard steel receiving profile.',
+    updatedAt: '2026-05-20T08:30:00.000Z'
+  },
+  {
+    id: 'inv-002',
+    sku: 'PK-BOX-010',
+    barcode: '9555000000028',
+    name: 'Carton Box Medium',
+    description: 'Medium-size packaging carton for outbound packing.',
+    category: 'Packaging',
+    itemType: 'packaging',
+    brand: 'PackRight',
+    model: 'Medium-Box',
+    preferredSupplierName: 'PackRight Industries',
+    standardCost: 2.1,
+    averageCost: 2.0,
+    currency: 'USD',
+    quantity: 35,
+    reorderLevel: 50,
+    minimumStockLevel: 40,
+    maximumStockLevel: 300,
+    unit: 'box',
+    warehouseLocation: 'B-02-04',
+    status: 'low_stock',
+    isActive: true,
+    isBatchTracked: false,
+    isExpiryTracked: false,
+    isSerialTracked: false,
+    baseUomCode: 'BOX',
+    purchaseUomCode: 'CTN',
+    salesUomCode: 'BOX',
+    issueUomCode: 'BOX',
+    uomConversionGroupCode: 'PK_STD_001',
+    allowsFraction: false,
+    notes: 'Packaging material.',
+    updatedAt: '2026-05-20T09:00:00.000Z'
+  },
+  {
+    id: 'inv-003',
+    sku: 'FG-VALVE-221',
+    barcode: '9555000000035',
+    name: 'Control Valve X',
+    description: 'Finished control valve item for industrial order fulfillment.',
+    category: 'Finished Goods',
+    itemType: 'finished_goods',
+    brand: 'ValveCore',
+    model: 'X221',
+    preferredSupplierName: 'ValveCore Manufacturing',
+    standardCost: 110,
+    averageCost: 108,
+    currency: 'USD',
+    quantity: 0,
+    reorderLevel: 20,
+    minimumStockLevel: 15,
+    maximumStockLevel: 120,
+    unit: 'pcs',
+    warehouseLocation: 'C-03-02',
+    status: 'out_of_stock',
+    isActive: true,
+    isBatchTracked: true,
+    isExpiryTracked: true,
+    isSerialTracked: false,
+    baseUomCode: 'PCS',
+    purchaseUomCode: 'BOX',
+    salesUomCode: 'PCS',
+    issueUomCode: 'PCS',
+    uomConversionGroupCode: 'PK_STD_001',
+    allowsFraction: false,
+    notes: 'Requires traceability through batch/expiry flow.',
+    updatedAt: '2026-05-20T10:15:00.000Z'
+  }
+];
+
+const INVENTORY_MASTER_BACKFILL = memoryInventoryStore.map((item) => ({
+  id: item.id,
+  itemType: item.itemType,
+  brand: item.brand,
+  model: item.model,
+  preferredSupplierName: item.preferredSupplierName,
+  standardCost: item.standardCost,
+  averageCost: item.averageCost,
+  currency: item.currency
+}));
+
+function matchesSearch(values: string[], search?: string) {
+  const normalized = String(search ?? '').trim().toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return values.some((value) => value.toLowerCase().includes(normalized));
+}
+
+function mapRow(row: any): InventoryRecord {
+  return {
+    id: String(row.id),
+    sku: String(row.sku),
+    barcode: String(row.barcode ?? ''),
+    name: String(row.name),
+    description: String(row.description ?? ''),
+    category: String(row.category),
+    itemType: String(row.item_type ?? 'raw_material') as InventoryItemType,
+    brand: String(row.brand ?? ''),
+    model: String(row.model ?? ''),
+    preferredSupplierName: String(row.preferred_supplier_name ?? ''),
+    standardCost: Number(row.standard_cost ?? 0),
+    averageCost: Number(row.average_cost ?? 0),
+    currency: String(row.currency ?? 'USD'),
+    quantity: Number(row.quantity),
+    reorderLevel: Number(row.reorder_level),
+    minimumStockLevel: Number(row.minimum_stock_level ?? 0),
+    maximumStockLevel: Number(row.maximum_stock_level ?? 0),
+    unit: String(row.unit),
+    warehouseLocation: String(row.warehouse_location),
+    status: String(row.status) as InventoryStatus,
+    isActive: Boolean(row.is_active),
+    isBatchTracked: Boolean(row.is_batch_tracked),
+    isExpiryTracked: Boolean(row.is_expiry_tracked),
+    isSerialTracked: Boolean(row.is_serial_tracked),
+    baseUomCode: String(row.base_uom_code ?? ''),
+    purchaseUomCode: String(row.purchase_uom_code ?? ''),
+    salesUomCode: String(row.sales_uom_code ?? ''),
+    issueUomCode: String(row.issue_uom_code ?? ''),
+    uomConversionGroupCode: String(row.uom_conversion_group_code ?? ''),
+    allowsFraction: Boolean(row.allows_fraction),
+    notes: String(row.notes ?? ''),
+    updatedAt: new Date(row.updated_at).toISOString()
+  };
+}
+
+async function backfillExistingInventoryMasterData() {
+  if (!isPostgresEnabled()) {
+    return;
+  }
+
+  for (const item of INVENTORY_MASTER_BACKFILL) {
+    await execute(
+      `
+      UPDATE inventory_items
+      SET
+        item_type = $2,
+        brand = $3,
+        model = $4,
+
+============================================================
+FILE HEAD: src\modules\inventory\routes.ts
+============================================================
+
+import { Router } from 'express';
+import { created, ok } from '../../common/http/api-response';
+import { asyncHandler } from '../../common/utils/async-handler';
+import { AppError } from '../../common/errors/app-error';
+import {
+  createInventory,
+  getInventoryById,
+  getInventoryPersistenceMode,
+  listInventory,
+  setInventoryActiveStatus,
+  updateInventory,
+  type InventoryItemType,
+  type InventoryStatus
+} from './repository';
+import { listConversionGroups, listUoms } from '../uom/store';
+
+export const inventoryRouter = Router();
+
+function readSingle(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+
+  return value ?? '';
+}
+
+const allowedStatuses: InventoryStatus[] = ['in_stock', 'low_stock', 'out_of_stock'];
+const allowedItemTypes: InventoryItemType[] = [
+  'raw_material',
+  'finished_goods',
+  'packaging',
+  'spare_part',
+  'consumable'
+];
+
+function requireText(value: unknown, field: string, min = 1, max = 150) {
+  const text = String(value ?? '').trim();
+
+  if (!text) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} is required`
+    });
+  }
+
+  if (text.length < min || text.length > max) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} must be between ${min} and ${max} characters`
+    });
+  }
+
+  return text;
+}
+
+function optionalText(value: unknown, max = 250) {
+  const text = String(value ?? '').trim();
+
+  if (!text) {
+    return '';
+  }
+
+  if (text.length > max) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `Text length must be ${max} characters or less`
+    });
+  }
+
+  return text;
+}
+
+function requireNumber(value: unknown, field: string, min = 0) {
+  const parsed = Number(value);
+
+  if (Number.isNaN(parsed) || parsed < min) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} must be a valid number ${min} or greater`
+    });
+  }
+
+  return parsed;
+}
+
+function normalizeStatus(value: unknown) {
+  const status = String(value ?? '').trim() as InventoryStatus;
+
+  if (!allowedStatuses.includes(status)) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'status must be one of: in_stock, low_stock, out_of_stock'
+    });
+  }
+
+  return status;
+}
+
+function normalizeItemType(value: unknown) {
+  const itemType = String(value ?? '').trim() as InventoryItemType;
+
+  if (!allowedItemTypes.includes(itemType)) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message:
+        'itemType must be one of: raw_material, finished_goods, packaging, spare_part, consumable'
+    });
+  }
+
+  return itemType;
+}
+
+function requireCurrency(value: unknown) {
+  const currency = requireText(value, 'currency', 3, 10).toUpperCase();
+  return currency;
+}
+
+function requireActiveUomCode(value: unknown, field: string) {
+  const code = requireText(value, field, 1, 20).toUpperCase();
+
+  const uom = listUoms({ search: '', type: 'all' }).find(
+    (item) => item.uomCode.toUpperCase() === code
+  );
+
+  if (!uom) {
+    throw new AppError({
+      status: 400,
+      code: 'INVALID_UOM',
+      message: `${field} does not exist`
+    });
+  }
+
+  if (!uom.isActive) {
+    throw new AppError({
+      status: 400,
+      code: 'INACTIVE_UOM',
+      message: `${field} is inactive and cannot be used`
+    });
+  }
+
+  return code;
+}
+
+function optionalActiveConversionGroupCode(value: unknown) {
+  const code = String(value ?? '').trim().toUpperCase();
+
+  if (!code) {
+    return '';
+  }
+
+  const group = listConversionGroups({ search: '' }).find(
+    (item) => item.groupCode.toUpperCase() === code
+  );
+
+  if (!group) {
+    throw new AppError({
+      status: 400,
+      code: 'INVALID_UOM_CONVERSION_GROUP',
+      message: 'uomConversionGroupCode does not exist'
+    });
+  }
+
+  if (!group.isActive) {
+    throw new AppError({
+      status: 400,
+      code: 'INACTIVE_UOM_CONVERSION_GROUP',
+      message: 'uomConversionGroupCode is inactive and cannot be used'
+    });
+  }
+
+  return code;
+}
+
+function buildInventoryInput(body: any) {
+  const minimumStockLevel = requireNumber(body?.minimumStockLevel, 'minimumStockLevel', 0);
+  const maximumStockLevel = requireNumber(body?.maximumStockLevel, 'maximumStockLevel', 0);
+
+  if (maximumStockLevel > 0 && maximumStockLevel < minimumStockLevel) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'maximumStockLevel must be greater than or equal to minimumStockLevel'
+    });
+  }
+
+  return {
+    sku: requireText(body?.sku, 'sku', 2, 50),
+    barcode: optionalText(body?.barcode, 60),
+    name: requireText(body?.name, 'name', 2, 120),
+    description: optionalText(body?.description, 500),
+    category: requireText(body?.category, 'category', 2, 80),
+    itemType: normalizeItemType(body?.itemType),
+    brand: optionalText(body?.brand, 80),
+    model: optionalText(body?.model, 80),
+    preferredSupplierName: optionalText(body?.preferredSupplierName, 120),
+    standardCost: requireNumber(body?.standardCost, 'standardCost', 0),
+    averageCost: requireNumber(body?.averageCost, 'averageCost', 0),
+    currency: requireCurrency(body?.currency ?? 'USD'),
+    quantity: requireNumber(body?.quantity, 'quantity', 0),
+    reorderLevel: requireNumber(body?.reorderLevel, 'reorderLevel', 0),
+    minimumStockLevel,
+    maximumStockLevel,
+    unit: requireText(body?.unit, 'unit', 1, 20),
+    warehouseLocation: requireText(body?.warehouseLocation, 'warehouseLocation', 3, 30),
+    status: normalizeStatus(body?.status ?? 'in_stock'),
+    isActive: body?.isActive === undefined ? true : Boolean(body?.isActive),
+    isBatchTracked: Boolean(body?.isBatchTracked),
+    isExpiryTracked: Boolean(body?.isExpiryTracked),
+    isSerialTracked: Boolean(body?.isSerialTracked),
+    baseUomCode: requireActiveUomCode(body?.baseUomCode, 'baseUomCode'),
+    purchaseUomCode: requireActiveUomCode(body?.purchaseUomCode, 'purchaseUomCode'),
+    salesUomCode: requireActiveUomCode(body?.salesUomCode, 'salesUomCode'),
+    issueUomCode: requireActiveUomCode(body?.issueUomCode, 'issueUomCode'),
+    uomConversionGroupCode: optionalActiveConversionGroupCode(body?.uomConversionGroupCode),
+
+============================================================
+FILE HEAD: src\modules\inventory\location-balance-store.ts
+============================================================
+
+import {
+  getInventoryById,
+  listInventory,
+  type InventoryRecord
+} from './repository';
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryTransferRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes: string;
+  createdAt: string;
+}
+
+let inventoryTransferStore: InventoryTransferRecord[] = [];
+
+function toLocationBalanceRecord(item: InventoryRecord): InventoryLocationBalanceRecord {
+  const onHandQty = Number(item.quantity ?? 0);
+  const reservedQty = 0;
+  const availableQty = Math.max(0, onHandQty - reservedQty);
+
+  return {
+    id: `bal-${item.id}-${String(item.warehouseLocation ?? '').trim().toUpperCase()}`,
+    inventoryItemId: item.id,
+    sku: String(item.sku ?? '').trim(),
+    itemName: String(item.name ?? '').trim(),
+    warehouseLocation: String(item.warehouseLocation ?? '').trim(),
+    onHandQty,
+    reservedQty,
+    availableQty,
+    unit: String(item.unit ?? '').trim(),
+    updatedAt: String(item.updatedAt ?? new Date().toISOString())
+  };
+}
+
+function sortBalances(items: InventoryLocationBalanceRecord[]) {
+  return [...items].sort((a, b) => {
+    if (a.sku !== b.sku) {
+      return a.sku.localeCompare(b.sku);
+    }
+
+    return a.warehouseLocation.localeCompare(b.warehouseLocation);
+  });
+}
+
+function sortTransfers(items: InventoryTransferRecord[]) {
+  return [...items].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
+export async function listInventoryLocationBalances(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const inventoryItems = await listInventory({
+    search: filters?.search ?? '',
+    status: 'all'
+  });
+
+  const balances = inventoryItems
+    .map(toLocationBalanceRecord)
+    .filter((item) => {
+      const matchesInventoryItem =
+        !filters?.inventoryItemId || item.inventoryItemId === filters.inventoryItemId;
+
+      const locationFilter = String(filters?.warehouseLocation ?? '').trim().toLowerCase();
+      const matchesLocation =
+        !locationFilter ||
+        item.warehouseLocation.toLowerCase().includes(locationFilter);
+
+      return matchesInventoryItem && matchesLocation;
+    });
+
+  return sortBalances(balances);
+}
+
+export async function getInventoryLocationBalancesByItem(inventoryItemId: string) {
+  return listInventoryLocationBalances({ inventoryItemId });
+}
+
+export async function getInventoryLocationBalanceSummary() {
+  const balances = await listInventoryLocationBalances();
+
+  const totalLines = balances.length;
+  const totalOnHandQty = balances.reduce((sum, item) => sum + item.onHandQty, 0);
+  const totalAvailableQty = balances.reduce((sum, item) => sum + item.availableQty, 0);
+
+  return {
+    totalLines,
+    totalOnHandQty,
+    totalAvailableQty
+  };
+}
+
+export async function getInventoryLocationBalanceByLocation(
+  inventoryItemId: string,
+  warehouseLocation: string
+) {
+  const normalizedLocation = String(warehouseLocation ?? '').trim().toLowerCase();
+  const balances = await getInventoryLocationBalancesByItem(inventoryItemId);
+
+  return (
+    balances.find(
+      (item) => item.warehouseLocation.trim().toLowerCase() === normalizedLocation
+    ) ?? null
+  );
+}
+
+export function listInventoryTransfers(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const normalizedSearch = String(filters?.search ?? '').trim().toLowerCase();
+  const normalizedLocation = String(filters?.warehouseLocation ?? '').trim().toLowerCase();
+
+  const items = inventoryTransferStore.filter((item) => {
+    const matchesInventoryItem =
+      !filters?.inventoryItemId || item.inventoryItemId === filters.inventoryItemId;
+
+    const matchesSearch =
+      !normalizedSearch ||
+      item.sku.toLowerCase().includes(normalizedSearch) ||
+      item.itemName.toLowerCase().includes(normalizedSearch) ||
+      item.fromWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+      item.toWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+      item.reason.toLowerCase().includes(normalizedSearch);
+
+    const matchesLocation =
+      !normalizedLocation ||
+      item.fromWarehouseLocation.toLowerCase().includes(normalizedLocation) ||
+      item.toWarehouseLocation.toLowerCase().includes(normalizedLocation);
+
+    return matchesInventoryItem && matchesSearch && matchesLocation;
+  });
+
+  return sortTransfers(items);
+}
+
+export function getInventoryTransferById(id: string) {
+  return inventoryTransferStore.find((item) => item.id === id) ?? null;
+}
+
+export async function createInventoryTransferDraft(input: {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}) {
+  const inventoryItem = await getInventoryById(input.inventoryItemId);
+
+  if (!inventoryItem) {
+    throw new Error('Inventory item not found');
+  }
+
+  const quantity = Number(input.quantity);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new Error('quantity must be greater than 0');
+  }
+
+  const fromWarehouseLocation = String(input.fromWarehouseLocation ?? '').trim();
+  const toWarehouseLocation = String(input.toWarehouseLocation ?? '').trim();
+
+  if (!fromWarehouseLocation) {
+    throw new Error('fromWarehouseLocation is required');
+  }
+
+  if (!toWarehouseLocation) {
+    throw new Error('toWarehouseLocation is required');
+  }
+
+  if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+    throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+  }
+
+  const availableSourceBalance =
+    (await getInventoryLocationBalanceByLocation(input.inventoryItemId, fromWarehouseLocation)) ??
+    null;
+
+  return {
+    inventoryItemId: inventoryItem.id,
+    sku: inventoryItem.sku,
+    itemName: inventoryItem.name,
+    unit: inventoryItem.unit,
+    quantity,
+    fromWarehouseLocation,
+    toWarehouseLocation,
+    reason: String(input.reason ?? '').trim(),
+    notes: String(input.notes ?? '').trim(),
+    availableSourceBalance
+  };
+}
+
+============================================================
+FILE HEAD: src\modules\warehouse\store.ts
+============================================================
+
+export type WarehouseLocationStatus = 'empty' | 'occupied' | 'blocked';
+export type WarehouseLocationType =
+  | 'rack'
+  | 'floor'
+  | 'bulk'
+  | 'staging'
+  | 'quarantine'
+  | 'shelves'
+  | 'island';
+
+export type WarehouseCapacityUom = 'pallet' | 'pcs' | 'carton';
+export type WarehouseSiteScope = 'all' | 'warehouse' | 'outlet';
+export type WarehouseSiteType = 'warehouse' | 'outlet';
+export type WarehouseAlertSeverity = 'near_full' | 'full';
+export type WarehouseAlertThresholdSource = 'site_override' | 'site_type_default' | 'global_default' | 'request_override';
+
+export interface WarehouseSiteRecord {
+  siteCode: string;
+  siteName: string;
+  siteType: WarehouseSiteType;
+}
+
+export interface WarehouseAlertThresholdRecord {
+  siteCode: string | null;
+  siteName: string;
+  siteType: WarehouseSiteType | 'all';
+  thresholdPct: number;
+  source: WarehouseAlertThresholdSource;
+}
+
+export interface WarehouseLocationRecord {
+  id: string;
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  capacityUom: WarehouseCapacityUom;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface CreateWarehouseLocationInput {
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  capacityUom: WarehouseCapacityUom;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
+}
+
+export interface UpdateWarehouseLocationInput extends CreateWarehouseLocationInput {
+  id: string;
+}
+
+export interface WarehouseLocationImportResult {
+  inserted: number;
+  updated: number;
+  skipped: number;
+  errors: Array<{
+    rowNumber: number;
+    message: string;
+  }>;
+}
+
+export interface WarehouseUtilizationSummary {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  totalLocations: number;
+  activeLocations: number;
+  inactiveLocations: number;
+  emptyLocations: number;
+  occupiedLocations: number;
+  blockedLocations: number;
+  fullLocations: number;
+  fullLocationPct: number;
+  palletCapacityTotal: number;
+  palletCapacityUsed: number;
+  palletUtilizationPct: number;
+  pcsCapacityTotal: number;
+  pcsCapacityUsed: number;
+  pcsUtilizationPct: number;
+  cartonCapacityTotal: number;
+  cartonCapacityUsed: number;
+  cartonUtilizationPct: number;
+  updatedAt: string;
+}
+
+export interface WarehouseUtilizationDrilldownBucket {
+  key: string;
+  label: string;
+  totalLocations: number;
+  activeLocations: number;
+  inactiveLocations: number;
+  emptyLocations: number;
+  occupiedLocations: number;
+  blockedLocations: number;
+  fullLocations: number;
+  fullLocationPct: number;
+  palletCapacityTotal: number;
+  palletCapacityUsed: number;
+  palletUtilizationPct: number;
+  pcsCapacityTotal: number;
+  pcsCapacityUsed: number;
+  pcsUtilizationPct: number;
+  cartonCapacityTotal: number;
+  cartonCapacityUsed: number;
+  cartonUtilizationPct: number;
+}
+
+export interface WarehouseUtilizationDrilldown {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  byLocationType: WarehouseUtilizationDrilldownBucket[];
+  byZone: WarehouseUtilizationDrilldownBucket[];
+  updatedAt: string;
+}
+
+export interface WarehouseLocationAlertRecord {
+  id: string;
+  severity: WarehouseAlertSeverity;
+  utilizationPct: number;
+  thresholdPctApplied: number;
+  siteCode: string;
+  siteName: string;
+  siteType: WarehouseSiteType;
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  capacityUom: WarehouseCapacityUom;
+  capacityTotal: number;
+  capacityUsed: number;
+  remainingCapacity: number;
+  status: WarehouseLocationStatus;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+export interface WarehouseLocationAlertSummary {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  thresholdPct: number;
+  totalAlertLocations: number;
+  nearFullLocations: number;
+  fullLocations: number;
+  appliedThresholds: WarehouseAlertThresholdRecord[];
+  items: WarehouseLocationAlertRecord[];
+  updatedAt: string;
+}
+
+const DEFAULT_ALERT_THRESHOLD_PCT = 80;
+const DEFAULT_ALERT_THRESHOLD_BY_SITE_TYPE: Record<WarehouseSiteType, number> = {
+  warehouse: 90,
+  outlet: 80
+};
+
+let warehouseAlertThresholdOverrides: Record<string, number> = {};
+
+let warehouseLocationStore: WarehouseLocationRecord[] = [
+  {
+    id: 'loc-001',
+    warehouseCode: 'WH-001',
+    warehouseName: 'Main Warehouse',
+    locationCode: 'A-01-01-01',
+    zone: 'A',
+    aisle: '01',
+    levelCode: '01',
+    bin: '01',
+    locationType: 'rack',
+    status: 'occupied',
+    capacityUom: 'pallet',
+    palletCapacity: 4,
+    usedPalletCapacity: 2,
+    cubicCapacityM3: 12,
+    usedCubicCapacityM3: 6,
+    isActive: true,
+    notes: 'Primary raw material rack',
+    updatedAt: '2026-05-28T08:00:00.000Z'
+  },
+  {
+    id: 'loc-002',
+    warehouseCode: 'WH-001',
+    warehouseName: 'Main Warehouse',
+    locationCode: 'B-02-04-02',
+    zone: 'B',
+    aisle: '02',
+    levelCode: '04',
+    bin: '02',
+    locationType: 'shelves',
+    status: 'empty',
+    capacityUom: 'pcs',
+    palletCapacity: 240,
+    usedPalletCapacity: 0,
+    cubicCapacityM3: 18,
+    usedCubicCapacityM3: 0,
+    isActive: true,
+
+============================================================
+FILE MATCHES: src\modules\inventory\repository.ts
+============================================================
+
+--- pattern: quantity ---
+Line 25:   quantity: number;
+Line 59:   quantity: number;
+Line 100:     quantity: 240,
+Line 134:     quantity: 35,
+Line 168:     quantity: 0,
+Line 226:     quantity: Number(row.quantity),
+Line 305:       quantity NUMERIC NOT NULL,
+Line 359:           quantity,
+Line 397:           item.quantity,
+Line 472:       quantity,
+Line 552:       quantity,
+Line 600:     quantity: input.quantity,
+Line 644:       quantity,
+Line 682:       record.quantity,
+Line 722:     quantity: input.quantity,
+Line 772:       quantity = $14,
+Line 807:       updated.quantity,
+
+--- pattern: warehouseLocation ---
+Line 30:   warehouseLocation: string;
+Line 64:   warehouseLocation: string;
+Line 105:     warehouseLocation: 'A-01-01',
+Line 139:     warehouseLocation: 'B-02-04',
+Line 173:     warehouseLocation: 'C-03-02',
+Line 231:     warehouseLocation: String(row.warehouse_location),
+Line 402:           item.warehouseLocation,
+Line 605:     warehouseLocation: input.warehouseLocation,
+Line 687:       record.warehouseLocation,
+Line 727:     warehouseLocation: input.warehouseLocation,
+Line 812:       updated.warehouseLocation,
+
+--- pattern: updateInventory ---
+Line 79: export interface UpdateInventoryInput extends CreateInventoryInput {
+Line 707: export async function updateInventory(input: UpdateInventoryInput) {
+
+--- pattern: getInventoryById ---
+Line 529: export async function getInventoryById(id: string) {
+Line 860:   return getInventoryById(id);
+
+--- pattern: listInventory ---
+Line 426: export async function listInventory(filters?: { search?: string; status?: string }) {
+
+
+============================================================
+FILE MATCHES: src\modules\inventory\location-balance-store.ts
+============================================================
+
+--- pattern: InventoryTransferRecord ---
+Line 20: export interface InventoryTransferRecord {
+Line 33: let inventoryTransferStore: InventoryTransferRecord[] = [];
+Line 64: function sortTransfers(items: InventoryTransferRecord[]) {
+
+--- pattern: createInventoryTransferDraft ---
+Line 164: export async function createInventoryTransferDraft(input: {
+
+--- pattern: fromWarehouseLocation ---
+Line 25:   fromWarehouseLocation: string;
+Line 145:       item.fromWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+Line 151:       item.fromWarehouseLocation.toLowerCase().includes(normalizedLocation) ||
+Line 166:   fromWarehouseLocation: string;
+Line 184:   const fromWarehouseLocation = String(input.fromWarehouseLocation ?? '').trim();
+Line 187:   if (!fromWarehouseLocation) {
+Line 188:     throw new Error('fromWarehouseLocation is required');
+Line 195:   if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+Line 196:     throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+Line 200:     (await getInventoryLocationBalanceByLocation(input.inventoryItemId, fromWarehouseLocation)) ??
+Line 209:     fromWarehouseLocation,
+
+--- pattern: toWarehouseLocation ---
+Line 26:   toWarehouseLocation: string;
+Line 146:       item.toWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+Line 152:       item.toWarehouseLocation.toLowerCase().includes(normalizedLocation);
+Line 167:   toWarehouseLocation: string;
+Line 185:   const toWarehouseLocation = String(input.toWarehouseLocation ?? '').trim();
+Line 191:   if (!toWarehouseLocation) {
+Line 192:     throw new Error('toWarehouseLocation is required');
+Line 195:   if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+Line 196:     throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+Line 210:     toWarehouseLocation,
+
+--- pattern: availableSourceBalance ---
+Line 199:   const availableSourceBalance =
+Line 213:     availableSourceBalance
+
+
+============================================================
+FILE MATCHES: src\modules\inventory\routes.ts
+============================================================
+
+--- pattern: location-balance-summary ---
+no match
+
+--- pattern: location-balances ---
+no match
+
+--- pattern: transfers/draft ---
+no match
+
+
+============================================================
+FILE MATCHES: src\modules\warehouse\store.ts
+============================================================
+
+--- pattern: siteCode ---
+Line 18:   siteCode: string;
+Line 24:   siteCode: string | null;
+Line 143:   siteCode: string;
+Line 336: function normalizeSiteCode(value?: string) {
+Line 350: function inferSiteTypeFromCode(siteCode: string): WarehouseSiteType {
+Line 351:   const normalized = normalizeSiteCode(siteCode);
+Line 360: function normalizeSiteName(siteName: string, siteType: WarehouseSiteType, siteCode: string) {
+Line 367:   return siteType === 'outlet' ? `Outlet ${siteCode}` : `Warehouse ${siteCode}`;
+Line 374:   const siteCode = normalizeSiteCode(input.warehouseCode);
+Line 375:   const siteType = inferSiteTypeFromCode(siteCode);
+Line 376:   const siteName = normalizeSiteName(input.warehouseName, siteType, siteCode);
+Line 379:     siteCode,
+Line 394:     if (!siteMap.has(site.siteCode)) {
+Line 395:       siteMap.set(site.siteCode, site);
+Line 399:   return Array.from(siteMap.values()).sort((a, b) => a.siteCode.localeCompare(b.siteCode));
+Line 406: function getLocationCompositeKey(siteCode: string, locationCode: string) {
+Line 407:   return `${siteCode.trim().toUpperCase()}::${locationCode.trim().toUpperCase()}`;
+Line 416:   return getLocationCompositeKey(site.siteCode, item.locationCode);
+Line 439:       siteCode: site.siteCode,
+Line 447:   const override = warehouseAlertThresholdOverrides[site.siteCode];
+Line 450:       siteCode: site.siteCode,
+Line 461:       siteCode: site.siteCode,
+Line 470:     siteCode: site.siteCode,
+Line 482: export function getWarehouseAlertThreshold(siteCode: string): WarehouseAlertThresholdRecord {
+Line 483:   const normalizedSiteCode = normalizeSiteCode(siteCode);
+Line 485:     listWarehouseSites().find((site) => site.siteCode === normalizedSiteCode) ??
+Line 487:       siteCode: normalizedSiteCode,
+Line 488:       siteName: normalizedSiteCode,
+Line 489:       siteType: inferSiteTypeFromCode(normalizedSiteCode)
+Line 495: export function setWarehouseAlertThreshold(siteCode: string, thresholdPct: number): WarehouseAlertThresholdRecord {
+Line 496:   const normalizedSiteCode = normalizeSiteCode(siteCode);
+Line 499:   warehouseAlertThresholdOverrides[normalizedSiteCode] = normalizedThreshold;
+Line 501:   return getWarehouseAlertThreshold(normalizedSiteCode);
+Line 504: export function clearWarehouseAlertThreshold(siteCode: string): WarehouseAlertThresholdRecord {
+Line 505:   const normalizedSiteCode = normalizeSiteCode(siteCode);
+Line 507:   delete warehouseAlertThresholdOverrides[normalizedSiteCode];
+Line 509:   return getWarehouseAlertThreshold(normalizedSiteCode);
+Line 520:     warehouseCode: site.siteCode,
+Line 839:       appliedThresholdMap.set(site.siteCode, threshold);
+Line 855:         siteCode: site.siteCode,
+Line 900:       (a.siteCode ?? '').localeCompare(b.siteCode ?? '')
+Line 935:     warehouseCode: site.siteCode,
+Line 972:     warehouseCode: site.siteCode,
+Line 1205:         warehouseCode: site.siteCode,
+
+--- pattern: siteType ---
+Line 13: export type WarehouseSiteType = 'warehouse' | 'outlet';
+Line 20:   siteType: WarehouseSiteType;
+Line 26:   siteType: WarehouseSiteType | 'all';
+Line 145:   siteType: WarehouseSiteType;
+Line 176: const DEFAULT_ALERT_THRESHOLD_BY_SITE_TYPE: Record<WarehouseSiteType, number> = {
+Line 350: function inferSiteTypeFromCode(siteCode: string): WarehouseSiteType {
+Line 360: function normalizeSiteName(siteName: string, siteType: WarehouseSiteType, siteCode: string) {
+Line 367:   return siteType === 'outlet' ? `Outlet ${siteCode}` : `Warehouse ${siteCode}`;
+Line 375:   const siteType = inferSiteTypeFromCode(siteCode);
+Line 376:   const siteName = normalizeSiteName(input.warehouseName, siteType, siteCode);
+Line 381:     siteType
+Line 403:   return inferSiteTypeFromCode(warehouseCode);
+Line 441:       siteType: site.siteType,
+Line 452:       siteType: site.siteType,
+Line 458:   const byType = DEFAULT_ALERT_THRESHOLD_BY_SITE_TYPE[site.siteType];
+Line 463:       siteType: site.siteType,
+Line 472:     siteType: site.siteType,
+Line 489:       siteType: inferSiteTypeFromCode(normalizedSiteCode)
+Line 857:         siteType: site.siteType,
+
+--- pattern: warehouseCode ---
+Line 33:   warehouseCode: string;
+Line 53:   warehouseCode: string;
+Line 87:   warehouseCode: string | null;
+Line 132:   warehouseCode: string | null;
+Line 146:   warehouseCode: string;
+Line 165:   warehouseCode: string | null;
+Line 186:     warehouseCode: 'WH-001',
+Line 206:     warehouseCode: 'WH-001',
+Line 226:     warehouseCode: 'OTL-001',
+Line 246:     warehouseCode: 'OTL-001',
+Line 332: function normalizeWarehouseCodeFilter(value?: string) {
+Line 371:   warehouseCode: string;
+Line 374:   const siteCode = normalizeSiteCode(input.warehouseCode);
+Line 390:       warehouseCode: item.warehouseCode,
+Line 402: function getSiteScopeForWarehouseCode(warehouseCode: string): Exclude<WarehouseSiteScope, 'all'> {
+Line 403:   return inferSiteTypeFromCode(warehouseCode);
+Line 412:     warehouseCode: item.warehouseCode,
+Line 514:     warehouseCode: item.warehouseCode,
+Line 520:     warehouseCode: site.siteCode,
+Line 668:   warehouseCode?: string;
+Line 672:   const warehouseCode = normalizeWarehouseCodeFilter(filters?.warehouseCode);
+Line 676:     const itemSiteScope = getSiteScopeForWarehouseCode(item.warehouseCode);
+Line 678:     const matchesWarehouseCode = !warehouseCode || item.warehouseCode.toUpperCase() === warehouseCode;
+Line 685:         item.warehouseCode,
+Line 714:       matchesWarehouseCode &&
+Line 730:   warehouseCode?: string;
+Line 737:   const warehouseCode = normalizeWarehouseCodeFilter(filters?.warehouseCode);
+Line 761:     warehouseCode: warehouseCode || null,
+Line 789:   warehouseCode?: string;
+Line 796:   const warehouseCode = normalizeWarehouseCodeFilter(filters?.warehouseCode);
+Line 806:     warehouseCode: warehouseCode || null,
+Line 819:   warehouseCode?: string;
+Line 826:   const warehouseCode = normalizeWarehouseCodeFilter(filters?.warehouseCode);
+Line 835:         warehouseCode: item.warehouseCode,
+Line 858:         warehouseCode: item.warehouseCode,
+Line 894:     warehouseCode: warehouseCode || null,
+Line 913:   warehouseCode?: string;
+Line 929:     warehouseCode: input.warehouseCode,
+Line 935:     warehouseCode: site.siteCode,
+Line 966:     warehouseCode: input.warehouseCode,
+Line 972:     warehouseCode: site.siteCode,
+Line 1009:     'warehouseCode',
+Line 1031:       csvEscape(item.warehouseCode),
+Line 1066:     'warehouseCode',
+Line 1085:     'warehouseCode',
+Line 1135:       let warehouseCode = '';
+Line 1154:           warehouseCode,
+Line 1173:           warehouseCode,
+Line 1191:       if (!warehouseCode || !warehouseName || !locationCode || !zone || !aisle || !levelCode || !bin) {
+Line 1200:         warehouseCode,
+Line 1205:         warehouseCode: site.siteCode,
+Line 1223:       const incomingKey = getLocationCompositeKey(payload.warehouseCode, payload.locationCode);
+
+--- pattern: locationCode ---
+Line 35:   locationCode: string;
+Line 55:   locationCode: string;
+Line 148:   locationCode: string;
+Line 188:     locationCode: 'A-01-01-01',
+Line 208:     locationCode: 'B-02-04-02',
+Line 228:     locationCode: 'IS-01-01-01',
+Line 248:     locationCode: 'BF-01-01-01',
+Line 406: function getLocationCompositeKey(siteCode: string, locationCode: string) {
+Line 407:   return `${siteCode.trim().toUpperCase()}::${locationCode.trim().toUpperCase()}`;
+Line 416:   return getLocationCompositeKey(site.siteCode, item.locationCode);
+Line 664:   locationCode?: string;
+Line 673:   const locationCodeFilter = String(filters?.locationCode ?? '').trim().toLowerCase();
+Line 680:     const matchesLocationCode =
+Line 681:       !locationCodeFilter || item.locationCode.toLowerCase().includes(locationCodeFilter);
+Line 687:         item.locationCode,
+Line 715:       matchesLocationCode &&
+Line 726:   locationCode?: string;
+Line 785:   locationCode?: string;
+Line 815:   locationCode?: string;
+Line 860:         locationCode: item.locationCode,
+Line 909:   locationCode?: string;
+Line 937:     locationCode: input.locationCode,
+Line 974:     locationCode: input.locationCode,
+Line 1011:     'locationCode',
+Line 1033:       csvEscape(item.locationCode),
+Line 1068:     'locationCode',
+Line 1087:     'locationCode',
+Line 1137:       let locationCode = '';
+Line 1156:           locationCode,
+Line 1175:           locationCode,
+Line 1191:       if (!warehouseCode || !warehouseName || !locationCode || !zone || !aisle || !levelCode || !bin) {
+Line 1207:         locationCode,
+Line 1223:       const incomingKey = getLocationCompositeKey(payload.warehouseCode, payload.locationCode);
+

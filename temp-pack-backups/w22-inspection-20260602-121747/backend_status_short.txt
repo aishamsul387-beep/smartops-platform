@@ -1,0 +1,16 @@
+﻿REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend
+LABEL: backend_status_short
+COMMAND: git status --short
+TIME: 2026-06-02 12:17:47
+
+----- OUTPUT START -----
+?? H11B_MANUAL_PATCH_backend.txt
+?? data/
+?? src/modules/stock-control/h11b-issue-repository.ts
+?? src/modules/stock-control/h11b-issue-service.ts
+?? src/modules/stock-control/h11b-types.ts
+?? src/modules/stock-control/issue-repository.ts
+?? src/modules/stock-control/issue-service.ts
+?? src/modules/stock-control/types.ts
+?? temp-pack-backups/
+----- OUTPUT END -----

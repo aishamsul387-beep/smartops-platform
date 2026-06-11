@@ -1,9 +1,11 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ROUTES } from '@/lib/routes';
-import { useInventoryDetail } from '../hooks/useInventoryDetail';
 import { useBatchList } from '@/features/batches/hooks/useBatchList';
+import { useInventoryDetail } from '../hooks/useInventoryDetail';
+import { useInventoryTransferDraft } from '../hooks/useInventoryTransferDraft';
 
 function getStatusColor(status: string) {
   if (status === 'in_stock') {
@@ -71,6 +73,7 @@ function getBatchStatusStyle(status: string) {
 
 export function InventoryDetailScreen({ id }: { id: string }) {
   const { item, isLoading, error, refresh } = useInventoryDetail(id);
+
   const {
     items: batches,
     total: batchTotal,
@@ -78,6 +81,81 @@ export function InventoryDetailScreen({ id }: { id: string }) {
     isLoading: isBatchLoading,
     error: batchError
   } = useBatchList({ inventoryItemId: id, status: 'all', search: '' });
+
+  const {
+    draft,
+    isLoading: isPreviewLoading,
+    error: transferPreviewError,
+    previewTransfer,
+    clearDraft
+  } = useInventoryTransferDraft();
+
+  const [toWarehouseLocation, setToWarehouseLocation] = useState('');
+  const [transferQty, setTransferQty] = useState('1');
+  const [transferReason, setTransferReason] = useState('inventory_transfer');
+  const [transferNotes, setTransferNotes] = useState('');
+  const [transferFormError, setTransferFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!item) {
+      return;
+    }
+
+    setTransferQty(item.quantity > 0 ? '1' : '0');
+  }, [item]);
+
+  async function handlePreviewTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!item) {
+      return;
+    }
+
+    const qty = Number(transferQty);
+
+    if (!toWarehouseLocation.trim()) {
+      setTransferFormError('Destination location is required');
+      return;
+    }
+
+    if (!transferReason.trim()) {
+      setTransferFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setTransferFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setTransferFormError(null);
+
+    try {
+      await previewTransfer({
+        inventoryItemId: item.id,
+        fromWarehouseLocation: item.warehouseLocation,
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: transferReason.trim(),
+        notes: transferNotes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleClearPreview() {
+    clearDraft();
+    setTransferFormError(null);
+    setToWarehouseLocation('');
+    setTransferNotes('');
+    if (item) {
+      setTransferQty(item.quantity > 0 ? '1' : '0');
+    } else {
+      setTransferQty('1');
+    }
+    setTransferReason('inventory_transfer');
+  }
 
   if (isLoading) {
     return (
@@ -131,10 +209,9 @@ export function InventoryDetailScreen({ id }: { id: string }) {
               {item.name}
             </div>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
-              Inventory master detail now includes UOM policy, tracking flags, stock thresholds, and related batches.
+              Inventory master detail now includes UOM policy, tracking flags, stock thresholds, related batches, and transfer preview.
             </div>
           </div>
-
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <Link href={ROUTES.inventory} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', fontWeight: 600 }}>
               Back to inventory
@@ -154,39 +231,32 @@ export function InventoryDetailScreen({ id }: { id: string }) {
           <div style={{ color: '#64748b', marginBottom: '8px' }}>SKU</div>
           <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.sku}</div>
         </div>
-
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Barcode</div>
           <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.barcode || '-'}</div>
         </div>
-
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Category</div>
           <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.category}</div>
         </div>
-
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Quantity</div>
           <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.quantity} {item.unit}</div>
         </div>
-
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Reorder / Min / Max</div>
           <div style={{ fontSize: '18px', fontWeight: 700 }}>
             {item.reorderLevel} / {item.minimumStockLevel} / {item.maximumStockLevel}
           </div>
         </div>
-
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Warehouse Location</div>
           <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.warehouseLocation}</div>
         </div>
-
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>UOM Group</div>
           <div style={{ fontSize: '18px', fontWeight: 700 }}>{item.uomConversionGroupCode || '-'}</div>
         </div>
-
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ color: '#64748b', marginBottom: '8px' }}>Status</div>
           <span
@@ -202,6 +272,211 @@ export function InventoryDetailScreen({ id }: { id: string }) {
             {item.statusLabel}
           </span>
         </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '20px',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>
+          Inventory Transfer Preview
+        </div>
+        <div style={{ color: '#475569', lineHeight: 1.7, marginBottom: '16px' }}>
+          Preview a location-to-location transfer before we add the final transfer posting action.
+        </div>
+
+        <form onSubmit={handlePreviewTransfer}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '16px',
+              marginBottom: '16px'
+            }}
+          >
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                From Location
+              </label>
+              <input
+                value={item.warehouseLocation}
+                readOnly
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#f8fafc'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                To Location
+              </label>
+              <input
+                value={toWarehouseLocation}
+                onChange={(e) => setToWarehouseLocation(e.target.value)}
+                placeholder="Example: B-02-01"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Quantity
+              </label>
+              <input
+                value={transferQty}
+                onChange={(e) => setTransferQty(e.target.value)}
+                placeholder="1"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Reason
+              </label>
+              <input
+                value={transferReason}
+                onChange={(e) => setTransferReason(e.target.value)}
+                placeholder="inventory_transfer"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Notes
+              </label>
+              <textarea
+                value={transferNotes}
+                onChange={(e) => setTransferNotes(e.target.value)}
+                rows={3}
+                placeholder="Optional transfer note"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+          </div>
+
+          {transferFormError ? (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {transferFormError}
+            </div>
+          ) : null}
+
+          {transferPreviewError ? (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {transferPreviewError}
+            </div>
+          ) : null}
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <button
+              type="submit"
+              disabled={isPreviewLoading}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isPreviewLoading ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              {isPreviewLoading ? 'Previewing...' : 'Preview Transfer'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClearPreview}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#334155',
+                fontWeight: 600
+              }}
+            >
+              Clear Preview
+            </button>
+          </div>
+        </form>
+
+        {draft ? (
+          <div
+            style={{
+              padding: '16px',
+              borderRadius: '12px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              color: '#334155'
+            }}
+          >
+            <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>
+              Draft Preview
+            </div>
+            <div><strong>Item:</strong> {draft.sku} - {draft.itemName}</div>
+            <div><strong>From:</strong> {draft.fromWarehouseLocation}</div>
+            <div><strong>To:</strong> {draft.toWarehouseLocation}</div>
+            <div><strong>Quantity:</strong> {draft.quantity} {draft.unit}</div>
+            <div><strong>Reason:</strong> {draft.reason}</div>
+            <div><strong>Notes:</strong> {draft.notes || '-'}</div>
+            <div style={{ marginTop: '12px' }}>
+              <strong>Source Balance:</strong>{' '}
+              {draft.availableSourceBalance
+                ? `${draft.availableSourceBalance.availableQty} ${draft.availableSourceBalance.unit} available at ${draft.availableSourceBalance.warehouseLocation}`
+                : 'No source balance found'}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginBottom: '24px' }}>
@@ -241,7 +516,6 @@ export function InventoryDetailScreen({ id }: { id: string }) {
         <div style={{ color: '#64748b', marginBottom: '12px' }}>
           Persistence mode: <strong>{batchPersistenceMode || '-'}</strong>
         </div>
-
         {isBatchLoading ? (
           <div style={{ color: '#64748b' }}>Loading related batches...</div>
         ) : batchError ? (
@@ -296,7 +570,7 @@ export function InventoryDetailScreen({ id }: { id: string }) {
       </div>
 
       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
-        <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Notes & Last Updated</div>
+        <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Notes and Last Updated</div>
         <div style={{ color: '#475569', lineHeight: 1.8 }}>
           Notes: <strong>{item.notes || '-'}</strong><br />
           Updated: <strong>{new Date(item.updatedAt).toLocaleString()}</strong>

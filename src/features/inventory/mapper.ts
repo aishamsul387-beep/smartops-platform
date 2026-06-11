@@ -1,10 +1,12 @@
 import type {
   CreateInventoryRequest,
+  InventoryDetailResponse,
   InventoryFormValues,
   InventoryItem,
   InventoryItemType,
   InventoryListResponse,
-  InventoryStatus
+  InventoryStatus,
+  InventoryTrackingFlag
 } from './types';
 
 function asText(value: unknown, fallback = '') {
@@ -21,14 +23,8 @@ function asBoolean(value: unknown) {
 }
 
 function getStatusLabel(status: InventoryStatus) {
-  if (status === 'in_stock') {
-    return 'In stock';
-  }
-
-  if (status === 'low_stock') {
-    return 'Low stock';
-  }
-
+  if (status === 'in_stock') return 'In stock';
+  if (status === 'low_stock') return 'Low stock';
   return 'Out of stock';
 }
 
@@ -69,6 +65,19 @@ export function mapInventoryItem(payload: any): InventoryItem {
     allowsFraction: asBoolean(payload?.allowsFraction),
     notes: asText(payload?.notes),
     updatedAt: asText(payload?.updatedAt)
+  };
+}
+
+export function mapInventoryDetailResponse(payload: any): InventoryDetailResponse {
+  const item = mapInventoryItem(payload);
+
+  const trackingFlags: InventoryTrackingFlag[] = Array.isArray(payload?.trackingFlags)
+    ? payload.trackingFlags
+    : [];
+
+  return {
+    ...item,
+    trackingFlags
   };
 }
 

@@ -1,4 +1,4 @@
-export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+﻿export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
 export type InventoryItemType =
   | 'raw_material'
   | 'finished_goods'
@@ -7,6 +7,8 @@ export type InventoryItemType =
   | 'consumable';
 
 export type InventoryPersistenceMode = 'memory' | 'postgres' | string;
+
+export type InventoryTrackingFlag = 'batch' | 'expiry' | 'serial';
 
 export interface InventoryItem {
   id: string;
@@ -127,23 +129,93 @@ export interface InventoryFormValues {
 
 export type InventoryFormErrors = Partial<Record<keyof InventoryFormValues, string>>;
 
-export interface InventoryRelatedBatch {
-  id: string;
-  inventoryItemId: string;
-  batchNumber: string;
-  lotNumber: string;
-  supplierLotNumber: string;
-  supplierName: string;
-  purchaseOrderNo: string;
-  goodsReceivedNoteNo: string;
-  receivedQty: number;
-  availableQty: number;
-  expiryDate: string | null;
-  batchStatus: string;
+export interface InventoryDetailResponse extends InventoryItem {
+  trackingFlags: InventoryTrackingFlag[];
 }
 
-export type InventoryItemDto = InventoryItem;
-export type InventoryDetailResponse = InventoryItem;
-export type InventoryCreateRequest = CreateInventoryRequest;
-export type InventoryUpdateRequest = UpdateInventoryRequest;
-export type InventoryListParams = InventoryListFilters;
+export interface InventoryItemDto extends InventoryItem {}
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryLocationBalanceListResponse {
+  items: InventoryLocationBalanceRecord[];
+  total: number;
+}
+
+export interface InventoryLocationBalanceSummary {
+  totalLines: number;
+  totalOnHandQty: number;
+  totalAvailableQty: number;
+}
+
+export interface InventoryTransferDraft {
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  unit: string;
+  quantity: number;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  reason: string;
+  notes: string;
+  availableSourceBalance: InventoryLocationBalanceRecord | null;
+}
+
+export interface CreateInventoryTransferDraftRequest {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+export interface InventoryTransferSourceSuggestion {
+  strategy: 'fefo' | 'fifo';
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  unit: string;
+  recommendedFromWarehouseLocation: string;
+  availableQty: number;
+  referenceType: 'batch' | 'location';
+  referenceNo: string;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  notes: string;
+}
+
+export interface InventoryTransferRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface InventoryTransferListResponse {
+  items: InventoryTransferRecord[];
+  total: number;
+}
+
+export interface InventoryTransferListFilters {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}

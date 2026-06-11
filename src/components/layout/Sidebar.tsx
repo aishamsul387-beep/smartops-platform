@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -70,6 +70,22 @@ const NAV_ITEMS: NavItem[] = [
   }
 ];
 
+const COLORS = {
+  sidebarBg: '#0F172A',
+  sidebarAlt: '#111C32',
+  sidebarBorder: 'rgba(255,255,255,0.08)',
+  brandText: '#FFFFFF',
+  mutedText: '#94A3B8',
+  badgeBg: 'rgba(20,184,166,0.14)',
+  badgeText: '#99F6E4',
+  itemText: '#E5E7EB',
+  itemMuted: '#CBD5E1',
+  itemActiveBg: 'linear-gradient(135deg, rgba(29,78,216,0.18) 0%, rgba(15,118,110,0.18) 100%)',
+  itemActiveBorder: '#2DD4BF',
+  itemActiveText: '#FFFFFF',
+  itemShadow: '0 6px 16px rgba(15, 23, 42, 0.18)'
+} as const;
+
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
 
@@ -82,20 +98,49 @@ export function Sidebar({ user }: SidebarProps) {
       style={{
         width: '260px',
         minHeight: '100vh',
-        background: '#0f172a',
-        color: '#ffffff',
-        padding: '20px',
-        borderRight: '1px solid rgba(255,255,255,0.08)',
+        background: 'linear-gradient(180deg, ' + COLORS.sidebarBg + ' 0%, ' + COLORS.sidebarAlt + ' 100%)',
+        color: COLORS.brandText,
+        padding: '22px 18px',
+        borderRight: '1px solid ' + COLORS.sidebarBorder,
         position: 'sticky',
         top: 0,
-        alignSelf: 'start'
+        alignSelf: 'start',
+        boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.03)'
       }}
     >
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ fontSize: '20px', fontWeight: 800, marginBottom: '6px' }}>
+      <div
+        style={{
+          marginBottom: '26px',
+          padding: '8px 6px 14px 6px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)'
+        }}
+      >
+        <div
+          style={{
+            fontSize: '20px',
+            fontWeight: 800,
+            marginBottom: '8px',
+            letterSpacing: '-0.02em',
+            color: COLORS.brandText
+          }}
+        >
           SmartOps WMS AI
         </div>
-        <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 10px',
+            borderRadius: '999px',
+            background: COLORS.badgeBg,
+            color: COLORS.badgeText,
+            fontSize: '12px',
+            fontWeight: 700,
+            textTransform: 'capitalize'
+          }}
+        >
           Role: {user.role}
         </div>
       </div>
@@ -113,11 +158,16 @@ export function Sidebar({ user }: SidebarProps) {
               style={{
                 display: 'block',
                 padding: '12px 14px',
-                borderRadius: '10px',
-                background: isActive ? '#1e293b' : 'transparent',
-                color: '#ffffff',
+                borderRadius: '12px',
+                background: isActive ? COLORS.itemActiveBg : 'transparent',
+                color: isActive ? COLORS.itemActiveText : COLORS.itemText,
                 fontWeight: isActive ? 700 : 500,
-                border: isActive ? '1px solid #334155' : '1px solid transparent'
+                border: isActive
+                  ? '1px solid ' + COLORS.itemActiveBorder
+                  : '1px solid transparent',
+                boxShadow: isActive ? COLORS.itemShadow : 'none',
+                textDecoration: 'none',
+                transition: 'all 0.2s ease'
               }}
             >
               {item.label}
@@ -125,6 +175,18 @@ export function Sidebar({ user }: SidebarProps) {
           );
         })}
       </nav>
+
+      <div
+        style={{
+          marginTop: '24px',
+          padding: '12px 10px 0 10px',
+          color: COLORS.mutedText,
+          fontSize: '12px',
+          lineHeight: 1.6
+        }}
+      >
+        Calm operations, clearer control, and friendlier daily warehouse workflows.
+      </div>
     </aside>
   );
 }

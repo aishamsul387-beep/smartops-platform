@@ -1,0 +1,294 @@
+﻿W7 Layout Screening Dump
+Generated At: 2026-06-08 23:09:47
+
+IMPORTANT:
+- No code was changed by this script
+- Copy the content between START CHAT DUMP and END CHAT DUMP
+- Paste it back into chat
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+
+################################################################################
+FILE: src\components\layout\AppShell.tsx
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\components\layout\AppShell.tsx
+
+'use client';
+
+import type { ReactNode } from 'react';
+import type { AuthUser } from '@/types/auth';
+import { Sidebar } from './Sidebar';
+import { Topbar } from './Topbar';
+
+interface AppShellProps {
+  user: AuthUser;
+  children: ReactNode;
+}
+
+export function AppShell({ user, children }: AppShellProps) {
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#f8fafc',
+        display: 'grid',
+        gridTemplateColumns: '260px 1fr'
+      }}
+    >
+      <Sidebar user={user} />
+
+      <main style={{ minWidth: 0 }}>
+        <div style={{ padding: '24px' }}>
+          <Topbar user={user} />
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\components\layout\Sidebar.tsx
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\components\layout\Sidebar.tsx
+
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ROUTES } from '@/lib/routes';
+import { hasAnyPermission } from '@/lib/permissions';
+import { PERMISSIONS } from '@/types/permissions';
+import type { AuthUser } from '@/types/auth';
+
+interface SidebarProps {
+  user: AuthUser;
+}
+
+interface NavItem {
+  label: string;
+  href: string;
+  permissions: string[];
+}
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    label: 'Dashboard',
+    href: ROUTES.dashboard,
+    permissions: [PERMISSIONS.DASHBOARD_VIEW]
+  },
+  {
+    label: 'Inventory',
+    href: ROUTES.inventory,
+    permissions: [PERMISSIONS.INVENTORY_VIEW]
+  },
+  {
+    label: 'Batches',
+    href: ROUTES.batches,
+    permissions: [PERMISSIONS.INVENTORY_VIEW]
+  },
+  {
+    label: 'Stock Control',
+    href: ROUTES.stockControl,
+    permissions: [PERMISSIONS.INVENTORY_VIEW]
+  },
+  {
+    label: 'UOM',
+    href: ROUTES.uom,
+    permissions: [PERMISSIONS.INVENTORY_VIEW]
+  },
+  {
+    label: 'Warehouse',
+    href: ROUTES.warehouse,
+    permissions: [PERMISSIONS.WAREHOUSE_VIEW]
+  },
+  {
+    label: 'Tasks',
+    href: ROUTES.warehouseTasks,
+    permissions: [PERMISSIONS.TASKS_VIEW]
+  },
+  {
+    label: 'Orders',
+    href: ROUTES.orders,
+    permissions: [PERMISSIONS.ORDERS_VIEW]
+  },
+  {
+    label: 'Reports',
+    href: ROUTES.reports,
+    permissions: [PERMISSIONS.REPORTS_VIEW]
+  },
+  {
+    label: 'AI Assistant',
+    href: ROUTES.aiAssistant,
+    permissions: [PERMISSIONS.AI_USE]
+  }
+];
+
+export function Sidebar({ user }: SidebarProps) {
+  const pathname = usePathname();
+
+  const visibleItems = NAV_ITEMS.filter((item) =>
+    hasAnyPermission(user, item.permissions as any)
+  );
+
+  return (
+    <aside
+      style={{
+        width: '260px',
+        minHeight: '100vh',
+        background: '#0f172a',
+        color: '#ffffff',
+        padding: '20px',
+        borderRight: '1px solid rgba(255,255,255,0.08)',
+        position: 'sticky',
+        top: 0,
+        alignSelf: 'start'
+      }}
+    >
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ fontSize: '20px', fontWeight: 800, marginBottom: '6px' }}>
+          SmartOps WMS AI
+        </div>
+        <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+          Role: {user.role}
+        </div>
+      </div>
+
+      <nav style={{ display: 'grid', gap: '10px' }}>
+        {visibleItems.map((item) => {
+          const isActive =
+            pathname === item.href ||
+            (item.href !== ROUTES.dashboard && pathname?.startsWith(item.href));
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={{
+                display: 'block',
+                padding: '12px 14px',
+                borderRadius: '10px',
+                background: isActive ? '#1e293b' : 'transparent',
+                color: '#ffffff',
+                fontWeight: isActive ? 700 : 500,
+                border: isActive ? '1px solid #334155' : '1px solid transparent'
+              }}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\components\layout\Topbar.tsx
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\components\layout\Topbar.tsx
+
+'use client';
+
+import { usePathname } from 'next/navigation';
+import { useLogout } from '@/features/auth/hooks/useLogout';
+import type { AuthUser } from '@/types/auth';
+
+interface TopbarProps {
+  user: AuthUser;
+}
+
+function getPageTitle(pathname: string | null) {
+  if (!pathname) return 'SmartOps WMS AI';
+  if (pathname.startsWith('/stock-control')) return 'Stock Control / Forecasting';
+  if (pathname.startsWith('/batches')) return 'Batch / Expiry Control';
+  if (pathname.startsWith('/uom')) return 'UOM / Multi-UOM Conversion';
+  if (pathname.startsWith('/inventory/create')) return 'Create Inventory Item';
+  if (pathname.startsWith('/inventory/') && pathname.endsWith('/edit')) return 'Edit Inventory Item';
+  if (pathname.startsWith('/inventory/')) return 'Inventory Detail';
+  if (pathname.startsWith('/inventory')) return 'Inventory';
+  if (pathname.startsWith('/warehouse/locations')) return 'Warehouse Locations';
+  if (pathname.startsWith('/warehouse/tasks/')) return 'Task Detail';
+  if (pathname.startsWith('/warehouse/tasks')) return 'Warehouse Tasks';
+  if (pathname.startsWith('/warehouse')) return 'Warehouse';
+  if (pathname.startsWith('/orders/quotations')) return 'Quotations';
+  if (pathname.startsWith('/orders/purchase-orders/create')) return 'Create Purchase Order';
+  if (pathname.startsWith('/orders/purchase-orders/')) return 'Purchase Order Detail';
+  if (pathname.startsWith('/orders/purchase-orders')) return 'Purchase Orders';
+  if (pathname.startsWith('/orders/goods-received-notes/create')) return 'Create GRN';
+  if (pathname.startsWith('/orders/goods-received-notes/')) return 'GRN Detail';
+  if (pathname.startsWith('/orders/goods-received-notes')) return 'Goods Received Notes';
+  if (pathname.startsWith('/orders/supplier-invoices')) return 'Supplier Invoices';
+  if (pathname.startsWith('/orders/supplier-credit-notes')) return 'Supplier Credit Notes';
+  if (pathname.startsWith('/orders/returns')) return 'Returns';
+  if (pathname.startsWith('/orders')) return 'Orders';
+  if (pathname.startsWith('/reports')) return 'Reports';
+  if (pathname.startsWith('/ai-assistant')) return 'AI Assistant';
+  if (pathname.startsWith('/dashboard')) return 'Dashboard';
+  return 'SmartOps WMS AI';
+}
+
+export function Topbar({ user }: TopbarProps) {
+  const pathname = usePathname();
+  const { logout } = useLogout();
+
+  return (
+    <header
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '18px 20px',
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '16px',
+        flexWrap: 'wrap'
+      }}
+    >
+      <div>
+        <div style={{ fontSize: '26px', fontWeight: 800, marginBottom: '4px' }}>
+          {getPageTitle(pathname)}
+        </div>
+        <div style={{ color: '#64748b' }}>
+          Signed in as <strong>{user.name}</strong> Â· {user.email}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => void logout()}
+          style={{
+            padding: '10px 14px',
+            borderRadius: '10px',
+            border: '1px solid #cbd5e1',
+            background: '#ffffff',
+            cursor: 'pointer',
+            fontWeight: 600
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </header>
+  );
+}
+
+############################## END OF FILE ######################################
+

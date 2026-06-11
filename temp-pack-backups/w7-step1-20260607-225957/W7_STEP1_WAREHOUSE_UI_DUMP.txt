@@ -1,0 +1,2565 @@
+﻿W7 Step 1 - Warehouse UI Redesign Inspection Dump
+Generated At: 2026-06-07 22:59:57
+
+IMPORTANT:
+- No code was changed by this script
+- Copy the content between START CHAT DUMP and END CHAT DUMP
+- Paste it back into chat
+- If long, paste in multiple parts
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+
+################################################################################
+FRONTEND GIT STATUS
+################################################################################
+
+?? H11B_EASY_SANDBOX_NOTES.txt
+?? src/app/stock-issues-h11b/
+?? src/app/stock-issues/[issueId]/
+?? src/app/stock-issues/history/
+?? src/features/stock-issue-h11b/
+?? src/features/stock-issue/api.ts
+?? src/features/stock-issue/components/
+?? src/features/stock-issue/hooks/useStockIssueContext.ts
+?? src/features/stock-issue/hooks/useStockIssueDetail.ts
+?? src/features/stock-issue/hooks/useStockIssueHistory.ts
+?? src/features/stock-issue/screens/StockIssueDetailScreen.tsx
+?? src/features/stock-issue/screens/StockIssueHistoryScreen.tsx
+?? src/features/stock-issue/screens/StockIssuePrintScreen.tsx
+?? src/features/stock-issue/types.ts
+?? temp-pack-backups/
+?? temp-run-pack.ps1
+?? w22-files/
+
+############################## END OF OUTPUT #####################################
+
+
+################################################################################
+FILE: src\components\layout\PageShell.tsx
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\components\layout\PageShell.tsx
+
+import type { CSSProperties, ReactNode } from 'react';
+
+const shellStyle: CSSProperties = {
+  background: '#ffffff',
+  border: '1px solid #e2e8f0',
+  borderRadius: '16px',
+  padding: '24px',
+  marginBottom: '24px'
+};
+
+export function PageHeaderCard({
+  title,
+  description,
+  actions,
+  children
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <div style={{ ...shellStyle, marginTop: '24px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: '16px',
+          alignItems: 'center',
+          flexWrap: 'wrap'
+        }}
+      >
+        <div>
+          <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+            {title}
+          </div>
+          {description ? (
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>{description}</div>
+          ) : null}
+        </div>
+
+        {actions ? <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>{actions}</div> : null}
+      </div>
+
+      {children ? <div style={{ marginTop: '16px' }}>{children}</div> : null}
+    </div>
+  );
+}
+
+export function PageSectionCard({
+  title,
+  description,
+  children,
+  noPadding = false
+}: {
+  title?: string;
+  description?: string;
+  children: ReactNode;
+  noPadding?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        marginBottom: '24px',
+        overflow: 'hidden'
+      }}
+    >
+      {title || description ? (
+        <div style={{ padding: '24px 24px 0 24px' }}>
+          {title ? (
+            <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: description ? '8px' : '16px' }}>
+              {title}
+            </div>
+          ) : null}
+
+          {description ? (
+            <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
+              {description}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div style={noPadding ? undefined : { padding: '20px 24px 24px 24px' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function PageStatsGrid({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gap: '16px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function PageStatCard({
+  label,
+  value
+}: {
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '20px'
+      }}
+    >
+      <div style={{ color: '#64748b', marginBottom: '8px' }}>{label}</div>
+      <div style={{ fontSize: '28px', fontWeight: 700 }}>{value}</div>
+    </div>
+  );
+}
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\app\warehouse\page.tsx
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\page.tsx
+
+import { ProtectedLayout } from '@/components/layout/ProtectedLayout';
+import { WarehouseScreen } from '@/features/warehouse/screens/WarehouseScreen';
+import { PERMISSIONS } from '@/types/permissions';
+
+export default function WarehousePage() {
+  return (
+    <ProtectedLayout permissions={[PERMISSIONS.WAREHOUSE_VIEW]}>
+      <WarehouseScreen />
+    </ProtectedLayout>
+  );
+}
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\features\warehouse\screens\WarehouseScreen.tsx
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseScreen.tsx
+
+'use client';
+
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { ROUTES } from '@/lib/routes';
+import { useWarehouseAlertThresholds } from '../hooks/useWarehouseAlertThresholds';
+import { useWarehouseAlerts } from '../hooks/useWarehouseAlerts';
+import { useWarehouseDrilldown } from '../hooks/useWarehouseDrilldown';
+import { useWarehouseSites } from '../hooks/useWarehouseSites';
+import { useWarehouseSummary } from '../hooks/useWarehouseSummary';
+import type {
+  WarehouseAlertThresholdRecord,
+  WarehouseLocationAlertRecord,
+  WarehouseSiteScope,
+  WarehouseUtilizationDrilldownBucket
+} from '../types';
+
+function formatPercent(value: number) {
+  return `${value.toFixed(2)}%`;
+}
+
+function getScopeLabel(siteScope: WarehouseSiteScope) {
+  if (siteScope === 'warehouse') {
+    return 'Warehouse only';
+  }
+
+  if (siteScope === 'outlet') {
+    return 'Outlet only';
+  }
+
+  return 'All sites';
+}
+
+function renderUtilizationPair(label: string, used: number, total: number, pct: number) {
+  return (
+    <div style={{ fontSize: '13px', color: '#475569' }}>
+      <strong>{label}:</strong> {used} / {total} ({formatPercent(pct)})
+    </div>
+  );
+}
+
+function getAlertSeverityStyle(severity: WarehouseLocationAlertRecord['severity']) {
+  if (severity === 'full') {
+    return {
+      background: '#fee2e2',
+      color: '#991b1b',
+      border: '1px solid #fecaca'
+    };
+  }
+
+  return {
+    background: '#fef3c7',
+    color: '#92400e',
+    border: '1px solid #fde68a'
+  };
+}
+
+function getAlertSeverityLabel(severity: WarehouseLocationAlertRecord['severity']) {
+  return severity === 'full' ? 'Full' : 'Near Full';
+}
+
+function getThresholdSourceLabel(source: string) {
+  if (source === 'site_override') {
+    return 'site override';
+  }
+
+  if (source === 'site_type_default') {
+    return 'site type default';
+  }
+
+  if (source === 'request_override') {
+    return 'request override';
+  }
+
+  return 'global default';
+}
+
+function DrilldownTable({
+  title,
+  description,
+  rows
+}: {
+  title: string;
+  description: string;
+  rows: WarehouseUtilizationDrilldownBucket[];
+}) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '24px'
+      }}
+    >
+      <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>{title}</div>
+      <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>{description}</div>
+
+      {rows.length === 0 ? (
+        <div style={{ color: '#64748b' }}>No drill-down data found for the current filter.</div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Group</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Locations</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Full %</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Pallet</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>PCS</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Carton</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.key}>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                    {row.label}
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    <div>Total: {row.totalLocations}</div>
+                    <div>Active: {row.activeLocations}</div>
+                    <div>Occupied: {row.occupiedLocations}</div>
+                    <div>Empty: {row.emptyLocations}</div>
+                    <div>Blocked: {row.blockedLocations}</div>
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 700 }}>{formatPercent(row.fullLocationPct)}</div>
+                    <div style={{ color: '#64748b', fontSize: '13px' }}>
+                      {row.fullLocations} full
+                    </div>
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    {renderUtilizationPair('Utilization', row.palletCapacityUsed, row.palletCapacityTotal, row.palletUtilizationPct)}
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    {renderUtilizationPair('Utilization', row.pcsCapacityUsed, row.pcsCapacityTotal, row.pcsUtilizationPct)}
+                  </td>
+                  <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                    {renderUtilizationPair('Utilization', row.cartonCapacityUsed, row.cartonCapacityTotal, row.cartonUtilizationPct)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ThresholdConfigTable({
+  rows,
+  drafts,
+  isSaving,
+  onDraftChange,
+  onSave,
+  onClear
+}: {
+  rows: WarehouseAlertThresholdRecord[];
+  drafts: Record<string, string>;
+  isSaving: boolean;
+  onDraftChange: (siteCode: string, value: string) => void;
+  onSave: (siteCode: string) => Promise<void>;
+  onClear: (siteCode: string) => Promise<void>;
+}) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '24px',
+        marginBottom: '24px'
+      }}
+    >
+      <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>
+        Alert Threshold Configuration
+      </div>
+      <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
+        Configure near-full thresholds per site. Full locations always remain at 100%.
+      </div>
+
+      {rows.length === 0 ? (
+        <div style={{ color: '#64748b' }}>No threshold configuration rows found.</div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Site</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Type</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Current Threshold</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Source</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>New Threshold %</th>
+                <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const siteCode = row.siteCode ?? '';
+                const currentDraft = drafts[siteCode] ?? String(row.thresholdPct);
+
+                return (
+                  <tr key={`${row.siteCode ?? 'all'}-${row.siteType}`}>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ fontWeight: 700 }}>{row.siteCode ?? 'ALL SITES'}</div>
+                      <div>{row.siteName}</div>
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {row.siteType}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                      {formatPercent(row.thresholdPct)}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {getThresholdSourceLabel(row.source)}
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <input
+                        value={currentDraft}
+                        onChange={(e) => onDraftChange(siteCode, e.target.value)}
+                        disabled={isSaving || !siteCode}
+                        placeholder="80"
+                        style={{
+                          width: '120px',
+                          padding: '10px 12px',
+                          borderRadius: '10px',
+                          border: '1px solid #cbd5e1'
+                        }}
+                      />
+                    </td>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          disabled={isSaving || !siteCode}
+                          onClick={() => void onSave(siteCode)}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: isSaving || !siteCode ? '#94a3b8' : '#0f172a',
+                            color: '#ffffff',
+                            fontWeight: 600,
+                            cursor: isSaving || !siteCode ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          Save
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isSaving || !siteCode || row.source !== 'site_override'}
+                          onClick={() => void onClear(siteCode)}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            color: isSaving || !siteCode || row.source !== 'site_override' ? '#94a3b8' : '#334155',
+                            fontWeight: 600,
+                            cursor: isSaving || !siteCode || row.source !== 'site_override' ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          Clear Override
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function WarehouseScreen() {
+  const {
+    summary,
+    siteScope,
+    warehouseCode,
+    isLoading,
+    error,
+    setSiteScope,
+    setWarehouseCode,
+    refresh
+  } = useWarehouseSummary();
+
+  const {
+    items: sites,
+    isLoading: isSitesLoading,
+    error: sitesError,
+    refresh: refreshSites
+  } = useWarehouseSites();
+
+  const {
+    items: thresholdItems,
+    isLoading: isThresholdsLoading,
+    isSaving: isThresholdSaving,
+    error: thresholdsError,
+    refresh: refreshThresholds,
+    updateThreshold,
+    clearThreshold
+  } = useWarehouseAlertThresholds();
+
+  const {
+    drilldown,
+    isLoading: isDrilldownLoading,
+    error: drilldownError,
+    refresh: refreshDrilldown
+  } = useWarehouseDrilldown({
+    siteScope,
+    warehouseCode: warehouseCode || undefined
+  });
+
+  const {
+    alerts,
+    isLoading: isAlertsLoading,
+    error: alertsError,
+    refresh: refreshAlerts
+  } = useWarehouseAlerts({
+    siteScope,
+    warehouseCode: warehouseCode || undefined
+  });
+
+  const [thresholdDrafts, setThresholdDrafts] = useState<Record<string, string>>({});
+
+  const filteredSites = useMemo(() => {
+    if (siteScope === 'all') {
+      return sites;
+    }
+
+    return sites.filter((site) => site.siteType === siteScope);
+  }, [sites, siteScope]);
+
+  const selectedSite = useMemo(() => {
+    if (!warehouseCode) {
+      return null;
+    }
+
+    return sites.find((site) => site.siteCode === warehouseCode) ?? null;
+  }, [sites, warehouseCode]);
+
+  const visibleThresholdItems = useMemo(() => {
+    let filtered = thresholdItems;
+
+    if (siteScope !== 'all') {
+      filtered = filtered.filter((item) => item.siteType === siteScope);
+    }
+
+    if (warehouseCode) {
+      filtered = filtered.filter((item) => item.siteCode === warehouseCode);
+    }
+
+    return filtered;
+  }, [thresholdItems, siteScope, warehouseCode]);
+
+  const activeBase = summary.activeLocations > 0 ? summary.activeLocations : summary.totalLocations;
+
+  async function handleRefresh() {
+    await Promise.all([
+      refresh(),
+      refreshSites(),
+      refreshDrilldown(),
+      refreshAlerts(),
+      refreshThresholds()
+    ]);
+  }
+
+  function handleSiteScopeChange(nextScope: WarehouseSiteScope) {
+    setSiteScope(nextScope);
+    setWarehouseCode('');
+  }
+
+  function handleThresholdDraftChange(siteCode: string, value: string) {
+    setThresholdDrafts((current) => ({
+      ...current,
+      [siteCode]: value
+    }));
+  }
+
+  async function handleSaveThreshold(siteCode: string) {
+    const rawValue = thresholdDrafts[siteCode];
+    const parsedValue = Number(rawValue);
+
+    if (!Number.isFinite(parsedValue)) {
+      return;
+    }
+
+    await updateThreshold(siteCode, parsedValue);
+    await Promise.all([refreshAlerts(), refreshThresholds()]);
+  }
+
+  async function handleClearThreshold(siteCode: string) {
+    await clearThreshold(siteCode);
+    await Promise.all([refreshAlerts(), refreshThresholds()]);
+    setThresholdDrafts((current) => {
+      const next = { ...current };
+      delete next[siteCode];
+      return next;
+    });
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Warehouse
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Warehouse overview now uses normalized site selection, utilization drill-down, and actionable near-full/full alerts.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              href={ROUTES.warehouseLocations}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#0f766e',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Open locations
+            </Link>
+
+            <Link
+              href={ROUTES.warehouseTasks}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#0f172a',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Open tasks
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => void handleRefresh()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>
+          Warehouse Overview Filters
+        </div>
+        <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
+          Filter utilization by normalized site scope and site selection so each warehouse or outlet can be measured on its own.
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px'
+          }}
+        >
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Site Scope</label>
+            <select
+              value={siteScope}
+              onChange={(e) => handleSiteScopeChange(e.target.value as WarehouseSiteScope)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff'
+              }}
+            >
+              <option value="all">all</option>
+              <option value="warehouse">warehouse</option>
+              <option value="outlet">outlet</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Site
+            </label>
+            <select
+              value={warehouseCode}
+              onChange={(e) => setWarehouseCode(e.target.value)}
+              disabled={isSitesLoading}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff'
+              }}
+            >
+              <option value="">
+                {isSitesLoading ? 'Loading sites...' : 'All sites'}
+              </option>
+
+              {filteredSites.map((site) => (
+                <option key={site.siteCode} value={site.siteCode}>
+                  {site.siteCode} â€” {site.siteName}
+                </option>
+              ))}
+            </select>
+
+            <div style={{ marginTop: '8px', color: '#64748b', fontSize: '13px' }}>
+              Choose a normalized site from the master list instead of typing a code manually.
+            </div>
+
+            {sitesError ? (
+              <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '13px' }}>
+                {sitesError}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: '16px',
+            padding: '12px',
+            borderRadius: '12px',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            color: '#334155'
+          }}
+        >
+          <strong>Current filter:</strong> {getScopeLabel(siteScope)}
+          {selectedSite
+            ? ` â€¢ ${selectedSite.siteCode} â€” ${selectedSite.siteName}`
+            : ' â€¢ all sites'}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div style={{ color: '#64748b' }}>Loading warehouse summary...</div>
+      ) : error ? (
+        <div
+          style={{
+            padding: '12px',
+            borderRadius: '10px',
+            background: '#fef2f2',
+            color: '#b91c1c',
+            border: '1px solid #fecaca'
+          }}
+        >
+          {error}
+        </div>
+      ) : (
+        <>
+          <div
+            style={{
+              display: 'grid',
+              gap: '16px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Total Locations</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.totalLocations}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Active Locations</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.activeLocations}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Inactive Locations</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.inactiveLocations}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Full Locations</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.fullLocations}</div>
+              <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>
+                Based on {activeBase} active/total location base
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Full Location %</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatPercent(summary.fullLocationPct)}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Empty Locations</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.emptyLocations}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Occupied Locations</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.occupiedLocations}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Blocked Locations</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.blockedLocations}</div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: '16px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Pallet Utilization</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatPercent(summary.palletUtilizationPct)}</div>
+              <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>
+                {summary.palletCapacityUsed} / {summary.palletCapacityTotal}
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>PCS Utilization</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatPercent(summary.pcsUtilizationPct)}</div>
+              <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>
+                {summary.pcsCapacityUsed} / {summary.pcsCapacityTotal}
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Carton Utilization</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatPercent(summary.cartonUtilizationPct)}</div>
+              <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>
+                {summary.cartonCapacityUsed} / {summary.cartonCapacityTotal}
+              </div>
+            </div>
+          </div>
+
+          <ThresholdConfigTable
+            rows={visibleThresholdItems}
+            drafts={thresholdDrafts}
+            isSaving={isThresholdSaving}
+            onDraftChange={handleThresholdDraftChange}
+            onSave={handleSaveThreshold}
+            onClear={handleClearThreshold}
+          />
+
+          {isThresholdsLoading ? (
+            <div style={{ color: '#64748b', marginBottom: '24px' }}>Loading threshold configuration...</div>
+          ) : thresholdsError ? (
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca',
+                marginBottom: '24px'
+              }}
+            >
+              {thresholdsError}
+            </div>
+          ) : null}
+
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>
+              Location Capacity Alerts
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6, marginBottom: '16px' }}>
+              Near-full and full locations help operations act before capacity becomes a bottleneck.
+            </div>
+
+            {isAlertsLoading ? (
+              <div style={{ color: '#64748b' }}>Loading warehouse alerts...</div>
+            ) : alertsError ? (
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '10px',
+                  background: '#fef2f2',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca'
+                }}
+              >
+                {alertsError}
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: '16px',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    marginBottom: '16px'
+                  }}
+                >
+                  <div style={{ background: '#fff7ed', border: '1px solid #fdba74', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#9a3412', marginBottom: '8px' }}>Near-Full Locations</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#9a3412' }}>{alerts.nearFullLocations}</div>
+                  </div>
+
+                  <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#991b1b', marginBottom: '8px' }}>Full Locations</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#991b1b' }}>{alerts.fullLocations}</div>
+                  </div>
+
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#64748b', marginBottom: '8px' }}>Total Alert Locations</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700 }}>{alerts.totalAlertLocations}</div>
+                  </div>
+
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ color: '#64748b', marginBottom: '8px' }}>Requested Threshold</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatPercent(alerts.thresholdPct)}</div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    marginBottom: '16px',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    color: '#334155'
+                  }}
+                >
+                  <div style={{ fontWeight: 700, marginBottom: '8px' }}>Applied Thresholds</div>
+                  {alerts.appliedThresholds.length === 0 ? (
+                    <div style={{ color: '#64748b' }}>No threshold metadata returned.</div>
+                  ) : (
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                      {alerts.appliedThresholds.map((item) => (
+                        <div key={`${item.siteCode ?? 'all'}-${item.siteType}`}>
+                          <strong>{item.siteCode ?? 'ALL SITES'}</strong> â€” {item.siteName} â€” {item.siteType} â€” {formatPercent(item.thresholdPct)} ({getThresholdSourceLabel(item.source)})
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {alerts.items.length === 0 ? (
+                  <div style={{ color: '#64748b' }}>No near-full or full locations found for the current filter.</div>
+                ) : (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Severity</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Site</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Location</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Zone / Type</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Utilization</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Threshold</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Remaining</th>
+                          <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {alerts.items.map((item) => (
+                          <tr key={`${item.id}-${item.severity}`}>
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              <span
+                                style={{
+                                  display: 'inline-block',
+                                  padding: '6px 10px',
+                                  borderRadius: '999px',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                  ...getAlertSeverityStyle(item.severity)
+                                }}
+                              >
+                                {getAlertSeverityLabel(item.severity)}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              <div style={{ fontWeight: 700 }}>{item.siteCode}</div>
+                              <div>{item.siteName}</div>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                              {item.locationCode}
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              <div>{item.zone}</div>
+                              <div style={{ color: '#64748b', fontSize: '13px' }}>{item.locationType}</div>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              <div style={{ fontWeight: 700 }}>{formatPercent(item.utilizationPct)}</div>
+                              <div style={{ color: '#64748b', fontSize: '13px' }}>
+                                {item.capacityUsed} / {item.capacityTotal} {item.capacityUom}
+                              </div>
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              {formatPercent(item.thresholdPctApplied)}
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              {item.remainingCapacity} {item.capacityUom}
+                            </td>
+
+                            <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                              {item.status}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gap: '24px', marginBottom: '24px' }}>
+            {isDrilldownLoading ? (
+              <div style={{ color: '#64748b' }}>Loading utilization drill-down...</div>
+            ) : drilldownError ? (
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '10px',
+                  background: '#fef2f2',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca'
+                }}
+              >
+                {drilldownError}
+              </div>
+            ) : (
+              <>
+                <DrilldownTable
+                  title="Utilization by Location Type"
+                  description="Breakdown of location capacity and fullness by location type for the current site filter."
+                  rows={drilldown.byLocationType}
+                />
+
+                <DrilldownTable
+                  title="Utilization by Zone"
+                  description="Breakdown of location capacity and fullness by zone for the current site filter."
+                  rows={drilldown.byZone}
+                />
+              </>
+            )}
+          </div>
+
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '24px'
+            }}
+          >
+            <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px' }}>
+              Current warehouse snapshot
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.7 }}>
+              This summary now includes actionable near-full/full alerts, configurable thresholds, and drill-down by location type and zone for the selected normalized site and scope.
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\features\warehouse\screens\WarehouseLocationMasterScreen.tsx
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseLocationMasterScreen.tsx
+
+'use client';
+
+import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { PageHeaderCard, PageSectionCard, PageStatCard, PageStatsGrid } from '@/components/layout/PageShell';
+import { useCreateWarehouseLocation } from '../hooks/useCreateWarehouseLocation';
+import { useToggleWarehouseLocationActive } from '../hooks/useToggleWarehouseLocationActive';
+import { useWarehouseLocations } from '../hooks/useWarehouseLocations';
+import { useWarehouseSites } from '../hooks/useWarehouseSites';
+import { useWarehouseSummary } from '../hooks/useWarehouseSummary';
+import {
+  initialWarehouseLocationFormValues,
+  mapWarehouseLocationFormToCreateRequest,
+  validateWarehouseLocationForm
+} from '../schema';
+import { warehouseApi } from '../api';
+import type {
+  WarehouseLocationFormErrors,
+  WarehouseLocationFormValues,
+  WarehouseLocationImportResult,
+  WarehouseLocationRecord,
+  WarehouseSiteScope
+} from '../types';
+
+function getStatusStyle(status: string) {
+  if (status === 'empty') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'occupied') {
+    return {
+      background: '#dbeafe',
+      color: '#1d4ed8',
+      border: '1px solid #bfdbfe'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+function csvEscape(value: unknown) {
+  const text = String(value ?? '');
+  if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+function downloadTextFile(content: string, fileName: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function buildWarehouseLocationTemplateCsv() {
+  const header = [
+    'warehouseCode',
+    'warehouseName',
+    'locationCode',
+    'zone',
+    'aisle',
+    'levelCode',
+    'bin',
+    'locationType',
+    'status',
+    'capacityUom',
+    'palletCapacity',
+    'usedPalletCapacity',
+    'cubicCapacityM3',
+    'usedCubicCapacityM3',
+    'isActive',
+    'notes'
+  ];
+
+  const sampleRows = [
+    [
+      'WH-001',
+      'Main Warehouse',
+      'A-01-01-01',
+      'A',
+      '01',
+      '01',
+      '01',
+      'rack',
+      'empty',
+      'pallet',
+      '4',
+      '0',
+      '12',
+      '0',
+      'true',
+      'Sample rack location'
+    ],
+    [
+      'OTL-001',
+      'Outlet 1',
+      'SH-01-01-01',
+      'SH',
+      '01',
+      '01',
+      '01',
+      'shelves',
+      'occupied',
+      'pcs',
+      '120',
+      '48',
+      '6',
+      '2',
+      'true',
+      'Sample outlet shelf using pcs capacity'
+    ],
+    [
+      'OTL-001',
+      'Outlet 1',
+      'BF-01-01-01',
+      'BF',
+      '01',
+      '01',
+      '01',
+      'floor',
+      'empty',
+      'carton',
+      '24',
+      '6',
+      '10',
+      '2',
+      'true',
+      'Sample outlet buffer stock using carton capacity'
+    ]
+  ];
+
+  return [header.join(','), ...sampleRows.map((row) => row.map(csvEscape).join(','))].join('\n');
+}
+
+function buildWarehouseLocationExportCsv(items: WarehouseLocationRecord[]) {
+  const header = [
+    'warehouseCode',
+    'warehouseName',
+    'locationCode',
+    'zone',
+    'aisle',
+    'levelCode',
+    'bin',
+    'locationType',
+    'status',
+    'capacityUom',
+    'palletCapacity',
+    'usedPalletCapacity',
+    'cubicCapacityM3',
+    'usedCubicCapacityM3',
+    'isActive',
+    'notes'
+  ];
+
+  const rows = items.map((item) =>
+    [
+      item.warehouseCode,
+      item.warehouseName,
+      item.locationCode,
+      item.zone,
+      item.aisle,
+      item.levelCode,
+      item.bin,
+      item.locationType,
+      item.status,
+      item.capacityUom,
+      item.palletCapacity,
+      item.usedPalletCapacity,
+      item.cubicCapacityM3,
+      item.usedCubicCapacityM3,
+      item.isActive,
+      item.notes
+    ]
+      .map(csvEscape)
+      .join(',')
+  );
+
+  return [header.join(','), ...rows].join('\n');
+}
+
+function getCapacityUnitLabel(capacityUom: WarehouseLocationRecord['capacityUom']) {
+  if (capacityUom === 'pcs') {
+    return 'PCS';
+  }
+
+  if (capacityUom === 'carton') {
+    return 'Carton';
+  }
+
+  return 'Pallet';
+}
+
+function getStorageCapacityLabel(capacityUom: WarehouseLocationFormValues['capacityUom']) {
+  if (capacityUom === 'pcs') {
+    return 'Storage Capacity (PCS)';
+  }
+
+  if (capacityUom === 'carton') {
+    return 'Storage Capacity (Carton)';
+  }
+
+  return 'Storage Capacity (Pallet)';
+}
+
+function getUsedStorageCapacityLabel(capacityUom: WarehouseLocationFormValues['capacityUom']) {
+  if (capacityUom === 'pcs') {
+    return 'Used Storage Capacity (PCS)';
+  }
+
+  if (capacityUom === 'carton') {
+    return 'Used Storage Capacity (Carton)';
+  }
+
+  return 'Used Storage Capacity (Pallet)';
+}
+
+function formatPercent(value: number) {
+  return `${value.toFixed(2)}%`;
+}
+
+export function WarehouseLocationMasterScreen() {
+  const {
+    items,
+    total,
+    filters,
+    isLoading,
+    error,
+    updateSearch,
+    updateWarehouseCode,
+    updateSiteScope,
+    updateLocationCode,
+    updateStatus,
+    updateType,
+    updateActive,
+    refresh
+  } = useWarehouseLocations();
+
+  const {
+    items: sites,
+    isLoading: isSitesLoading,
+    error: sitesError,
+    refresh: refreshSites
+  } = useWarehouseSites();
+
+  const {
+    summary: utilizationSummary,
+    isLoading: isSummaryLoading,
+    error: summaryError,
+    refresh: refreshSummary
+  } = useWarehouseSummary({
+    search: filters.search,
+    warehouseCode: filters.warehouseCode,
+    siteScope: filters.siteScope,
+    locationCode: filters.locationCode,
+    status: filters.status,
+    type: filters.type,
+    active: filters.active
+  });
+
+  const { createLocation, isSubmitting, error: createError } = useCreateWarehouseLocation();
+  const { toggleActive, isSubmitting: isToggling, error: toggleError } = useToggleWarehouseLocationActive();
+
+  const [values, setValues] = useState<WarehouseLocationFormValues>(initialWarehouseLocationFormValues);
+  const [errors, setErrors] = useState<WarehouseLocationFormErrors>({});
+
+  const [csvText, setCsvText] = useState('');
+  const [pendingCsvText, setPendingCsvText] = useState('');
+  const [selectedCsvFileName, setSelectedCsvFileName] = useState<string | null>(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
+
+  const [importResult, setImportResult] = useState<WarehouseLocationImportResult | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
+
+  const filteredSites = useMemo(() => {
+    const currentScope = filters.siteScope ?? 'all';
+
+    if (currentScope === 'all') {
+      return sites;
+    }
+
+    return sites.filter((site) => site.siteType === currentScope);
+  }, [sites, filters.siteScope]);
+
+  const selectedSite = useMemo(() => {
+    if (!filters.warehouseCode) {
+      return null;
+    }
+
+    return sites.find((site) => site.siteCode === filters.warehouseCode) ?? null;
+  }, [sites, filters.warehouseCode]);
+
+  const locationSummary = useMemo(() => {
+    const activeItems = items.filter((item) => item.isActive).length;
+    const emptyItems = items.filter((item) => item.status === 'empty').length;
+    const occupiedItems = items.filter((item) => item.status === 'occupied').length;
+    const blockedItems = items.filter((item) => item.status === 'blocked').length;
+
+    return {
+      activeItems,
+      emptyItems,
+      occupiedItems,
+      blockedItems
+    };
+  }, [items]);
+
+  async function refreshAll() {
+    await Promise.all([refresh(), refreshSummary(), refreshSites()]);
+  }
+
+  function handleSiteScopeChange(siteScope: WarehouseSiteScope) {
+    updateSiteScope(siteScope);
+  }
+
+  function updateField<K extends keyof WarehouseLocationFormValues>(
+    field: K,
+    value: WarehouseLocationFormValues[K]
+  ) {
+    setValues((current) => ({
+      ...current,
+      [field]: value
+    }));
+
+    setErrors((current) => ({
+      ...current,
+      [field]: undefined
+    }));
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const result = validateWarehouseLocationForm(values);
+    setErrors(result.errors);
+
+    if (!result.isValid) {
+      return;
+    }
+
+    try {
+      await createLocation(mapWarehouseLocationFormToCreateRequest(values));
+      setValues(initialWarehouseLocationFormValues);
+      await refreshAll();
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  async function handleToggle(item: WarehouseLocationRecord) {
+    try {
+      await toggleActive(item.id, !item.isActive);
+      await refreshAll();
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleCsvFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setSelectedCsvFileName(null);
+      setPendingCsvText('');
+      return;
+    }
+
+    setSelectedCsvFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPendingCsvText(String(reader.result ?? ''));
+    };
+    reader.readAsText(file);
+  }
+
+  function handleConfirmAttachedFile() {
+    setCsvText(pendingCsvText);
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  function handleRemoveAttachedFile() {
+    setSelectedCsvFileName(null);
+    setPendingCsvText('');
+    setCsvText('');
+    setFileInputKey((current) => current + 1);
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  async function handleImportCsv() {
+    try {
+      setIsImporting(true);
+      setImportError(null);
+      const result = await warehouseApi.importLocationsCsv(csvText);
+      setImportResult(result);
+      await refreshAll();
+    } catch (err: any) {
+      setImportResult(null);
+      setImportError(err?.message || 'Failed to import CSV');
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  async function handleExportCsv() {
+    try {
+      setIsExporting(true);
+      const csv = buildWarehouseLocationExportCsv(items);
+      downloadTextFile(csv, 'warehouse-locations.csv', 'text/csv;charset=utf-8;');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  async function handleDownloadTemplate() {
+    try {
+      setIsDownloadingTemplate(true);
+      const csv = buildWarehouseLocationTemplateCsv();
+      downloadTextFile(csv, 'warehouse-locations-template.csv', 'text/csv;charset=utf-8;');
+    } finally {
+      setIsDownloadingTemplate(false);
+    }
+  }
+
+  return (
+    <div className="container">
+      <PageHeaderCard
+        title="Warehouse Location Master"
+        description="Master location setup for storage, inventory control, receiving, and future capacity analytics."
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => void refreshAll()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Refresh
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleDownloadTemplate()}
+              disabled={isDownloadingTemplate}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                cursor: isDownloadingTemplate ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isDownloadingTemplate ? 'Preparing...' : 'Download CSV Template'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleExportCsv()}
+              disabled={isExporting}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isExporting ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                cursor: isExporting ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isExporting ? 'Exporting...' : 'Export CSV'}
+            </button>
+          </>
+        }
+      />
+
+      <PageSectionCard
+        title="Warehouse Utilization Summary"
+        description="This summary follows your current normalized site and location filters."
+      >
+        {isSummaryLoading ? (
+          <div style={{ color: '#64748b' }}>Loading warehouse utilization summary...</div>
+        ) : summaryError ? (
+          <div
+            style={{
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#fef2f2',
+              color: '#b91c1c',
+              border: '1px solid #fecaca'
+            }}
+          >
+            {summaryError}
+          </div>
+        ) : (
+          <>
+            <PageStatsGrid>
+              <PageStatCard
+                label="Pallet Utilization"
+                value={formatPercent(utilizationSummary.palletUtilizationPct)}
+              />
+              <PageStatCard
+                label="PCS Utilization"
+                value={formatPercent(utilizationSummary.pcsUtilizationPct)}
+              />
+              <PageStatCard
+                label="Carton Utilization"
+                value={formatPercent(utilizationSummary.cartonUtilizationPct)}
+              />
+              <PageStatCard label="Total Locations" value={utilizationSummary.totalLocations} />
+              <PageStatCard label="Active Locations" value={utilizationSummary.activeLocations} />
+              <PageStatCard label="Inactive Locations" value={utilizationSummary.inactiveLocations} />
+            </PageStatsGrid>
+
+            <div
+              style={{
+                marginTop: '16px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '12px'
+              }}
+            >
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#334155'
+                }}
+              >
+                <strong>Pallet basis:</strong> {utilizationSummary.palletCapacityUsed} / {utilizationSummary.palletCapacityTotal}
+              </div>
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#334155'
+                }}
+              >
+                <strong>PCS basis:</strong> {utilizationSummary.pcsCapacityUsed} / {utilizationSummary.pcsCapacityTotal}
+              </div>
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  color: '#334155'
+                }}
+              >
+                <strong>Carton basis:</strong> {utilizationSummary.cartonCapacityUsed} / {utilizationSummary.cartonCapacityTotal}
+              </div>
+            </div>
+          </>
+        )}
+      </PageSectionCard>
+
+      <PageSectionCard
+        title="Import Warehouse Locations CSV"
+        description="Upload or paste CSV content to create/update location master records in bulk."
+      >
+        <div style={{ display: 'grid', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Upload CSV File
+            </label>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                key={fileInputKey}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleCsvFileChange}
+              />
+
+              <button
+                type="button"
+                onClick={handleConfirmAttachedFile}
+                disabled={!pendingCsvText.trim()}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: !pendingCsvText.trim() ? '#94a3b8' : '#0f172a',
+                  color: '#ffffff',
+                  cursor: !pendingCsvText.trim() ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Confirm Attached File
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRemoveAttachedFile}
+                disabled={!selectedCsvFileName}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: !selectedCsvFileName ? '#94a3b8' : '#334155',
+                  cursor: !selectedCsvFileName ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Remove File
+              </button>
+            </div>
+
+            {selectedCsvFileName ? (
+              <div style={{ marginTop: '8px', color: '#475569', fontSize: '14px' }}>
+                Attached file: <strong>{selectedCsvFileName}</strong>
+              </div>
+            ) : null}
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              CSV Content
+            </label>
+            <textarea
+              value={csvText}
+              onChange={(e) => setCsvText(e.target.value)}
+              rows={8}
+              placeholder="warehouseCode,warehouseName,locationCode,zone,aisle,levelCode,bin,locationType,status,capacityUom,palletCapacity,usedPalletCapacity,cubicCapacityM3,usedCubicCapacityM3,isActive,notes"
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => void handleImportCsv()}
+              disabled={isImporting || !csvText.trim()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isImporting || !csvText.trim() ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                cursor: isImporting || !csvText.trim() ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isImporting ? 'Importing...' : 'Import CSV'}
+            </button>
+          </div>
+
+          {importError ? (
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {importError}
+            </div>
+          ) : null}
+
+          {importResult ? (
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                color: '#334155'
+              }}
+            >
+              <div><strong>Inserted:</strong> {importResult.inserted}</div>
+              <div><strong>Updated:</strong> {importResult.updated}</div>
+              <div><strong>Skipped:</strong> {importResult.skipped}</div>
+              {importResult.errors.length > 0 ? (
+                <div style={{ marginTop: '8px', color: '#b91c1c' }}>
+                  {importResult.errors.map((error, index) => (
+                    <div key={index}>
+                      Row {error.rowNumber}: {error.message}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </PageSectionCard>
+
+      <PageSectionCard title="Create Warehouse Location">
+        <form onSubmit={handleSubmit}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '16px'
+            }}
+          >
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Warehouse Code</label>
+              <input value={values.warehouseCode} onChange={(e) => updateField('warehouseCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.warehouseCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.warehouseCode}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Warehouse Name</label>
+              <input value={values.warehouseName} onChange={(e) => updateField('warehouseName', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.warehouseName ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.warehouseName}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Location Code</label>
+              <input value={values.locationCode} onChange={(e) => updateField('locationCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.locationCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.locationCode}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Zone</label>
+              <input value={values.zone} onChange={(e) => updateField('zone', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.zone ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.zone}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Aisle</label>
+              <input value={values.aisle} onChange={(e) => updateField('aisle', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.aisle ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.aisle}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Level</label>
+              <input value={values.levelCode} onChange={(e) => updateField('levelCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.levelCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.levelCode}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Bin</label>
+              <input value={values.bin} onChange={(e) => updateField('bin', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.bin ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.bin}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Location Type</label>
+              <select value={values.locationType} onChange={(e) => updateField('locationType', e.target.value as WarehouseLocationFormValues['locationType'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+                <option value="rack">rack</option>
+                <option value="floor">floor</option>
+                <option value="bulk">bulk</option>
+                <option value="staging">staging</option>
+                <option value="quarantine">quarantine</option>
+                <option value="shelves">shelves</option>
+                <option value="island">island</option>
+              </select>
+              {errors.locationType ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.locationType}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Status</label>
+              <select value={values.status} onChange={(e) => updateField('status', e.target.value as WarehouseLocationFormValues['status'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+                <option value="empty">empty</option>
+                <option value="occupied">occupied</option>
+                <option value="blocked">blocked</option>
+              </select>
+              {errors.status ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.status}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Capacity Unit</label>
+              <select value={values.capacityUom} onChange={(e) => updateField('capacityUom', e.target.value as WarehouseLocationFormValues['capacityUom'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+                <option value="pallet">pallet</option>
+                <option value="pcs">pcs</option>
+                <option value="carton">carton</option>
+              </select>
+              <div style={{ marginTop: '8px', color: '#64748b', fontSize: '13px' }}>
+                Use <strong>pcs</strong> for outlet shelves, and <strong>carton</strong> for outlet buffer stock.
+              </div>
+              {errors.capacityUom ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.capacityUom}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>{getStorageCapacityLabel(values.capacityUom)}</label>
+              <input value={values.palletCapacity} onChange={(e) => updateField('palletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.palletCapacity ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.palletCapacity}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>{getUsedStorageCapacityLabel(values.capacityUom)}</label>
+              <input value={values.usedPalletCapacity} onChange={(e) => updateField('usedPalletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.usedPalletCapacity ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.usedPalletCapacity}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Cubic Capacity (m3)</label>
+              <input value={values.cubicCapacityM3} onChange={(e) => updateField('cubicCapacityM3', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.cubicCapacityM3 ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.cubicCapacityM3}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Used Cubic Capacity (m3)</label>
+              <input value={values.usedCubicCapacityM3} onChange={(e) => updateField('usedCubicCapacityM3', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.usedCubicCapacityM3 ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.usedCubicCapacityM3}</div> : null}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '28px' }}>
+              <input
+                id="isActive"
+                type="checkbox"
+                checked={values.isActive}
+                onChange={(e) => updateField('isActive', e.target.checked)}
+              />
+              <label htmlFor="isActive" style={{ fontWeight: 600 }}>Active</label>
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Notes</label>
+              <textarea value={values.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', resize: 'vertical' }} />
+              {errors.notes ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.notes}</div> : null}
+            </div>
+          </div>
+
+          {(createError || toggleError) ? (
+            <div
+              style={{
+                marginTop: '16px',
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {createError || toggleError}
+            </div>
+          ) : null}
+
+          <div style={{ marginTop: '20px' }}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                padding: '12px 16px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isSubmitting ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              {isSubmitting ? 'Creating...' : 'Create Location'}
+            </button>
+          </div>
+        </form>
+      </PageSectionCard>
+
+      <PageSectionCard title="Warehouse Location Summary">
+        <PageStatsGrid>
+          <PageStatCard label="Total Locations" value={total} />
+          <PageStatCard label="Active Locations" value={locationSummary.activeItems} />
+          <PageStatCard label="Empty Locations" value={locationSummary.emptyItems} />
+          <PageStatCard label="Occupied Locations" value={locationSummary.occupiedItems} />
+          <PageStatCard label="Blocked Locations" value={locationSummary.blockedItems} />
+        </PageStatsGrid>
+      </PageSectionCard>
+
+      <PageSectionCard title="Search & Filter">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px'
+          }}
+        >
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Site Scope</label>
+            <select
+              value={filters.siteScope || 'all'}
+              onChange={(e) => handleSiteScopeChange(e.target.value as WarehouseSiteScope)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="all">all</option>
+              <option value="warehouse">warehouse</option>
+              <option value="outlet">outlet</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Site</label>
+            <select
+              value={filters.warehouseCode || ''}
+              onChange={(e) => updateWarehouseCode(e.target.value)}
+              disabled={isSitesLoading}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="">{isSitesLoading ? 'Loading sites...' : 'All sites'}</option>
+              {filteredSites.map((site) => (
+                <option key={site.siteCode} value={site.siteCode}>
+                  {site.siteCode} â€” {site.siteName}
+                </option>
+              ))}
+            </select>
+            {sitesError ? (
+              <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '13px' }}>{sitesError}</div>
+            ) : selectedSite ? (
+              <div style={{ marginTop: '8px', color: '#64748b', fontSize: '13px' }}>
+                Selected: {selectedSite.siteCode} â€” {selectedSite.siteName}
+              </div>
+            ) : null}
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Search</label>
+            <input
+              value={filters.search || ''}
+              onChange={(e) => updateSearch(e.target.value)}
+              placeholder="Search location, zone, aisle, warehouse"
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Location Code</label>
+            <input
+              value={filters.locationCode || ''}
+              onChange={(e) => updateLocationCode(e.target.value)}
+              placeholder="Filter by exact/partial location code"
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Status</label>
+            <select
+              value={filters.status || 'all'}
+              onChange={(e) => updateStatus(e.target.value as any)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="all">All</option>
+              <option value="empty">empty</option>
+              <option value="occupied">occupied</option>
+              <option value="blocked">blocked</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Type</label>
+            <select
+              value={filters.type || 'all'}
+              onChange={(e) => updateType(e.target.value as any)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="all">All</option>
+              <option value="rack">rack</option>
+              <option value="floor">floor</option>
+              <option value="bulk">bulk</option>
+              <option value="staging">staging</option>
+              <option value="quarantine">quarantine</option>
+              <option value="shelves">shelves</option>
+              <option value="island">island</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Active</label>
+            <select
+              value={filters.active || 'all'}
+              onChange={(e) => updateActive(e.target.value as any)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="all">All</option>
+              <option value="active">active</option>
+              <option value="inactive">inactive</option>
+            </select>
+          </div>
+        </div>
+      </PageSectionCard>
+
+      <PageSectionCard title="Warehouse Location List" noPadding>
+        {isLoading ? (
+          <div style={{ padding: '24px', color: '#64748b' }}>Loading warehouse locations...</div>
+        ) : error ? (
+          <div style={{ padding: '24px', color: '#b91c1c' }}>{error}</div>
+        ) : items.length === 0 ? (
+          <div style={{ padding: '24px', color: '#64748b' }}>No warehouse locations found.</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Warehouse</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Location Code</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Zone / Aisle / Level / Bin</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Type</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Storage Capacity</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Active</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.id}>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ fontWeight: 700 }}>{item.warehouseCode}</div>
+                      <div>{item.warehouseName}</div>
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                      {item.locationCode}
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {item.zone} / {item.aisle} / {item.levelCode} / {item.bin}
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {item.locationType}
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '6px 10px',
+                          borderRadius: '999px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          ...getStatusStyle(item.status)
+                        }}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div>
+                        {getCapacityUnitLabel(item.capacityUom)}: {item.usedPalletCapacity} / {item.palletCapacity}
+                      </div>
+                      <div>M3: {item.usedCubicCapacityM3} / {item.cubicCapacityM3}</div>
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {item.isActive ? 'Yes' : 'No'}
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <button
+                        type="button"
+                        disabled={isToggling}
+                        onClick={() => void handleToggle(item)}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #cbd5e1',
+                          background: '#ffffff',
+                          fontWeight: 600
+                        }}
+                      >
+                        {item.isActive ? 'Set inactive' : 'Set active'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </PageSectionCard>
+    </div>
+  );
+}
+
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\features\warehouse\hooks\useWarehouseSummary.ts
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseSummary.ts
+
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { warehouseApi, type WarehouseSummaryFilters } from '../api';
+import type { WarehouseSiteScope, WarehouseUtilizationSummary } from '../types';
+
+const initialSummary: WarehouseUtilizationSummary = {
+  siteScope: 'all',
+  warehouseCode: null,
+  totalLocations: 0,
+  activeLocations: 0,
+  inactiveLocations: 0,
+  emptyLocations: 0,
+  occupiedLocations: 0,
+  blockedLocations: 0,
+  fullLocations: 0,
+  fullLocationPct: 0,
+  palletCapacityTotal: 0,
+  palletCapacityUsed: 0,
+  palletUtilizationPct: 0,
+  pcsCapacityTotal: 0,
+  pcsCapacityUsed: 0,
+  pcsUtilizationPct: 0,
+  cartonCapacityTotal: 0,
+  cartonCapacityUsed: 0,
+  cartonUtilizationPct: 0,
+  updatedAt: ''
+};
+
+export function useWarehouseSummary(externalFilters?: Partial<WarehouseSummaryFilters>) {
+  const [summary, setSummary] = useState<WarehouseUtilizationSummary>(initialSummary);
+  const [siteScope, setSiteScope] = useState<WarehouseSiteScope>(externalFilters?.siteScope ?? 'all');
+  const [warehouseCode, setWarehouseCode] = useState(externalFilters?.warehouseCode ?? '');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const resolvedSiteScope = externalFilters?.siteScope ?? siteScope;
+      const resolvedWarehouseCode =
+        externalFilters?.warehouseCode !== undefined
+          ? externalFilters.warehouseCode
+          : warehouseCode.trim() || undefined;
+
+      const data = await warehouseApi.getSummary({
+        search: externalFilters?.search,
+        locationCode: externalFilters?.locationCode,
+        status: externalFilters?.status,
+        type: externalFilters?.type,
+        active: externalFilters?.active,
+        siteScope: resolvedSiteScope,
+        warehouseCode: resolvedWarehouseCode
+      });
+
+      setSummary(data);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load warehouse summary');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    externalFilters?.search,
+    externalFilters?.locationCode,
+    externalFilters?.status,
+    externalFilters?.type,
+    externalFilters?.active,
+    externalFilters?.siteScope,
+    externalFilters?.warehouseCode,
+    siteScope,
+    warehouseCode
+  ]);
+
+  useEffect(() => {
+    if (externalFilters?.siteScope !== undefined) {
+      setSiteScope(externalFilters.siteScope);
+    }
+  }, [externalFilters?.siteScope]);
+
+  useEffect(() => {
+    if (externalFilters?.warehouseCode !== undefined) {
+      setWarehouseCode(externalFilters.warehouseCode);
+    }
+  }, [externalFilters?.warehouseCode]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return {
+    summary,
+    siteScope,
+    warehouseCode,
+    isLoading,
+    error,
+    setSiteScope,
+    setWarehouseCode,
+    refresh
+  };
+}
+
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\features\warehouse\hooks\useWarehouseSites.ts
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseSites.ts
+
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { warehouseApi } from '../api';
+import type { WarehouseSiteRecord } from '../types';
+
+export function useWarehouseSites() {
+  const [items, setItems] = useState<WarehouseSiteRecord[]>([]);
+  const [total, setTotal] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await warehouseApi.getSites();
+      setItems(response.items);
+      setTotal(response.total);
+    } catch (err: any) {
+      setItems([]);
+      setTotal(0);
+      setError(err?.message || 'Failed to load warehouse sites');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return {
+    items,
+    total,
+    isLoading,
+    error,
+    refresh
+  };
+}
+
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\features\warehouse\hooks\useWarehouseDrilldown.ts
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseDrilldown.ts
+
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { warehouseApi, type WarehouseSummaryFilters } from '../api';
+import type { WarehouseUtilizationDrilldown } from '../types';
+
+const initialDrilldown: WarehouseUtilizationDrilldown = {
+  siteScope: 'all',
+  warehouseCode: null,
+  byLocationType: [],
+  byZone: [],
+  updatedAt: ''
+};
+
+export function useWarehouseDrilldown(filters?: Partial<WarehouseSummaryFilters>) {
+  const [drilldown, setDrilldown] = useState<WarehouseUtilizationDrilldown>(initialDrilldown);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const data = await warehouseApi.getDrilldown({
+        search: filters?.search,
+        locationCode: filters?.locationCode,
+        status: filters?.status,
+        type: filters?.type,
+        active: filters?.active,
+        siteScope: filters?.siteScope,
+        warehouseCode: filters?.warehouseCode
+      });
+
+      setDrilldown(data);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load warehouse drilldown');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    filters?.search,
+    filters?.locationCode,
+    filters?.status,
+    filters?.type,
+    filters?.active,
+    filters?.siteScope,
+    filters?.warehouseCode
+  ]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return {
+    drilldown,
+    isLoading,
+    error,
+    refresh
+  };
+}
+
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src\features\warehouse\hooks\useWarehouseAlerts.ts
+################################################################################
+
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseAlerts.ts
+
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { warehouseApi, type WarehouseAlertFilters } from '../api';
+import type { WarehouseLocationAlertSummary } from '../types';
+
+const initialAlerts: WarehouseLocationAlertSummary = {
+  siteScope: 'all',
+  warehouseCode: null,
+  thresholdPct: 80,
+  totalAlertLocations: 0,
+  nearFullLocations: 0,
+  fullLocations: 0,
+  appliedThresholds: [],
+  items: [],
+  updatedAt: ''
+};
+
+export function useWarehouseAlerts(filters?: Partial<WarehouseAlertFilters>) {
+  const [alerts, setAlerts] = useState<WarehouseLocationAlertSummary>(initialAlerts);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const data = await warehouseApi.getAlerts({
+        search: filters?.search,
+        locationCode: filters?.locationCode,
+        status: filters?.status,
+        type: filters?.type,
+        active: filters?.active,
+        siteScope: filters?.siteScope,
+        warehouseCode: filters?.warehouseCode,
+        thresholdPct: filters?.thresholdPct
+      });
+
+      setAlerts(data);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load warehouse alerts');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    filters?.search,
+    filters?.locationCode,
+    filters?.status,
+    filters?.type,
+    filters?.active,
+    filters?.siteScope,
+    filters?.warehouseCode,
+    filters?.thresholdPct
+  ]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return {
+    alerts,
+    isLoading,
+    error,
+    refresh
+  };
+}
+
+
+############################## END OF FILE ######################################
+

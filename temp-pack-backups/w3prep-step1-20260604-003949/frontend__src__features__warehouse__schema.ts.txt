@@ -1,0 +1,163 @@
+﻿import type {
+  CreateWarehouseLocationRequest,
+  WarehouseCapacityUom,
+  WarehouseLocationFormErrors,
+  WarehouseLocationFormValues,
+  WarehouseLocationStatus,
+  WarehouseLocationType
+} from './types';
+
+const allowedTypes: WarehouseLocationType[] = [
+  'rack',
+  'floor',
+  'bulk',
+  'staging',
+  'quarantine',
+  'shelves',
+  'island'
+];
+const allowedStatuses: WarehouseLocationStatus[] = ['empty', 'occupied', 'blocked'];
+const allowedCapacityUom: WarehouseCapacityUom[] = ['pallet', 'pcs', 'carton'];
+
+function isBlank(value: string) {
+  return !value.trim();
+}
+
+function parseNonNegativeNumber(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+export const initialWarehouseLocationFormValues: WarehouseLocationFormValues = {
+  warehouseCode: '',
+  warehouseName: '',
+  locationCode: '',
+  zone: '',
+  aisle: '',
+  levelCode: '',
+  bin: '',
+  locationType: 'rack',
+  status: 'empty',
+  capacityUom: 'pallet',
+  palletCapacity: '0',
+  usedPalletCapacity: '0',
+  cubicCapacityM3: '0',
+  usedCubicCapacityM3: '0',
+  isActive: true,
+  notes: ''
+};
+
+export function validateWarehouseLocationForm(values: WarehouseLocationFormValues): {
+  isValid: boolean;
+  errors: WarehouseLocationFormErrors;
+} {
+  const errors: WarehouseLocationFormErrors = {};
+
+  if (isBlank(values.warehouseCode)) {
+    errors.warehouseCode = 'Warehouse Code is required';
+  } else if (values.warehouseCode.trim().length < 2 || values.warehouseCode.trim().length > 30) {
+    errors.warehouseCode = 'Warehouse Code must be between 2 and 30 characters';
+  }
+
+  if (isBlank(values.warehouseName)) {
+    errors.warehouseName = 'Warehouse Name is required';
+  } else if (values.warehouseName.trim().length < 2 || values.warehouseName.trim().length > 120) {
+    errors.warehouseName = 'Warehouse Name must be between 2 and 120 characters';
+  }
+
+  if (isBlank(values.locationCode)) {
+    errors.locationCode = 'Location Code is required';
+  } else if (values.locationCode.trim().length < 3 || values.locationCode.trim().length > 50) {
+    errors.locationCode = 'Location Code must be between 3 and 50 characters';
+  }
+
+  if (isBlank(values.zone)) {
+    errors.zone = 'Zone is required';
+  }
+
+  if (isBlank(values.aisle)) {
+    errors.aisle = 'Aisle is required';
+  }
+
+  if (isBlank(values.levelCode)) {
+    errors.levelCode = 'Level is required';
+  }
+
+  if (isBlank(values.bin)) {
+    errors.bin = 'Bin is required';
+  }
+
+  if (!allowedTypes.includes(values.locationType)) {
+    errors.locationType = 'Location Type is invalid';
+  }
+
+  if (!allowedStatuses.includes(values.status)) {
+    errors.status = 'Status is invalid';
+  }
+
+  if (!allowedCapacityUom.includes(values.capacityUom)) {
+    errors.capacityUom = 'Capacity Unit is invalid';
+  }
+
+  const palletCapacity = parseNonNegativeNumber(values.palletCapacity);
+  const usedPalletCapacity = parseNonNegativeNumber(values.usedPalletCapacity);
+  const cubicCapacityM3 = parseNonNegativeNumber(values.cubicCapacityM3);
+  const usedCubicCapacityM3 = parseNonNegativeNumber(values.usedCubicCapacityM3);
+
+  if (palletCapacity === null) {
+    errors.palletCapacity = 'Storage Capacity must be a valid number 0 or greater';
+  }
+
+  if (usedPalletCapacity === null) {
+    errors.usedPalletCapacity = 'Used Storage Capacity must be a valid number 0 or greater';
+  }
+
+  if (cubicCapacityM3 === null) {
+    errors.cubicCapacityM3 = 'Cubic Capacity (m3) must be a valid number 0 or greater';
+  }
+
+  if (usedCubicCapacityM3 === null) {
+    errors.usedCubicCapacityM3 = 'Used Cubic Capacity (m3) must be a valid number 0 or greater';
+  }
+
+  if (palletCapacity !== null && usedPalletCapacity !== null && usedPalletCapacity > palletCapacity) {
+    errors.usedPalletCapacity = 'Used Storage Capacity cannot exceed Storage Capacity';
+  }
+
+  if (cubicCapacityM3 !== null && usedCubicCapacityM3 !== null && usedCubicCapacityM3 > cubicCapacityM3) {
+    errors.usedCubicCapacityM3 = 'Used Cubic Capacity cannot exceed Cubic Capacity';
+  }
+
+  if (values.notes.trim().length > 250) {
+    errors.notes = 'Notes must be 250 characters or less';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+}
+
+export function mapWarehouseLocationFormToCreateRequest(
+  values: WarehouseLocationFormValues
+): CreateWarehouseLocationRequest {
+  return {
+    warehouseCode: values.warehouseCode.trim(),
+    warehouseName: values.warehouseName.trim(),
+    locationCode: values.locationCode.trim(),
+    zone: values.zone.trim(),
+    aisle: values.aisle.trim(),
+    levelCode: values.levelCode.trim(),
+    bin: values.bin.trim(),
+    locationType: values.locationType,
+    status: values.status,
+    capacityUom: values.capacityUom,
+    palletCapacity: Number(values.palletCapacity),
+    usedPalletCapacity: Number(values.usedPalletCapacity),
+    cubicCapacityM3: Number(values.cubicCapacityM3),
+    usedCubicCapacityM3: Number(values.usedCubicCapacityM3),
+    isActive: values.isActive,
+    notes: values.notes.trim()
+  };
+}
+

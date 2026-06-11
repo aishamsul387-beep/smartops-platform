@@ -1,0 +1,8 @@
+﻿REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+LABEL: frontend_diff_endpoints
+COMMAND: git diff -- src/services/api/endpoints.ts
+TIME: 2026-06-02 12:17:47
+
+----- OUTPUT START -----
+
+----- OUTPUT END -----

@@ -1,4 +1,4 @@
-export const ROUTES = {
+﻿export const ROUTES = {
   home: '/',
   login: '/login',
   unauthorized: '/unauthorized',
@@ -6,6 +6,7 @@ export const ROUTES = {
 
   inventory: '/inventory',
   inventoryCreate: '/inventory/create',
+  inventoryTransfers: '/inventory/transfers',
   batches: '/batches',
   stockControl: '/stock-control',
 

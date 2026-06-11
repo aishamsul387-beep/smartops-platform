@@ -1,0 +1,1907 @@
+﻿SmartOps WMS AI - W2.2 Required Source For Chat
+Generated At: 2026-06-02 12:29:02
+
+IMPORTANT:
+- Copy the content between START CHAT DUMP and END CHAT DUMP
+- Paste it back into chat
+- If too long, paste it in 2 or 3 messages
+- Do NOT stage this file
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+
+################################################################################
+FILE: src/features/warehouse/types.ts
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\types.ts
+################################################################################
+
+export type WarehouseLocationStatus = 'empty' | 'occupied' | 'blocked';
+export type WarehouseLocationType = 'rack' | 'floor' | 'bulk' | 'staging' | 'quarantine';
+
+export interface WarehouseLocationRecord {
+  id: string;
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface WarehouseLocationListResponse {
+  items: WarehouseLocationRecord[];
+  total: number;
+}
+
+export interface WarehouseLocationImportResult {
+  inserted: number;
+  updated: number;
+  skipped: number;
+  errors: Array<{
+    rowNumber: number;
+    message: string;
+  }>;
+}
+
+export interface WarehouseLocationListFilters {
+  search?: string;
+  status?: 'all' | WarehouseLocationStatus;
+  type?: 'all' | WarehouseLocationType;
+  active?: 'all' | 'active' | 'inactive';
+}
+
+export interface CreateWarehouseLocationRequest {
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
+}
+
+export interface UpdateWarehouseLocationRequest extends CreateWarehouseLocationRequest {
+  id: string;
+}
+
+export interface WarehouseLocationFormValues {
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  palletCapacity: string;
+  usedPalletCapacity: string;
+  cubicCapacityM3: string;
+  usedCubicCapacityM3: string;
+  isActive: boolean;
+  notes: string;
+}
+
+export type WarehouseLocationFormErrors = Partial<Record<keyof WarehouseLocationFormValues, string>>;
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src/features/warehouse/api.ts
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\api.ts
+################################################################################
+
+import { apiClient } from '@/services/api/client';
+import { ENDPOINTS } from '@/services/api/endpoints';
+import { mapWarehouseLocation, mapWarehouseLocationListResponse } from './mapper';
+import type {
+  CreateWarehouseLocationRequest,
+  UpdateWarehouseLocationRequest,
+  WarehouseLocationImportResult,
+  WarehouseLocationListFilters
+} from './types';
+
+function buildWarehouseLocationListUrl(filters: WarehouseLocationListFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  if (filters.type && filters.type !== 'all') {
+    query.set('type', filters.type);
+  }
+
+  if (filters.active && filters.active !== 'all') {
+    query.set('active', filters.active);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${ENDPOINTS.warehouse.locations}?${queryString}` : ENDPOINTS.warehouse.locations;
+}
+
+export const warehouseApi = {
+  async getLocations(filters: WarehouseLocationListFilters = {}) {
+    const response = await apiClient.get<any>(buildWarehouseLocationListUrl(filters));
+    return mapWarehouseLocationListResponse(response.data);
+  },
+
+  async getLocationById(id: string) {
+    const response = await apiClient.get<any>(ENDPOINTS.warehouse.locationDetail(id));
+    return mapWarehouseLocation(response.data);
+  },
+
+  async createLocation(payload: CreateWarehouseLocationRequest) {
+    const response = await apiClient.post<any>(ENDPOINTS.warehouse.createLocation, payload);
+    return mapWarehouseLocation(response.data);
+  },
+
+  async updateLocation(id: string, payload: Omit<UpdateWarehouseLocationRequest, 'id'>) {
+    const response = await apiClient.put<any>(ENDPOINTS.warehouse.updateLocation(id), payload);
+    return mapWarehouseLocation(response.data);
+  },
+
+  async toggleLocationActive(id: string, isActive: boolean) {
+    const response = await apiClient.patch<any>(ENDPOINTS.warehouse.toggleLocationActive(id), {
+      isActive
+    });
+    return mapWarehouseLocation(response.data);
+  },
+
+  async importLocationsCsv(csvText: string): Promise<WarehouseLocationImportResult> {
+    const response = await apiClient.post<any>(ENDPOINTS.warehouse.importCsv, {
+      csvText
+    });
+    return response.data;
+  },
+
+  async exportLocationsCsv(): Promise<string> {
+    const response = await apiClient.get<any>(ENDPOINTS.warehouse.exportCsv);
+    return typeof response.data === 'string' ? response.data : String(response.data ?? '');
+  }
+};
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src/features/warehouse/screens/WarehouseLocationMasterScreen.tsx
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseLocationMasterScreen.tsx
+################################################################################
+
+'use client';
+
+import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { PageHeaderCard, PageSectionCard, PageStatCard, PageStatsGrid } from '@/components/layout/PageShell';
+import { useCreateWarehouseLocation } from '../hooks/useCreateWarehouseLocation';
+import { useToggleWarehouseLocationActive } from '../hooks/useToggleWarehouseLocationActive';
+import { useWarehouseLocations } from '../hooks/useWarehouseLocations';
+import {
+  initialWarehouseLocationFormValues,
+  mapWarehouseLocationFormToCreateRequest,
+  validateWarehouseLocationForm
+} from '../schema';
+import { warehouseApi } from '../api';
+import type {
+  WarehouseLocationFormErrors,
+  WarehouseLocationFormValues,
+  WarehouseLocationImportResult,
+  WarehouseLocationRecord
+} from '../types';
+
+function getStatusStyle(status: string) {
+  if (status === 'empty') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'occupied') {
+    return {
+      background: '#dbeafe',
+      color: '#1d4ed8',
+      border: '1px solid #bfdbfe'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+function csvEscape(value: unknown) {
+  const text = String(value ?? '');
+  if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+function downloadTextFile(content: string, fileName: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function buildWarehouseLocationTemplateCsv() {
+  const header = [
+    'warehouseCode',
+    'warehouseName',
+    'locationCode',
+    'zone',
+    'aisle',
+    'levelCode',
+    'bin',
+    'locationType',
+    'status',
+    'palletCapacity',
+    'usedPalletCapacity',
+    'cubicCapacityM3',
+    'usedCubicCapacityM3',
+    'isActive',
+    'notes'
+  ];
+
+  const sampleRows = [
+    [
+      'WH-001',
+      'Main Warehouse',
+      'A-01-01-01',
+      'A',
+      '01',
+      '01',
+      '01',
+      'rack',
+      'empty',
+      '4',
+      '0',
+      '12',
+      '0',
+      'true',
+      'Sample rack location'
+    ],
+    [
+      'WH-002',
+      'Overflow Warehouse',
+      'B-02-04-02',
+      'B',
+      '02',
+      '04',
+      '02',
+      'bulk',
+      'occupied',
+      '6',
+      '2',
+      '18',
+      '6',
+      'true',
+      'Sample bulk location'
+    ]
+  ];
+
+  return [
+    header.join(','),
+    ...sampleRows.map((row) => row.map(csvEscape).join(','))
+  ].join('\n');
+}
+
+function buildWarehouseLocationExportCsv(items: WarehouseLocationRecord[]) {
+  const header = [
+    'warehouseCode',
+    'warehouseName',
+    'locationCode',
+    'zone',
+    'aisle',
+    'levelCode',
+    'bin',
+    'locationType',
+    'status',
+    'palletCapacity',
+    'usedPalletCapacity',
+    'cubicCapacityM3',
+    'usedCubicCapacityM3',
+    'isActive',
+    'notes'
+  ];
+
+  const rows = items.map((item) =>
+    [
+      item.warehouseCode,
+      item.warehouseName,
+      item.locationCode,
+      item.zone,
+      item.aisle,
+      item.levelCode,
+      item.bin,
+      item.locationType,
+      item.status,
+      item.palletCapacity,
+      item.usedPalletCapacity,
+      item.cubicCapacityM3,
+      item.usedCubicCapacityM3,
+      item.isActive,
+      item.notes
+    ]
+      .map(csvEscape)
+      .join(',')
+  );
+
+  return [header.join(','), ...rows].join('\n');
+}
+
+export function WarehouseLocationMasterScreen() {
+  const {
+    items,
+    total,
+    filters,
+    isLoading,
+    error,
+    updateSearch,
+    updateStatus,
+    updateType,
+    updateActive,
+    refresh
+  } = useWarehouseLocations();
+
+  const { createLocation, isSubmitting, error: createError } = useCreateWarehouseLocation();
+  const { toggleActive, isSubmitting: isToggling, error: toggleError } = useToggleWarehouseLocationActive();
+
+  const [values, setValues] = useState<WarehouseLocationFormValues>(initialWarehouseLocationFormValues);
+  const [errors, setErrors] = useState<WarehouseLocationFormErrors>({});
+
+  const [csvText, setCsvText] = useState('');
+  const [pendingCsvText, setPendingCsvText] = useState('');
+  const [selectedCsvFileName, setSelectedCsvFileName] = useState<string | null>(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
+
+  const [importResult, setImportResult] = useState<WarehouseLocationImportResult | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
+
+  const summary = useMemo(() => {
+    const activeItems = items.filter((item) => item.isActive).length;
+    const emptyItems = items.filter((item) => item.status === 'empty').length;
+    const occupiedItems = items.filter((item) => item.status === 'occupied').length;
+    const blockedItems = items.filter((item) => item.status === 'blocked').length;
+
+    return {
+      activeItems,
+      emptyItems,
+      occupiedItems,
+      blockedItems
+    };
+  }, [items]);
+
+  function updateField<K extends keyof WarehouseLocationFormValues>(
+    field: K,
+    value: WarehouseLocationFormValues[K]
+  ) {
+    setValues((current) => ({
+      ...current,
+      [field]: value
+    }));
+
+    setErrors((current) => ({
+      ...current,
+      [field]: undefined
+    }));
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const result = validateWarehouseLocationForm(values);
+    setErrors(result.errors);
+
+    if (!result.isValid) {
+      return;
+    }
+
+    try {
+      await createLocation(mapWarehouseLocationFormToCreateRequest(values));
+      setValues(initialWarehouseLocationFormValues);
+      await refresh();
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  async function handleToggle(item: WarehouseLocationRecord) {
+    try {
+      await toggleActive(item.id, !item.isActive);
+      await refresh();
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleCsvFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setSelectedCsvFileName(null);
+      setPendingCsvText('');
+      return;
+    }
+
+    setSelectedCsvFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPendingCsvText(String(reader.result ?? ''));
+    };
+    reader.readAsText(file);
+  }
+
+  function handleConfirmAttachedFile() {
+    setCsvText(pendingCsvText);
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  function handleRemoveAttachedFile() {
+    setSelectedCsvFileName(null);
+    setPendingCsvText('');
+    setCsvText('');
+    setFileInputKey((current) => current + 1);
+    setImportResult(null);
+    setImportError(null);
+  }
+
+  async function handleImportCsv() {
+    try {
+      setIsImporting(true);
+      setImportError(null);
+      const result = await warehouseApi.importLocationsCsv(csvText);
+      setImportResult(result);
+      await refresh();
+    } catch (err: any) {
+      setImportResult(null);
+      setImportError(err?.message || 'Failed to import CSV');
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  async function handleExportCsv() {
+    try {
+      setIsExporting(true);
+      const csv = buildWarehouseLocationExportCsv(items);
+      downloadTextFile(csv, 'warehouse-locations.csv', 'text/csv;charset=utf-8;');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  async function handleDownloadTemplate() {
+    try {
+      setIsDownloadingTemplate(true);
+      const csv = buildWarehouseLocationTemplateCsv();
+      downloadTextFile(csv, 'warehouse-locations-template.csv', 'text/csv;charset=utf-8;');
+    } finally {
+      setIsDownloadingTemplate(false);
+    }
+  }
+
+  return (
+    <div className="container">
+      <PageHeaderCard
+        title="Warehouse Location Master"
+        description="Master location setup for storage, inventory control, receiving, and future capacity analytics."
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Refresh
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleDownloadTemplate()}
+              disabled={isDownloadingTemplate}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                cursor: isDownloadingTemplate ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isDownloadingTemplate ? 'Preparing...' : 'Download CSV Template'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleExportCsv()}
+              disabled={isExporting}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isExporting ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                cursor: isExporting ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isExporting ? 'Exporting...' : 'Export CSV'}
+            </button>
+          </>
+        }
+      />
+
+      <PageSectionCard
+        title="Import Warehouse Locations CSV"
+        description="Upload or paste CSV content to create/update location master records in bulk."
+      >
+        <div style={{ display: 'grid', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Upload CSV File
+            </label>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                key={fileInputKey}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleCsvFileChange}
+              />
+
+              <button
+                type="button"
+                onClick={handleConfirmAttachedFile}
+                disabled={!pendingCsvText.trim()}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: !pendingCsvText.trim() ? '#94a3b8' : '#0f172a',
+                  color: '#ffffff',
+                  cursor: !pendingCsvText.trim() ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Confirm Attached File
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRemoveAttachedFile}
+                disabled={!selectedCsvFileName}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: !selectedCsvFileName ? '#94a3b8' : '#334155',
+                  cursor: !selectedCsvFileName ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Remove File
+              </button>
+            </div>
+
+            {selectedCsvFileName ? (
+              <div style={{ marginTop: '8px', color: '#475569', fontSize: '14px' }}>
+                Attached file: <strong>{selectedCsvFileName}</strong>
+              </div>
+            ) : null}
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              CSV Content
+            </label>
+            <textarea
+              value={csvText}
+              onChange={(e) => setCsvText(e.target.value)}
+              rows={8}
+              placeholder="warehouseCode,warehouseName,locationCode,zone,aisle,levelCode,bin,locationType,status,palletCapacity,usedPalletCapacity,cubicCapacityM3,usedCubicCapacityM3,isActive,notes"
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => void handleImportCsv()}
+              disabled={isImporting || !csvText.trim()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isImporting || !csvText.trim() ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                cursor: isImporting || !csvText.trim() ? 'not-allowed' : 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {isImporting ? 'Importing...' : 'Import CSV'}
+            </button>
+          </div>
+
+          {importError ? (
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {importError}
+            </div>
+          ) : null}
+
+          {importResult ? (
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                color: '#334155'
+              }}
+            >
+              <div><strong>Inserted:</strong> {importResult.inserted}</div>
+              <div><strong>Updated:</strong> {importResult.updated}</div>
+              <div><strong>Skipped:</strong> {importResult.skipped}</div>
+              {importResult.errors.length > 0 ? (
+                <div style={{ marginTop: '8px', color: '#b91c1c' }}>
+                  {importResult.errors.map((error, index) => (
+                    <div key={index}>
+                      Row {error.rowNumber}: {error.message}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </PageSectionCard>
+
+      <PageSectionCard title="Create Warehouse Location">
+        <form onSubmit={handleSubmit}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '16px'
+            }}
+          >
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Warehouse Code</label>
+              <input value={values.warehouseCode} onChange={(e) => updateField('warehouseCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.warehouseCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.warehouseCode}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Warehouse Name</label>
+              <input value={values.warehouseName} onChange={(e) => updateField('warehouseName', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.warehouseName ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.warehouseName}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Location Code</label>
+              <input value={values.locationCode} onChange={(e) => updateField('locationCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.locationCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.locationCode}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Zone</label>
+              <input value={values.zone} onChange={(e) => updateField('zone', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.zone ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.zone}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Aisle</label>
+              <input value={values.aisle} onChange={(e) => updateField('aisle', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.aisle ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.aisle}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Level</label>
+              <input value={values.levelCode} onChange={(e) => updateField('levelCode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.levelCode ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.levelCode}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Bin</label>
+              <input value={values.bin} onChange={(e) => updateField('bin', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.bin ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.bin}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Location Type</label>
+              <select value={values.locationType} onChange={(e) => updateField('locationType', e.target.value as WarehouseLocationFormValues['locationType'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+                <option value="rack">rack</option>
+                <option value="floor">floor</option>
+                <option value="bulk">bulk</option>
+                <option value="staging">staging</option>
+                <option value="quarantine">quarantine</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Status</label>
+              <select value={values.status} onChange={(e) => updateField('status', e.target.value as WarehouseLocationFormValues['status'])} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}>
+                <option value="empty">empty</option>
+                <option value="occupied">occupied</option>
+                <option value="blocked">blocked</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Pallet Capacity</label>
+              <input value={values.palletCapacity} onChange={(e) => updateField('palletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.palletCapacity ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.palletCapacity}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Used Pallet Capacity</label>
+              <input value={values.usedPalletCapacity} onChange={(e) => updateField('usedPalletCapacity', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.usedPalletCapacity ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.usedPalletCapacity}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Cubic Capacity (m3)</label>
+              <input value={values.cubicCapacityM3} onChange={(e) => updateField('cubicCapacityM3', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.cubicCapacityM3 ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.cubicCapacityM3}</div> : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Used Cubic Capacity (m3)</label>
+              <input value={values.usedCubicCapacityM3} onChange={(e) => updateField('usedCubicCapacityM3', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+              {errors.usedCubicCapacityM3 ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.usedCubicCapacityM3}</div> : null}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '28px' }}>
+              <input
+                id="isActive"
+                type="checkbox"
+                checked={values.isActive}
+                onChange={(e) => updateField('isActive', e.target.checked)}
+              />
+              <label htmlFor="isActive" style={{ fontWeight: 600 }}>Active</label>
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Notes</label>
+              <textarea value={values.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', resize: 'vertical' }} />
+            </div>
+          </div>
+
+          {(createError || toggleError) ? (
+            <div
+              style={{
+                marginTop: '16px',
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {createError || toggleError}
+            </div>
+          ) : null}
+
+          <div style={{ marginTop: '20px' }}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                padding: '12px 16px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isSubmitting ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              {isSubmitting ? 'Creating...' : 'Create Location'}
+            </button>
+          </div>
+        </form>
+      </PageSectionCard>
+
+      <PageSectionCard title="Warehouse Location Summary">
+        <PageStatsGrid>
+          <PageStatCard label="Total Locations" value={total} />
+          <PageStatCard label="Active Locations" value={summary.activeItems} />
+          <PageStatCard label="Empty Locations" value={summary.emptyItems} />
+          <PageStatCard label="Occupied Locations" value={summary.occupiedItems} />
+          <PageStatCard label="Blocked Locations" value={summary.blockedItems} />
+        </PageStatsGrid>
+      </PageSectionCard>
+
+      <PageSectionCard title="Search & Filter">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px'
+          }}
+        >
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Search</label>
+            <input
+              value={filters.search || ''}
+              onChange={(e) => updateSearch(e.target.value)}
+              placeholder="Search location, zone, aisle, warehouse"
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Status</label>
+            <select
+              value={filters.status || 'all'}
+              onChange={(e) => updateStatus(e.target.value as any)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="all">All</option>
+              <option value="empty">empty</option>
+              <option value="occupied">occupied</option>
+              <option value="blocked">blocked</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Type</label>
+            <select
+              value={filters.type || 'all'}
+              onChange={(e) => updateType(e.target.value as any)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="all">All</option>
+              <option value="rack">rack</option>
+              <option value="floor">floor</option>
+              <option value="bulk">bulk</option>
+              <option value="staging">staging</option>
+              <option value="quarantine">quarantine</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Active</label>
+            <select
+              value={filters.active || 'all'}
+              onChange={(e) => updateActive(e.target.value as any)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff' }}
+            >
+              <option value="all">All</option>
+              <option value="active">active</option>
+              <option value="inactive">inactive</option>
+            </select>
+          </div>
+        </div>
+      </PageSectionCard>
+
+      <PageSectionCard title="Warehouse Location List" noPadding>
+        {isLoading ? (
+          <div style={{ padding: '24px', color: '#64748b' }}>Loading warehouse locations...</div>
+        ) : error ? (
+          <div style={{ padding: '24px', color: '#b91c1c' }}>{error}</div>
+        ) : items.length === 0 ? (
+          <div style={{ padding: '24px', color: '#64748b' }}>No warehouse locations found.</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Warehouse</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Location Code</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Zone / Aisle / Level / Bin</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Type</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Capacity</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Active</th>
+                  <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.id}>
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ fontWeight: 700 }}>{item.warehouseCode}</div>
+                      <div>{item.warehouseName}</div>
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
+                      {item.locationCode}
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {item.zone} / {item.aisle} / {item.levelCode} / {item.bin}
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {item.locationType}
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '6px 10px',
+                          borderRadius: '999px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          ...getStatusStyle(item.status)
+                        }}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <div>Pallet: {item.usedPalletCapacity} / {item.palletCapacity}</div>
+                      <div>M3: {item.usedCubicCapacityM3} / {item.cubicCapacityM3}</div>
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      {item.isActive ? 'Yes' : 'No'}
+                    </td>
+
+                    <td style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>
+                      <button
+                        type="button"
+                        disabled={isToggling}
+                        onClick={() => void handleToggle(item)}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #cbd5e1',
+                          background: '#ffffff',
+                          fontWeight: 600
+                        }}
+                      >
+                        {item.isActive ? 'Set inactive' : 'Set active'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </PageSectionCard>
+    </div>
+  );
+}
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src/services/api/endpoints.ts
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\services\api\endpoints.ts
+################################################################################
+
+export const ENDPOINTS = {
+  auth: {
+    login: '/auth/login',
+    logout: '/auth/logout',
+    me: '/auth/me',
+    refresh: '/auth/refresh'
+  },
+  dashboard: {
+    summary: '/dashboard/summary'
+  },
+  inventory: {
+    list: '/inventory',
+    detail: (id: string) => `/inventory/${id}`,
+    create: '/inventory',
+    update: (id: string) => `/inventory/${id}`,
+    toggleActive: (id: string) => `/inventory/${id}/active`
+  },
+  batches: {
+    list: '/batches',
+    detail: (id: string) => `/batches/${id}`,
+    create: '/batches'
+  },
+  stockControl: {
+    summary: '/stock-control/summary',
+    alerts: '/stock-control/alerts',
+    reorderSuggestions: '/stock-control/reorder-suggestions',
+    procurementActions: '/stock-control/procurement-actions',
+    createDraftPurchaseOrderFromSuggestion: (inventoryItemId: string) =>
+      `/stock-control/reorder-suggestions/${inventoryItemId}/create-po-draft`,
+    movements: '/stock-control/movements',
+    movementsByInventory: (inventoryItemId: string) =>
+      `/stock-control/movements/inventory/${inventoryItemId}`,
+    movementsByBatch: (batchId: string) => `/stock-control/movements/batch/${batchId}`,
+    issuePreview: '/stock-control/issue-preview',
+    createIssue: '/stock-control/issues'
+  },
+  warehouse: {
+    summary: '/warehouse/summary',
+    locations: '/warehouse/locations',
+    locationDetail: (id: string) => `/warehouse/locations/${id}`,
+    createLocation: '/warehouse/locations',
+    updateLocation: (id: string) => `/warehouse/locations/${id}`,
+    toggleLocationActive: (id: string) => `/warehouse/locations/${id}/active`,
+    importCsv: '/warehouse/locations/import-csv',
+    exportCsv: '/warehouse/locations/export-csv'
+  },
+  tasks: {
+    list: '/tasks',
+    detail: (id: string) => `/tasks/${id}`,
+    updateStatus: (id: string) => `/tasks/${id}/status`
+  },
+  orders: {
+    summary: '/orders/summary',
+    quotations: '/orders/quotations',
+    purchaseOrders: '/orders/purchase-orders',
+    purchaseOrderDetail: (id: string) => `/orders/purchase-orders/${id}`,
+    createPurchaseOrder: '/orders/purchase-orders',
+    issuePurchaseOrder: (id: string) => `/orders/purchase-orders/${id}/issue`,
+    goodsReceivedNotes: '/orders/goods-received-notes',
+    goodsReceivedNoteDetail: (id: string) => `/orders/goods-received-notes/${id}`,
+    createGoodsReceivedNote: '/orders/goods-received-notes',
+    supplierInvoices: '/orders/supplier-invoices',
+    supplierCreditNotes: '/orders/supplier-credit-notes',
+    returns: '/orders/returns'
+  },
+  uom: {
+    list: '/uom',
+    create: '/uom',
+    update: (id: string) => `/uom/${id}`,
+    toggleActive: (id: string) => `/uom/${id}/active`,
+    conversionGroups: '/uom/conversion-groups',
+    updateConversionGroup: (id: string) => `/uom/conversion-groups/${id}`,
+    toggleConversionGroupActive: (id: string) => `/uom/conversion-groups/${id}/active`,
+    conversionGroupLines: (id: string) => `/uom/conversion-groups/${id}/lines`,
+    createConversionLine: (groupId: string) => `/uom/conversion-groups/${groupId}/lines`,
+    updateConversionLine: (groupId: string, lineId: string) =>
+      `/uom/conversion-groups/${groupId}/lines/${lineId}`,
+    toggleConversionLineActive: (groupId: string, lineId: string) =>
+      `/uom/conversion-groups/${groupId}/lines/${lineId}/active`
+  },
+  reports: {
+    list: '/reports'
+  },
+  ai: {
+    chat: '/ai/chat'
+  }
+} as const;
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src/modules/warehouse/store.ts
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\warehouse\store.ts
+################################################################################
+
+export type WarehouseLocationStatus = 'empty' | 'occupied' | 'blocked';
+export type WarehouseLocationType =
+  | 'rack'
+  | 'floor'
+  | 'bulk'
+  | 'staging'
+  | 'quarantine'
+  | 'shelves'
+  | 'island';
+
+export interface WarehouseLocationRecord {
+  id: string;
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface CreateWarehouseLocationInput {
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
+}
+
+export interface UpdateWarehouseLocationInput extends CreateWarehouseLocationInput {
+  id: string;
+}
+
+export interface WarehouseLocationImportResult {
+  inserted: number;
+  updated: number;
+  skipped: number;
+  errors: Array<{
+    rowNumber: number;
+    message: string;
+  }>;
+}
+
+let warehouseLocationStore: WarehouseLocationRecord[] = [
+  {
+    id: 'loc-001',
+    warehouseCode: 'WH-001',
+    warehouseName: 'Main Warehouse',
+    locationCode: 'A-01-01-01',
+    zone: 'A',
+    aisle: '01',
+    levelCode: '01',
+    bin: '01',
+    locationType: 'rack',
+    status: 'occupied',
+    palletCapacity: 4,
+    usedPalletCapacity: 2,
+    cubicCapacityM3: 12,
+    usedCubicCapacityM3: 6,
+    isActive: true,
+    notes: 'Primary raw material rack',
+    updatedAt: '2026-05-28T08:00:00.000Z'
+  },
+  {
+    id: 'loc-002',
+    warehouseCode: 'WH-001',
+    warehouseName: 'Main Warehouse',
+    locationCode: 'B-02-04-02',
+    zone: 'B',
+    aisle: '02',
+    levelCode: '04',
+    bin: '02',
+    locationType: 'shelves',
+    status: 'empty',
+    palletCapacity: 6,
+    usedPalletCapacity: 0,
+    cubicCapacityM3: 18,
+    usedCubicCapacityM3: 0,
+    isActive: true,
+    notes: 'Packaging reserve location',
+    updatedAt: '2026-05-28T08:10:00.000Z'
+  },
+  {
+    id: 'loc-003',
+    warehouseCode: 'OUT-001',
+    warehouseName: 'Outlet 1',
+    locationCode: 'IS-01-01-01',
+    zone: 'IS',
+    aisle: '01',
+    levelCode: '01',
+    bin: '01',
+    locationType: 'island',
+    status: 'blocked',
+    palletCapacity: 2,
+    usedPalletCapacity: 1,
+    cubicCapacityM3: 5,
+    usedCubicCapacityM3: 2,
+    isActive: true,
+    notes: 'Outlet display island',
+    updatedAt: '2026-05-28T08:20:00.000Z'
+  }
+];
+
+function matchesSearch(values: string[], search?: string) {
+  const normalized = String(search ?? '').trim().toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return values.some((value) => value.toLowerCase().includes(normalized));
+}
+
+function normalizeStatus(value: string): WarehouseLocationStatus {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === 'empty' || normalized === 'occupied' || normalized === 'blocked') {
+    return normalized;
+  }
+
+  throw new Error('status must be one of: empty, occupied, blocked');
+}
+
+function normalizeType(value: string): WarehouseLocationType {
+  const normalized = value.trim().toLowerCase();
+
+  if (
+    normalized === 'rack' ||
+    normalized === 'floor' ||
+    normalized === 'bulk' ||
+    normalized === 'staging' ||
+    normalized === 'quarantine' ||
+    normalized === 'shelves' ||
+    normalized === 'island'
+  ) {
+    return normalized;
+  }
+
+  throw new Error('locationType must be one of: rack, floor, bulk, staging, quarantine, shelves, island');
+}
+
+function toNumber(value: string, field: string, min = 0) {
+  const parsed = Number(value);
+
+  if (Number.isNaN(parsed) || parsed < min) {
+    throw new Error(`${field} must be a valid number ${min} or greater`);
+  }
+
+  return parsed;
+}
+
+function toBoolean(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'active';
+}
+
+function splitCsvLine(line: string) {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  result.push(current);
+  return result.map((item) => item.trim());
+}
+
+function csvEscape(value: unknown) {
+  const text = String(value ?? '');
+  if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+export function listWarehouseLocations(filters?: {
+  search?: string;
+  status?: string;
+  type?: string;
+  active?: string;
+}) {
+  return warehouseLocationStore.filter((item) => {
+    const okSearch = matchesSearch(
+      [
+        item.warehouseCode,
+        item.warehouseName,
+        item.locationCode,
+        item.zone,
+        item.aisle,
+        item.levelCode,
+        item.bin,
+        item.locationType,
+        item.status
+      ],
+      filters?.search
+    );
+
+    const status = String(filters?.status ?? '').trim();
+    const okStatus = !status || status === 'all' || item.status === status;
+
+    const type = String(filters?.type ?? '').trim();
+    const okType = !type || type === 'all' || item.locationType === type;
+
+    const active = String(filters?.active ?? '').trim();
+    const okActive =
+      !active ||
+      active === 'all' ||
+      (active === 'active' && item.isActive) ||
+      (active === 'inactive' && !item.isActive);
+
+    return okSearch && okStatus && okType && okActive;
+  });
+}
+
+export function getWarehouseLocationById(id: string) {
+  return warehouseLocationStore.find((item) => item.id === id) ?? null;
+}
+
+export function createWarehouseLocation(input: CreateWarehouseLocationInput) {
+  const record: WarehouseLocationRecord = {
+    id: 'loc-' + Date.now(),
+    warehouseCode: input.warehouseCode,
+    warehouseName: input.warehouseName,
+    locationCode: input.locationCode,
+    zone: input.zone,
+    aisle: input.aisle,
+    levelCode: input.levelCode,
+    bin: input.bin,
+    locationType: input.locationType,
+    status: input.status,
+    palletCapacity: input.palletCapacity,
+    usedPalletCapacity: input.usedPalletCapacity,
+    cubicCapacityM3: input.cubicCapacityM3,
+    usedCubicCapacityM3: input.usedCubicCapacityM3,
+    isActive: input.isActive,
+    notes: input.notes,
+    updatedAt: new Date().toISOString()
+  };
+
+  warehouseLocationStore = [record, ...warehouseLocationStore];
+  return record;
+}
+
+export function updateWarehouseLocation(input: UpdateWarehouseLocationInput) {
+  const index = warehouseLocationStore.findIndex((item) => item.id === input.id);
+
+  if (index === -1) {
+    return null;
+  }
+
+  const updated: WarehouseLocationRecord = {
+    id: input.id,
+    warehouseCode: input.warehouseCode,
+    warehouseName: input.warehouseName,
+    locationCode: input.locationCode,
+    zone: input.zone,
+    aisle: input.aisle,
+    levelCode: input.levelCode,
+    bin: input.bin,
+    locationType: input.locationType,
+    status: input.status,
+    palletCapacity: input.palletCapacity,
+    usedPalletCapacity: input.usedPalletCapacity,
+    cubicCapacityM3: input.cubicCapacityM3,
+    usedCubicCapacityM3: input.usedCubicCapacityM3,
+    isActive: input.isActive,
+    notes: input.notes,
+    updatedAt: new Date().toISOString()
+  };
+
+  warehouseLocationStore[index] = updated;
+  return updated;
+}
+
+export function toggleWarehouseLocationActive(id: string, isActive: boolean) {
+  const item = warehouseLocationStore.find((row) => row.id === id);
+
+  if (!item) {
+    return null;
+  }
+
+  item.isActive = isActive;
+  item.updatedAt = new Date().toISOString();
+  return item;
+}
+
+export function exportWarehouseLocationsCsv() {
+  const header = [
+    'warehouseCode',
+    'warehouseName',
+    'locationCode',
+    'zone',
+    'aisle',
+    'levelCode',
+    'bin',
+    'locationType',
+    'status',
+    'palletCapacity',
+    'usedPalletCapacity',
+    'cubicCapacityM3',
+    'usedCubicCapacityM3',
+    'isActive',
+    'notes'
+  ].join(',');
+
+  const rows = warehouseLocationStore.map((item) =>
+    [
+      csvEscape(item.warehouseCode),
+      csvEscape(item.warehouseName),
+      csvEscape(item.locationCode),
+      csvEscape(item.zone),
+      csvEscape(item.aisle),
+      csvEscape(item.levelCode),
+      csvEscape(item.bin),
+      csvEscape(item.locationType),
+      csvEscape(item.status),
+      csvEscape(item.palletCapacity),
+      csvEscape(item.usedPalletCapacity),
+      csvEscape(item.cubicCapacityM3),
+      csvEscape(item.usedCubicCapacityM3),
+      csvEscape(item.isActive),
+      csvEscape(item.notes)
+    ].join(',')
+  );
+
+  return [header, ...rows].join('\n');
+}
+
+export function importWarehouseLocationsCsv(csvText: string): WarehouseLocationImportResult {
+  const lines = csvText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) {
+    throw new Error('CSV must contain a header row and at least one data row');
+  }
+
+  const header = splitCsvLine(lines[0]);
+  const expectedHeader = [
+    'warehouseCode',
+    'warehouseName',
+    'locationCode',
+    'zone',
+    'aisle',
+    'levelCode',
+    'bin',
+    'locationType',
+    'status',
+    'palletCapacity',
+    'usedPalletCapacity',
+    'cubicCapacityM3',
+    'usedCubicCapacityM3',
+    'isActive',
+    'notes'
+  ];
+
+  const headerMatches =
+    header.length === expectedHeader.length &&
+    header.every((value, index) => value === expectedHeader[index]);
+
+  if (!headerMatches) {
+    throw new Error(`CSV header must be exactly: ${expectedHeader.join(',')}`);
+  }
+
+  let inserted = 0;
+  let updated = 0;
+  let skipped = 0;
+  const errors: Array<{ rowNumber: number; message: string }> = [];
+
+  for (let i = 1; i < lines.length; i += 1) {
+    const rowNumber = i + 1;
+
+    try {
+      const cols = splitCsvLine(lines[i]);
+
+      if (cols.length !== expectedHeader.length) {
+        throw new Error('Column count does not match header');
+      }
+
+      const [
+        warehouseCode,
+        warehouseName,
+        locationCode,
+        zone,
+        aisle,
+        levelCode,
+        bin,
+        locationType,
+        status,
+        palletCapacity,
+        usedPalletCapacity,
+        cubicCapacityM3,
+        usedCubicCapacityM3,
+        isActive,
+        notes
+      ] = cols;
+
+      if (!warehouseCode || !warehouseName || !locationCode || !zone || !aisle || !levelCode || !bin) {
+        throw new Error('Required text fields are missing');
+      }
+
+      const normalizedType = normalizeType(locationType);
+      const normalizedStatus = normalizeStatus(status);
+
+      const payload: CreateWarehouseLocationInput = {
+        warehouseCode,
+        warehouseName,
+        locationCode,
+        zone,
+        aisle,
+        levelCode,
+        bin,
+        locationType: normalizedType,
+        status: normalizedStatus,
+        palletCapacity: toNumber(palletCapacity, 'palletCapacity', 0),
+        usedPalletCapacity: toNumber(usedPalletCapacity, 'usedPalletCapacity', 0),
+        cubicCapacityM3: toNumber(cubicCapacityM3, 'cubicCapacityM3', 0),
+        usedCubicCapacityM3: toNumber(usedCubicCapacityM3, 'usedCubicCapacityM3', 0),
+        isActive: toBoolean(isActive),
+        notes
+      };
+
+      const existingIndex = warehouseLocationStore.findIndex(
+        (item) => item.locationCode.toLowerCase() === locationCode.toLowerCase()
+      );
+
+      if (existingIndex >= 0) {
+        const existing = warehouseLocationStore[existingIndex];
+        warehouseLocationStore[existingIndex] = {
+          ...existing,
+          ...payload,
+          id: existing.id,
+          updatedAt: new Date().toISOString()
+        };
+        updated += 1;
+      } else {
+        const record: WarehouseLocationRecord = {
+          id: 'loc-' + Date.now() + '-' + rowNumber,
+          ...payload,
+          updatedAt: new Date().toISOString()
+        };
+        warehouseLocationStore = [record, ...warehouseLocationStore];
+        inserted += 1;
+      }
+    } catch (error: any) {
+      skipped += 1;
+      errors.push({
+        rowNumber,
+        message: error?.message || 'Unknown import error'
+      });
+    }
+  }
+
+  return {
+    inserted,
+    updated,
+    skipped,
+    errors
+  };
+}
+
+############################## END OF FILE ######################################
+
+
+################################################################################
+FILE: src/modules/warehouse/routes.ts
+REPO: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend
+FULL PATH: C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\warehouse\routes.ts
+################################################################################
+
+import { Router } from 'express';
+import { created, ok } from '../../common/http/api-response';
+import { asyncHandler } from '../../common/utils/async-handler';
+import { AppError } from '../../common/errors/app-error';
+import {
+  createWarehouseLocation,
+  exportWarehouseLocationsCsv,
+  getWarehouseLocationById,
+  importWarehouseLocationsCsv,
+  listWarehouseLocations,
+  toggleWarehouseLocationActive,
+  updateWarehouseLocation,
+  type WarehouseLocationStatus,
+  type WarehouseLocationType
+} from './store';
+
+export const warehouseRouter = Router();
+
+function readSingle(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+
+  return value ?? '';
+}
+
+const allowedStatuses: WarehouseLocationStatus[] = ['empty', 'occupied', 'blocked'];
+const allowedTypes: WarehouseLocationType[] = ['rack', 'floor', 'bulk', 'staging', 'quarantine'];
+
+function requiredText(value: unknown, field: string, min = 1, max = 120) {
+  const text = String(value ?? '').trim();
+
+  if (!text) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} is required`
+    });
+  }
+
+  if (text.length < min || text.length > max) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} must be between ${min} and ${max} characters`
+    });
+  }
+
+  return text;
+}
+
+function optionalText(value: unknown, max = 250) {
+  const text = String(value ?? '').trim();
+
+  if (!text) {
+    return '';
+  }
+
+  if (text.length > max) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `Text length must be ${max} characters or less`
+    });
+  }
+
+  return text;
+}
+
+function requiredNumber(value: unknown, field: string, min = 0) {
+  const parsed = Number(value);
+
+  if (Number.isNaN(parsed) || parsed < min) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} must be a valid number ${min} or greater`
+    });
+  }
+
+  return parsed;
+}
+
+function normalizeStatus(value: unknown) {
+  const status = String(value ?? '').trim() as WarehouseLocationStatus;
+
+  if (!allowedStatuses.includes(status)) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'status must be one of: empty, occupied, blocked'
+    });
+  }
+
+  return status;
+}
+
+function normalizeType(value: unknown) {
+  const type = String(value ?? '').trim() as WarehouseLocationType;
+
+  if (!allowedTypes.includes(type)) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'locationType must be one of: rack, floor, bulk, staging, quarantine'
+    });
+  }
+
+  return type;
+}
+
+warehouseRouter.get(
+  '/locations',
+  asyncHandler(async (request, response) => {
+    const items = listWarehouseLocations({
+      search: readSingle(request.query.search as string | string[] | undefined),
+      status: readSingle(request.query.status as string | string[] | undefined),
+      type: readSingle(request.query.type as string | string[] | undefined),
+      active: readSingle(request.query.active as string | string[] | undefined)
+    });
+
+    return ok(
+      response,
+      {
+        items,
+        total: items.length
+      },
+      200
+    );
+  })
+);
+
+warehouseRouter.get(
+  '/locations/export-csv',
+  asyncHandler(async (_request, response) => {
+    const csvText = exportWarehouseLocationsCsv();
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    response.setHeader('Content-Disposition', 'attachment; filename="warehouse-locations.csv"');
+    response.status(200).send(csvText);
+  })
+);
+
+warehouseRouter.post(
+  '/locations/import-csv',
+  asyncHandler(async (request, response) => {
+    const csvText = String(request.body?.csvText ?? '');
+
+    if (!csvText.trim()) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'csvText is required'
+      });
+    }
+
+    const result = importWarehouseLocationsCsv(csvText);
+    return ok(response, result, 200);
+  })
+);
+
+warehouseRouter.get(
+  '/locations/:id',
+  asyncHandler(async (request, response) => {
+    const id = readSingle(request.params.id as string | string[] | undefined);
+    const item = getWarehouseLocationById(id);
+
+    if (!item) {
+      throw new AppError({
+        status: 404,
+        code: 'WAREHOUSE_LOCATION_NOT_FOUND',
+        message: 'Warehouse location not found'
+      });
+    }
+
+    return ok(response, item, 200);
+  })
+);
+
+warehouseRouter.post(
+  '/locations',
+  asyncHandler(async (request, response) => {
+    const item = createWarehouseLocation({
+      warehouseCode: requiredText(request.body?.warehouseCode, 'warehouseCode', 2, 30),
+      warehouseName: requiredText(request.body?.warehouseName, 'warehouseName', 2, 120),
+      locationCode: requiredText(request.body?.locationCode, 'locationCode', 3, 50),
+      zone: requiredText(request.body?.zone, 'zone', 1, 20),
+      aisle: requiredText(request.body?.aisle, 'aisle', 1, 20),
+      levelCode: requiredText(request.body?.levelCode, 'levelCode', 1, 20),
+      bin: requiredText(request.body?.bin, 'bin', 1, 20),
+      locationType: normalizeType(request.body?.locationType),
+      status: normalizeStatus(request.body?.status),
+      palletCapacity: requiredNumber(request.body?.palletCapacity, 'palletCapacity', 0),
+      usedPalletCapacity: requiredNumber(request.body?.usedPalletCapacity, 'usedPalletCapacity', 0),
+      cubicCapacityM3: requiredNumber(request.body?.cubicCapacityM3, 'cubicCapacityM3', 0),
+      usedCubicCapacityM3: requiredNumber(request.body?.usedCubicCapacityM3, 'usedCubicCapacityM3', 0),
+      isActive: request.body?.isActive === undefined ? true : Boolean(request.body?.isActive),
+      notes: optionalText(request.body?.notes, 250)
+    });
+
+    return created(response, item);
+  })
+);
+
+warehouseRouter.put(
+  '/locations/:id',
+  asyncHandler(async (request, response) => {
+    const id = readSingle(request.params.id as string | string[] | undefined);
+    const existing = getWarehouseLocationById(id);
+
+    if (!existing) {
+      throw new AppError({
+        status: 404,
+        code: 'WAREHOUSE_LOCATION_NOT_FOUND',
+        message: 'Warehouse location not found'
+      });
+    }
+
+    const item = updateWarehouseLocation({
+      id,
+      warehouseCode: requiredText(request.body?.warehouseCode, 'warehouseCode', 2, 30),
+      warehouseName: requiredText(request.body?.warehouseName, 'warehouseName', 2, 120),
+      locationCode: requiredText(request.body?.locationCode, 'locationCode', 3, 50),
+      zone: requiredText(request.body?.zone, 'zone', 1, 20),
+      aisle: requiredText(request.body?.aisle, 'aisle', 1, 20),
+      levelCode: requiredText(request.body?.levelCode, 'levelCode', 1, 20),
+      bin: requiredText(request.body?.bin, 'bin', 1, 20),
+      locationType: normalizeType(request.body?.locationType),
+      status: normalizeStatus(request.body?.status),
+      palletCapacity: requiredNumber(request.body?.palletCapacity, 'palletCapacity', 0),
+      usedPalletCapacity: requiredNumber(request.body?.usedPalletCapacity, 'usedPalletCapacity', 0),
+      cubicCapacityM3: requiredNumber(request.body?.cubicCapacityM3, 'cubicCapacityM3', 0),
+      usedCubicCapacityM3: requiredNumber(request.body?.usedCubicCapacityM3, 'usedCubicCapacityM3', 0),
+      isActive: request.body?.isActive === undefined ? true : Boolean(request.body?.isActive),
+      notes: optionalText(request.body?.notes, 250)
+    });
+
+    return ok(response, item, 200);
+  })
+);
+
+warehouseRouter.patch(
+  '/locations/:id/active',
+  asyncHandler(async (request, response) => {
+    const id = readSingle(request.params.id as string | string[] | undefined);
+    const item = toggleWarehouseLocationActive(id, Boolean(request.body?.isActive));
+
+    if (!item) {
+      throw new AppError({
+        status: 404,
+        code: 'WAREHOUSE_LOCATION_NOT_FOUND',
+        message: 'Warehouse location not found'
+      });
+    }
+
+    return ok(response, item, 200);
+  })
+);
+
+############################## END OF FILE ######################################
+

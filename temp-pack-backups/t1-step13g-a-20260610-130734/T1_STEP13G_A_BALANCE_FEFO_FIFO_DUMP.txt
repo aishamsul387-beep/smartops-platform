@@ -1,0 +1,1926 @@
+﻿T1 Step 13G-A - Balance Visibility + FEFO/FIFO Inspection
+Generated At: 2026-06-10 13:07:34
+
+IMPORTANT:
+- No code was changed
+- Paste the generated output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+============================================================
+FRONTEND GIT STATUS
+============================================================
+
+ M src/components/layout/PageShell.tsx
+ M src/components/layout/Sidebar.tsx
+ M src/components/layout/Topbar.tsx
+ M src/features/inventory/api.ts
+ M src/features/inventory/screens/InventoryDetailScreen.tsx
+ M src/features/inventory/screens/InventoryListScreen.tsx
+ M src/features/inventory/types.ts
+ M src/features/warehouse/screens/WarehouseLocationMasterScreen.tsx
+ M src/features/warehouse/screens/WarehouseScreen.tsx
+ M src/lib/routes.ts
+?? H11B_EASY_SANDBOX_NOTES.txt
+?? src/app/inventory/transfers/
+?? src/app/stock-issues-h11b/
+?? src/app/stock-issues/[issueId]/
+?? src/app/stock-issues/history/
+?? src/features/inventory/components/
+?? src/features/inventory/hooks/useInventoryTransferCommit.ts
+?? src/features/inventory/hooks/useInventoryTransferDraft.ts
+?? src/features/inventory/hooks/useInventoryTransfers.ts
+?? src/features/inventory/screens/InventoryTransferScreen.tsx
+?? src/features/stock-issue-h11b/
+?? src/features/stock-issue/api.ts
+?? src/features/stock-issue/components/
+?? src/features/stock-issue/hooks/useStockIssueContext.ts
+?? src/features/stock-issue/hooks/useStockIssueDetail.ts
+?? src/features/stock-issue/hooks/useStockIssueHistory.ts
+?? src/features/stock-issue/screens/StockIssueDetailScreen.tsx
+?? src/features/stock-issue/screens/StockIssueHistoryScreen.tsx
+?? src/features/stock-issue/screens/StockIssuePrintScreen.tsx
+?? src/features/stock-issue/types.ts
+?? temp-pack-backups/
+?? temp-run-pack.ps1
+?? w22-files/
+
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryTransferScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { useInventoryList } from '../hooks/useInventoryList';
+import { useInventoryTransferCommit } from '../hooks/useInventoryTransferCommit';
+import { useInventoryTransferDraft } from '../hooks/useInventoryTransferDraft';
+import { InventoryTransferHistorySection } from '../components/InventoryTransferHistorySection';
+
+export function InventoryTransferScreen() {
+  const {
+    items: inventoryItems,
+    isLoading: isInventoryLoading,
+    error: inventoryLoadError
+  } = useInventoryList();
+
+  const {
+    draft,
+    isLoading: isPreviewLoading,
+    error: transferPreviewError,
+    previewTransfer,
+    clearDraft
+  } = useInventoryTransferDraft();
+
+  const {
+    result: commitResult,
+    isLoading: isCommitLoading,
+    error: transferCommitError,
+    commitTransfer,
+    clearResult
+  } = useInventoryTransferCommit();
+
+  const [inventoryItemId, setInventoryItemId] = useState('');
+  const [fromWarehouseLocation, setFromWarehouseLocation] = useState('');
+  const [toWarehouseLocation, setToWarehouseLocation] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [reason, setReason] = useState('inventory_transfer');
+  const [notes, setNotes] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const selectedItem = useMemo(() => {
+    if (!inventoryItemId) {
+      return null;
+    }
+
+    return inventoryItems.find((item) => item.id === inventoryItemId) ?? null;
+  }, [inventoryItems, inventoryItemId]);
+
+  useEffect(() => {
+    if (!selectedItem) {
+      return;
+    }
+
+    setFromWarehouseLocation(selectedItem.warehouseLocation || '');
+    setQuantity(selectedItem.quantity > 0 ? '1' : '0');
+  }, [selectedItem]);
+
+  async function handlePreviewTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const qty = Number(quantity);
+
+    if (!inventoryItemId.trim()) {
+      setFormError('Inventory item is required');
+      return;
+    }
+
+    if (!fromWarehouseLocation.trim()) {
+      setFormError('From Location is required');
+      return;
+    }
+
+    if (!toWarehouseLocation.trim()) {
+      setFormError('To Location is required');
+      return;
+    }
+
+    if (!reason.trim()) {
+      setFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setFormError(null);
+    clearResult();
+
+    try {
+      await previewTransfer({
+        inventoryItemId: inventoryItemId.trim(),
+        fromWarehouseLocation: fromWarehouseLocation.trim(),
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: reason.trim(),
+        notes: notes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  async function handlePostTransfer() {
+    const qty = Number(quantity);
+
+    if (!inventoryItemId.trim()) {
+      setFormError('Inventory item is required');
+      return;
+    }
+
+    if (!fromWarehouseLocation.trim()) {
+      setFormError('From Location is required');
+      return;
+    }
+
+    if (!toWarehouseLocation.trim()) {
+      setFormError('To Location is required');
+      return;
+    }
+
+    if (!reason.trim()) {
+      setFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setFormError(null);
+
+    try {
+      await commitTransfer({
+        inventoryItemId: inventoryItemId.trim(),
+        fromWarehouseLocation: fromWarehouseLocation.trim(),
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: reason.trim(),
+        notes: notes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleClearPreview() {
+    clearDraft();
+    clearResult();
+    setFormError(null);
+    setInventoryItemId('');
+    setFromWarehouseLocation('');
+    setToWarehouseLocation('');
+    setQuantity('1');
+    setReason('inventory_transfer');
+    setNotes('');
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Stock Transfer Preview
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Preview and then post location-to-location or plant-to-plant stock transfer.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              href={ROUTES.inventory}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Back to inventory
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>
+          Transfer Request
+        </div>
+        <div style={{ color: '#475569', lineHeight: 1.7, marginBottom: '16px' }}>
+          Start with a preview to validate source balance before posting the transfer.
+        </div>
+
+        <form onSubmit={handlePreviewTransfer}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '16px',
+              marginBottom: '16px'
+            }}
+          >
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Inventory Item
+              </label>
+              <select
+                value={inventoryItemId}
+                onChange={(e) => setInventoryItemId(e.target.value)}
+                disabled={isInventoryLoading}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff'
+                }}
+              >
+                <option value="">
+                  {isInventoryLoading ? 'Loading inventory...' : 'Select inventory item'}
+                </option>
+
+                {inventoryItems.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.sku} - {item.name}
+                  </option>
+                ))}
+              </select>
+
+              {inventoryLoadError ? (
+                <div style={{ marginTop: '8px', color: '#b91c1c', fontSize: '13px' }}>
+                  {inventoryLoadError}
+                </div>
+              ) : null}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                From Location
+              </label>
+              <input
+                value={fromWarehouseLocation}
+                onChange={(e) => setFromWarehouseLocation(e.target.value)}
+                placeholder="Example: A-01-01"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  background: selectedItem ? '#f8fafc' : '#ffffff'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                To Location
+              </label>
+              <input
+                value={toWarehouseLocation}
+                onChange={(e) => setToWarehouseLocation(e.target.value)}
+                placeholder="Example: B-02-01 or TRANSIT-01"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Quantity
+              </label>
+              <input
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="1"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+
+============================================================
+FILE HEAD: src\features\inventory\api.ts
+============================================================
+
+import { apiClient } from '@/services/api/client';
+import { ENDPOINTS } from '@/services/api/endpoints';
+import { mapInventoryItem, mapInventoryListResponse } from './mapper';
+import type {
+  CreateInventoryRequest,
+  CreateInventoryTransferDraftRequest,
+  InventoryDetailResponse,
+  InventoryItemDto,
+  InventoryListFilters,
+  InventoryListResponse,
+  InventoryLocationBalanceListResponse,
+  InventoryLocationBalanceRecord,
+  InventoryLocationBalanceSummary,
+  InventoryTransferDraft,
+  InventoryTransferListFilters,
+  InventoryTransferListResponse,
+  InventoryTransferRecord,
+  UpdateInventoryRequest
+} from './types';
+
+function buildInventoryListUrl(filters: InventoryListFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${ENDPOINTS.inventory.list}?${queryString}` : ENDPOINTS.inventory.list;
+}
+
+function buildInventoryLocationBalancesUrl(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const query = new URLSearchParams();
+
+  if (filters?.inventoryItemId && filters.inventoryItemId.trim()) {
+    query.set('inventoryItemId', filters.inventoryItemId.trim());
+  }
+
+  if (filters?.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters?.warehouseLocation && filters.warehouseLocation.trim()) {
+    query.set('warehouseLocation', filters.warehouseLocation.trim());
+  }
+
+  const queryString = query.toString();
+  return queryString
+    ? '/inventory/location-balances?' + queryString
+    : '/inventory/location-balances';
+}
+
+function buildInventoryTransfersUrl(filters?: InventoryTransferListFilters) {
+  const query = new URLSearchParams();
+
+  if (filters?.inventoryItemId && filters.inventoryItemId.trim()) {
+    query.set('inventoryItemId', filters.inventoryItemId.trim());
+  }
+
+  if (filters?.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters?.warehouseLocation && filters.warehouseLocation.trim()) {
+    query.set('warehouseLocation', filters.warehouseLocation.trim());
+  }
+
+  const queryString = query.toString();
+  return queryString
+    ? '/inventory/transfers?' + queryString
+    : '/inventory/transfers';
+}
+
+function mapInventoryLocationBalanceListResponse(data: any): InventoryLocationBalanceListResponse {
+  const payload = data?.data ?? data ?? {};
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+
+  const items: InventoryLocationBalanceRecord[] = rawItems.map((item: any) => ({
+    id: String(item?.id ?? '').trim(),
+    inventoryItemId: String(item?.inventoryItemId ?? '').trim(),
+    sku: String(item?.sku ?? '').trim(),
+    itemName: String(item?.itemName ?? '').trim(),
+    warehouseLocation: String(item?.warehouseLocation ?? '').trim(),
+    onHandQty: Number(item?.onHandQty ?? 0),
+    reservedQty: Number(item?.reservedQty ?? 0),
+    availableQty: Number(item?.availableQty ?? 0),
+    unit: String(item?.unit ?? '').trim(),
+    updatedAt: String(item?.updatedAt ?? '').trim()
+  }));
+
+  const total = Number.isFinite(Number(payload.total)) ? Number(payload.total) : items.length;
+
+  return {
+    items,
+    total
+  };
+}
+
+function mapInventoryLocationBalanceSummary(data: any): InventoryLocationBalanceSummary {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    totalLines: Number(payload?.totalLines ?? 0),
+    totalOnHandQty: Number(payload?.totalOnHandQty ?? 0),
+    totalAvailableQty: Number(payload?.totalAvailableQty ?? 0)
+  };
+}
+
+function mapInventoryTransferDraft(data: any): InventoryTransferDraft {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    inventoryItemId: String(payload?.inventoryItemId ?? '').trim(),
+    sku: String(payload?.sku ?? '').trim(),
+    itemName: String(payload?.itemName ?? '').trim(),
+    unit: String(payload?.unit ?? '').trim(),
+    quantity: Number(payload?.quantity ?? 0),
+    fromWarehouseLocation: String(payload?.fromWarehouseLocation ?? '').trim(),
+    toWarehouseLocation: String(payload?.toWarehouseLocation ?? '').trim(),
+    reason: String(payload?.reason ?? '').trim(),
+    notes: String(payload?.notes ?? '').trim(),
+    availableSourceBalance: payload?.availableSourceBalance
+      ? {
+          id: String(payload.availableSourceBalance.id ?? '').trim(),
+          inventoryItemId: String(payload.availableSourceBalance.inventoryItemId ?? '').trim(),
+          sku: String(payload.availableSourceBalance.sku ?? '').trim(),
+          itemName: String(payload.availableSourceBalance.itemName ?? '').trim(),
+          warehouseLocation: String(payload.availableSourceBalance.warehouseLocation ?? '').trim(),
+          onHandQty: Number(payload.availableSourceBalance.onHandQty ?? 0),
+          reservedQty: Number(payload.availableSourceBalance.reservedQty ?? 0),
+          availableQty: Number(payload.availableSourceBalance.availableQty ?? 0),
+          unit: String(payload.availableSourceBalance.unit ?? '').trim(),
+          updatedAt: String(payload.availableSourceBalance.updatedAt ?? '').trim()
+        }
+      : null
+  };
+}
+
+function mapInventoryTransferRecord(data: any): InventoryTransferRecord {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    id: String(payload?.id ?? '').trim(),
+    inventoryItemId: String(payload?.inventoryItemId ?? '').trim(),
+    sku: String(payload?.sku ?? '').trim(),
+    itemName: String(payload?.itemName ?? '').trim(),
+    fromWarehouseLocation: String(payload?.fromWarehouseLocation ?? '').trim(),
+    toWarehouseLocation: String(payload?.toWarehouseLocation ?? '').trim(),
+    quantity: Number(payload?.quantity ?? 0),
+    reason: String(payload?.reason ?? '').trim(),
+    notes: String(payload?.notes ?? '').trim(),
+    createdAt: String(payload?.createdAt ?? '').trim()
+  };
+}
+
+function mapInventoryTransferListResponse(data: any): InventoryTransferListResponse {
+  const payload = data?.data ?? data ?? {};
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+
+  const items: InventoryTransferRecord[] = rawItems.map((item: any) => ({
+    id: String(item?.id ?? '').trim(),
+    inventoryItemId: String(item?.inventoryItemId ?? '').trim(),
+    sku: String(item?.sku ?? '').trim(),
+    itemName: String(item?.itemName ?? '').trim(),
+    fromWarehouseLocation: String(item?.fromWarehouseLocation ?? '').trim(),
+    toWarehouseLocation: String(item?.toWarehouseLocation ?? '').trim(),
+    quantity: Number(item?.quantity ?? 0),
+    reason: String(item?.reason ?? '').trim(),
+    notes: String(item?.notes ?? '').trim(),
+    createdAt: String(item?.createdAt ?? '').trim()
+  }));
+
+  const total = Number.isFinite(Number(payload.total)) ? Number(payload.total) : items.length;
+
+  return {
+    items,
+    total
+  };
+}
+
+export const inventoryApi = {
+  async getInventoryList(filters: InventoryListFilters = {}): Promise<InventoryListResponse> {
+    const response = await apiClient.get<any>(buildInventoryListUrl(filters));
+    return mapInventoryListResponse(response.data);
+  },
+
+  async getInventoryById(id: string): Promise<InventoryDetailResponse> {
+    const response = await apiClient.get<any>(ENDPOINTS.inventory.detail(id));
+    return mapInventoryItem(response.data);
+  },
+
+  async getInventoryDetail(id: string): Promise<InventoryDetailResponse> {
+    return this.getInventoryById(id);
+  },
+
+  async createInventory(payload: CreateInventoryRequest): Promise<InventoryItemDto> {
+    const response = await apiClient.post<any>(ENDPOINTS.inventory.create, payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async updateInventory(
+    id: string,
+    payload: Omit<UpdateInventoryRequest, 'id'>
+  ): Promise<InventoryItemDto> {
+    const response = await apiClient.put<any>(ENDPOINTS.inventory.update(id), payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async toggleActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    const response = await apiClient.patch<any>(ENDPOINTS.inventory.toggleActive(id), {
+      isActive
+    });
+    return mapInventoryItem(response.data);
+  },
+
+  async setInventoryActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    return this.toggleActive(id, isActive);
+  },
+
+  async getLocationBalanceSummary(): Promise<InventoryLocationBalanceSummary> {
+    const response = await apiClient.get<any>('/inventory/location-balance-summary');
+    return mapInventoryLocationBalanceSummary(response.data);
+  },
+
+  async getLocationBalances(filters?: {
+    inventoryItemId?: string;
+    search?: string;
+    warehouseLocation?: string;
+  }): Promise<InventoryLocationBalanceListResponse> {
+    const response = await apiClient.get<any>(buildInventoryLocationBalancesUrl(filters));
+    return mapInventoryLocationBalanceListResponse(response.data);
+  },
+
+  async getLocationBalancesByInventoryItem(
+    inventoryItemId: string
+  ): Promise<InventoryLocationBalanceListResponse> {
+    const response = await apiClient.get<any>(`/inventory/location-balances/${encodeURIComponent(inventoryItemId)}`);
+    return mapInventoryLocationBalanceListResponse(response.data);
+  },
+
+  async createTransferDraft(
+    payload: CreateInventoryTransferDraftRequest
+  ): Promise<InventoryTransferDraft> {
+    const response = await apiClient.post<any>('/inventory/transfers/draft', payload);
+    return mapInventoryTransferDraft(response.data);
+  },
+
+  async commitTransfer(
+    payload: CreateInventoryTransferDraftRequest
+  ): Promise<any> {
+    const response = await apiClient.post<any>('/inventory/transfers/commit', payload);
+    return response.data?.data ?? response.data;
+
+============================================================
+FILE HEAD: src\features\inventory\types.ts
+============================================================
+
+export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+export type InventoryItemType =
+  | 'raw_material'
+  | 'finished_goods'
+  | 'packaging'
+  | 'spare_part'
+  | 'consumable';
+
+export type InventoryPersistenceMode = 'memory' | 'postgres' | string;
+
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  statusLabel: string;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface InventoryListResponse {
+  items: InventoryItem[];
+  total: number;
+  persistenceMode?: InventoryPersistenceMode;
+}
+
+export interface CreateInventoryRequest {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export interface UpdateInventoryRequest extends CreateInventoryRequest {
+  id: string;
+}
+
+export interface InventoryListFilters {
+  search?: string;
+  status?: 'all' | InventoryStatus;
+}
+
+export interface InventoryFormValues {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType?: InventoryItemType;
+  brand?: string;
+  model?: string;
+  preferredSupplierName?: string;
+  standardCost?: string;
+  averageCost?: string;
+  currency?: string;
+  quantity: string;
+  reorderLevel: string;
+  minimumStockLevel: string;
+  maximumStockLevel: string;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export type InventoryFormErrors = Partial<Record<keyof InventoryFormValues, string>>;
+export type InventoryTrackingFlag = 'batch' | 'expiry' | 'serial';
+
+export interface InventoryDetailResponse extends InventoryItem {
+  trackingFlags: InventoryTrackingFlag[];
+}
+
+export interface InventoryItemDto extends InventoryItem {}
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryLocationBalanceListResponse {
+  items: InventoryLocationBalanceRecord[];
+  total: number;
+}
+
+export interface InventoryLocationBalanceSummary {
+  totalLines: number;
+  totalOnHandQty: number;
+  totalAvailableQty: number;
+}
+
+export interface InventoryTransferDraft {
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  unit: string;
+  quantity: number;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  reason: string;
+  notes: string;
+  availableSourceBalance: InventoryLocationBalanceRecord | null;
+}
+
+export interface CreateInventoryTransferDraftRequest {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+export interface InventoryTransferRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface InventoryTransferListResponse {
+  items: InventoryTransferRecord[];
+  total: number;
+}
+
+export interface InventoryTransferListFilters {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}
+
+============================================================
+FILE MATCHES: src\features\inventory\screens\InventoryTransferScreen.tsx
+============================================================
+
+--- pattern: Source Balance ---
+Line 221:           Start with a preview to validate source balance before posting the transfer.
+Line 488:               <strong>Source Balance:</strong>{' '}
+Line 491:                 : 'No source balance found'}
+Line 515:               <strong>Updated Source Balance:</strong>{' '}
+
+--- pattern: Destination Balance ---
+Line 521:               <strong>Updated Destination Balance:</strong>{' '}
+
+--- pattern: Transfer History ---
+no match
+
+--- pattern: Inventory Item ---
+Line 65:       setFormError('Inventory item is required');
+Line 110:       setFormError('Inventory item is required');
+Line 235:                 Inventory Item
+Line 250:                   {isInventoryLoading ? 'Loading inventory...' : 'Select inventory item'}
+
+--- pattern: From Location ---
+Line 70:       setFormError('From Location is required');
+Line 115:       setFormError('From Location is required');
+Line 269:                 From Location
+
+--- pattern: To Location ---
+Line 75:       setFormError('To Location is required');
+Line 120:       setFormError('To Location is required');
+Line 287:                 To Location
+
+
+============================================================
+BACKEND GIT STATUS
+============================================================
+
+ M src/modules/inventory/routes.ts
+?? H11B_MANUAL_PATCH_backend.txt
+?? data/
+?? src/modules/inventory/location-balance-store.ts
+?? src/modules/stock-control/h11b-issue-repository.ts
+?? src/modules/stock-control/h11b-issue-service.ts
+?? src/modules/stock-control/h11b-types.ts
+?? src/modules/stock-control/issue-repository.ts
+?? src/modules/stock-control/issue-service.ts
+?? src/modules/stock-control/types.ts
+?? temp-pack-backups/
+
+
+============================================================
+FILE HEAD: src\modules\inventory\location-balance-store.ts
+============================================================
+
+import {
+  getInventoryById,
+  listInventory,
+  type InventoryRecord
+} from './repository';
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryTransferRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface CommitInventoryTransferInput {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+let inventoryTransferStore: InventoryTransferRecord[] = [];
+let inventoryLocationBalanceOverrides: InventoryLocationBalanceRecord[] = [];
+
+function toLocationBalanceRecord(item: InventoryRecord): InventoryLocationBalanceRecord {
+  const onHandQty = Number(item.quantity ?? 0);
+  const reservedQty = 0;
+  const availableQty = Math.max(0, onHandQty - reservedQty);
+
+  return {
+    id: `bal-${item.id}-${String(item.warehouseLocation ?? '').trim().toUpperCase()}`,
+    inventoryItemId: item.id,
+    sku: String(item.sku ?? '').trim(),
+    itemName: String(item.name ?? '').trim(),
+    warehouseLocation: String(item.warehouseLocation ?? '').trim(),
+    onHandQty,
+    reservedQty,
+    availableQty,
+    unit: String(item.unit ?? '').trim(),
+    updatedAt: String(item.updatedAt ?? new Date().toISOString())
+  };
+}
+
+function sortBalances(items: InventoryLocationBalanceRecord[]) {
+  return [...items].sort((a, b) => {
+    if (a.sku !== b.sku) {
+      return a.sku.localeCompare(b.sku);
+    }
+
+    return a.warehouseLocation.localeCompare(b.warehouseLocation);
+  });
+}
+
+function sortTransfers(items: InventoryTransferRecord[]) {
+  return [...items].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
+function normalizeLocation(value: string) {
+  return String(value ?? '').trim();
+}
+
+function makeBalanceId(inventoryItemId: string, warehouseLocation: string) {
+  return `bal-${inventoryItemId}-${normalizeLocation(warehouseLocation).toUpperCase()}`;
+}
+
+function recalculateAvailableQty(balance: InventoryLocationBalanceRecord) {
+  return Math.max(0, balance.onHandQty - balance.reservedQty);
+}
+
+async function buildBaseBalances(): Promise<InventoryLocationBalanceRecord[]> {
+  const inventoryItems = await listInventory({
+    search: '',
+    status: 'all'
+  });
+
+  return inventoryItems.map(toLocationBalanceRecord);
+}
+
+async function getEffectiveBalances(): Promise<InventoryLocationBalanceRecord[]> {
+  const baseBalances = await buildBaseBalances();
+  const effective = [...baseBalances];
+
+  for (const override of inventoryLocationBalanceOverrides) {
+    const index = effective.findIndex((item) => item.id === override.id);
+
+    if (index >= 0) {
+      effective[index] = { ...override };
+    } else {
+      effective.push({ ...override });
+    }
+  }
+
+  return effective;
+}
+
+function saveBalanceOverride(balance: InventoryLocationBalanceRecord) {
+  const index = inventoryLocationBalanceOverrides.findIndex((item) => item.id === balance.id);
+
+  if (index >= 0) {
+    inventoryLocationBalanceOverrides[index] = { ...balance };
+  } else {
+    inventoryLocationBalanceOverrides.push({ ...balance });
+  }
+}
+
+export async function listInventoryLocationBalances(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const balances = await getEffectiveBalances();
+
+  const normalizedSearch = String(filters?.search ?? '').trim().toLowerCase();
+  const normalizedLocation = String(filters?.warehouseLocation ?? '').trim().toLowerCase();
+
+  const filtered = balances.filter((item) => {
+    const matchesInventoryItem =
+      !filters?.inventoryItemId || item.inventoryItemId === filters.inventoryItemId;
+
+    const matchesSearch =
+      !normalizedSearch ||
+      item.sku.toLowerCase().includes(normalizedSearch) ||
+      item.itemName.toLowerCase().includes(normalizedSearch) ||
+      item.warehouseLocation.toLowerCase().includes(normalizedSearch);
+
+    const matchesLocation =
+      !normalizedLocation ||
+      item.warehouseLocation.toLowerCase().includes(normalizedLocation);
+
+    return matchesInventoryItem && matchesSearch && matchesLocation;
+  });
+
+  return sortBalances(filtered);
+}
+
+export async function getInventoryLocationBalancesByItem(inventoryItemId: string) {
+  return listInventoryLocationBalances({ inventoryItemId });
+}
+
+export async function getInventoryLocationBalanceSummary() {
+  const balances = await listInventoryLocationBalances();
+
+  const totalLines = balances.length;
+  const totalOnHandQty = balances.reduce((sum, item) => sum + item.onHandQty, 0);
+  const totalAvailableQty = balances.reduce((sum, item) => sum + item.availableQty, 0);
+
+  return {
+    totalLines,
+    totalOnHandQty,
+    totalAvailableQty
+  };
+}
+
+export async function getInventoryLocationBalanceByLocation(
+  inventoryItemId: string,
+  warehouseLocation: string
+) {
+  const normalizedLocation = normalizeLocation(warehouseLocation).toLowerCase();
+  const balances = await getInventoryLocationBalancesByItem(inventoryItemId);
+
+  return (
+    balances.find(
+      (item) => item.warehouseLocation.trim().toLowerCase() === normalizedLocation
+    ) ?? null
+  );
+}
+
+export function listInventoryTransfers(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const normalizedSearch = String(filters?.search ?? '').trim().toLowerCase();
+  const normalizedLocation = String(filters?.warehouseLocation ?? '').trim().toLowerCase();
+
+  const items = inventoryTransferStore.filter((item) => {
+    const matchesInventoryItem =
+      !filters?.inventoryItemId || item.inventoryItemId === filters.inventoryItemId;
+
+    const matchesSearch =
+      !normalizedSearch ||
+      item.sku.toLowerCase().includes(normalizedSearch) ||
+      item.itemName.toLowerCase().includes(normalizedSearch) ||
+      item.fromWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+      item.toWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+      item.reason.toLowerCase().includes(normalizedSearch);
+
+    const matchesLocation =
+      !normalizedLocation ||
+      item.fromWarehouseLocation.toLowerCase().includes(normalizedLocation) ||
+      item.toWarehouseLocation.toLowerCase().includes(normalizedLocation);
+
+    return matchesInventoryItem && matchesSearch && matchesLocation;
+  });
+
+  return sortTransfers(items);
+}
+
+export function getInventoryTransferById(id: string) {
+  return inventoryTransferStore.find((item) => item.id === id) ?? null;
+}
+
+export async function createInventoryTransferDraft(input: {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}) {
+  const inventoryItem = await getInventoryById(input.inventoryItemId);
+
+  if (!inventoryItem) {
+    throw new Error('Inventory item not found');
+  }
+
+  const quantity = Number(input.quantity);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new Error('quantity must be greater than 0');
+  }
+
+  const fromWarehouseLocation = normalizeLocation(input.fromWarehouseLocation);
+  const toWarehouseLocation = normalizeLocation(input.toWarehouseLocation);
+
+  if (!fromWarehouseLocation) {
+    throw new Error('fromWarehouseLocation is required');
+  }
+
+  if (!toWarehouseLocation) {
+    throw new Error('toWarehouseLocation is required');
+  }
+
+  if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+    throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+  }
+
+  const availableSourceBalance =
+    (await getInventoryLocationBalanceByLocation(input.inventoryItemId, fromWarehouseLocation)) ??
+    null;
+
+  if (!availableSourceBalance) {
+    throw new Error('Source balance not found for the selected location');
+  }
+
+  if (availableSourceBalance.availableQty < quantity) {
+    throw new Error('Insufficient available quantity at source location');
+  }
+
+  return {
+    inventoryItemId: inventoryItem.id,
+    sku: inventoryItem.sku,
+    itemName: inventoryItem.name,
+    unit: inventoryItem.unit,
+    quantity,
+    fromWarehouseLocation,
+    toWarehouseLocation,
+    reason: String(input.reason ?? '').trim(),
+    notes: String(input.notes ?? '').trim(),
+    availableSourceBalance
+  };
+}
+
+export async function commitInventoryTransfer(input: CommitInventoryTransferInput) {
+  const draft = await createInventoryTransferDraft(input);
+  const now = new Date().toISOString();
+
+  const sourceBalance = draft.availableSourceBalance;
+  if (!sourceBalance) {
+    throw new Error('Source balance not found');
+  }
+
+  const destinationBalance =
+    (await getInventoryLocationBalanceByLocation(input.inventoryItemId, input.toWarehouseLocation)) ??
+    null;
+
+  const updatedSource: InventoryLocationBalanceRecord = {
+    ...sourceBalance,
+    onHandQty: sourceBalance.onHandQty - draft.quantity,
+    availableQty: Math.max(0, sourceBalance.availableQty - draft.quantity),
+    updatedAt: now
+  };
+
+  const updatedDestination: InventoryLocationBalanceRecord = destinationBalance
+    ? {
+        ...destinationBalance,
+        onHandQty: destinationBalance.onHandQty + draft.quantity,
+        availableQty: destinationBalance.availableQty + draft.quantity,
+        updatedAt: now
+      }
+    : {
+        id: makeBalanceId(input.inventoryItemId, input.toWarehouseLocation),
+        inventoryItemId: draft.inventoryItemId,
+        sku: draft.sku,
+        itemName: draft.itemName,
+        warehouseLocation: normalizeLocation(input.toWarehouseLocation),
+        onHandQty: draft.quantity,
+        reservedQty: 0,
+        availableQty: draft.quantity,
+        unit: draft.unit,
+        updatedAt: now
+      };
+
+  saveBalanceOverride(updatedSource);
+  saveBalanceOverride(updatedDestination);
+
+  const transferRecord: InventoryTransferRecord = {
+    id: `trf-${Date.now()}`,
+    inventoryItemId: draft.inventoryItemId,
+    sku: draft.sku,
+    itemName: draft.itemName,
+    fromWarehouseLocation: draft.fromWarehouseLocation,
+    toWarehouseLocation: draft.toWarehouseLocation,
+    quantity: draft.quantity,
+    reason: draft.reason,
+    notes: draft.notes,
+    createdAt: now
+  };
+
+  inventoryTransferStore = [transferRecord, ...inventoryTransferStore];
+
+  return {
+    transfer: transferRecord,
+    sourceBalance: updatedSource,
+    destinationBalance: updatedDestination
+  };
+}
+
+============================================================
+FILE HEAD: src\modules\inventory\routes.ts
+============================================================
+
+import { Router } from 'express';
+import { created, ok } from '../../common/http/api-response';
+import { asyncHandler } from '../../common/utils/async-handler';
+import { AppError } from '../../common/errors/app-error';
+import {
+  createInventory,
+  getInventoryById,
+  getInventoryPersistenceMode,
+  listInventory,
+  setInventoryActiveStatus,
+  updateInventory,
+  type InventoryItemType,
+  type InventoryStatus
+} from './repository';
+import { listConversionGroups, listUoms } from '../uom/store';
+import {
+  commitInventoryTransfer,
+  createInventoryTransferDraft,
+  getInventoryLocationBalanceSummary,
+  getInventoryLocationBalancesByItem,
+  getInventoryTransferById,
+  listInventoryLocationBalances,
+  listInventoryTransfers
+} from './location-balance-store';
+
+export const inventoryRouter = Router();
+
+function readSingle(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+
+  return value ?? '';
+}
+
+const allowedStatuses: InventoryStatus[] = ['in_stock', 'low_stock', 'out_of_stock'];
+const allowedItemTypes: InventoryItemType[] = [
+  'raw_material',
+  'finished_goods',
+  'packaging',
+  'spare_part',
+  'consumable'
+];
+
+function requireText(value: unknown, field: string, min = 1, max = 150) {
+  const text = String(value ?? '').trim();
+
+  if (!text) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} is required`
+    });
+  }
+
+  if (text.length < min || text.length > max) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} must be between ${min} and ${max} characters`
+    });
+  }
+
+  return text;
+}
+
+function optionalText(value: unknown, max = 250) {
+  const text = String(value ?? '').trim();
+
+  if (!text) {
+    return '';
+  }
+
+  if (text.length > max) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `Text length must be ${max} characters or less`
+    });
+  }
+
+  return text;
+}
+
+function requireNumber(value: unknown, field: string, min = 0) {
+  const parsed = Number(value);
+
+  if (Number.isNaN(parsed) || parsed < min) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: `${field} must be a valid number ${min} or greater`
+    });
+  }
+
+  return parsed;
+}
+
+function normalizeStatus(value: unknown) {
+  const status = String(value ?? '').trim() as InventoryStatus;
+
+  if (!allowedStatuses.includes(status)) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'status must be one of: in_stock, low_stock, out_of_stock'
+    });
+  }
+
+  return status;
+}
+
+function normalizeItemType(value: unknown) {
+  const itemType = String(value ?? '').trim() as InventoryItemType;
+
+  if (!allowedItemTypes.includes(itemType)) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message:
+        'itemType must be one of: raw_material, finished_goods, packaging, spare_part, consumable'
+    });
+  }
+
+  return itemType;
+}
+
+function requireCurrency(value: unknown) {
+  const currency = requireText(value, 'currency', 3, 10).toUpperCase();
+  return currency;
+}
+
+function requireActiveUomCode(value: unknown, field: string) {
+  const code = requireText(value, field, 1, 20).toUpperCase();
+
+  const uom = listUoms({ search: '', type: 'all' }).find(
+    (item) => item.uomCode.toUpperCase() === code
+  );
+
+  if (!uom) {
+    throw new AppError({
+      status: 400,
+      code: 'INVALID_UOM',
+      message: `${field} does not exist`
+    });
+  }
+
+  if (!uom.isActive) {
+    throw new AppError({
+      status: 400,
+      code: 'INACTIVE_UOM',
+      message: `${field} is inactive and cannot be used`
+    });
+  }
+
+  return code;
+}
+
+function optionalActiveConversionGroupCode(value: unknown) {
+  const code = String(value ?? '').trim().toUpperCase();
+
+  if (!code) {
+    return '';
+  }
+
+  const group = listConversionGroups({ search: '' }).find(
+    (item) => item.groupCode.toUpperCase() === code
+  );
+
+  if (!group) {
+    throw new AppError({
+      status: 400,
+      code: 'INVALID_UOM_CONVERSION_GROUP',
+      message: 'uomConversionGroupCode does not exist'
+    });
+  }
+
+  if (!group.isActive) {
+    throw new AppError({
+      status: 400,
+      code: 'INACTIVE_UOM_CONVERSION_GROUP',
+      message: 'uomConversionGroupCode is inactive and cannot be used'
+    });
+  }
+
+  return code;
+}
+
+function buildInventoryInput(body: any) {
+  const minimumStockLevel = requireNumber(body?.minimumStockLevel, 'minimumStockLevel', 0);
+  const maximumStockLevel = requireNumber(body?.maximumStockLevel, 'maximumStockLevel', 0);
+
+  if (maximumStockLevel > 0 && maximumStockLevel < minimumStockLevel) {
+    throw new AppError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'maximumStockLevel must be greater than or equal to minimumStockLevel'
+    });
+  }
+
+  return {
+    sku: requireText(body?.sku, 'sku', 2, 50),
+    barcode: optionalText(body?.barcode, 60),
+    name: requireText(body?.name, 'name', 2, 120),
+    description: optionalText(body?.description, 500),
+    category: requireText(body?.category, 'category', 2, 80),
+    itemType: normalizeItemType(body?.itemType),
+    brand: optionalText(body?.brand, 80),
+    model: optionalText(body?.model, 80),
+    preferredSupplierName: optionalText(body?.preferredSupplierName, 120),
+    standardCost: requireNumber(body?.standardCost, 'standardCost', 0),
+    averageCost: requireNumber(body?.averageCost, 'averageCost', 0),
+    currency: requireCurrency(body?.currency ?? 'USD'),
+    quantity: requireNumber(body?.quantity, 'quantity', 0),
+    reorderLevel: requireNumber(body?.reorderLevel, 'reorderLevel', 0),
+    minimumStockLevel,
+    maximumStockLevel,
+    unit: requireText(body?.unit, 'unit', 1, 20),
+    warehouseLocation: requireText(body?.warehouseLocation, 'warehouseLocation', 3, 30),
+    status: normalizeStatus(body?.status ?? 'in_stock'),
+    isActive: body?.isActive === undefined ? true : Boolean(body?.isActive),
+    isBatchTracked: Boolean(body?.isBatchTracked),
+    isExpiryTracked: Boolean(body?.isExpiryTracked),
+    isSerialTracked: Boolean(body?.isSerialTracked),
+    baseUomCode: requireActiveUomCode(body?.baseUomCode, 'baseUomCode'),
+    purchaseUomCode: requireActiveUomCode(body?.purchaseUomCode, 'purchaseUomCode'),
+    salesUomCode: requireActiveUomCode(body?.salesUomCode, 'salesUomCode'),
+    issueUomCode: requireActiveUomCode(body?.issueUomCode, 'issueUomCode'),
+    uomConversionGroupCode: optionalActiveConversionGroupCode(body?.uomConversionGroupCode),
+    allowsFraction: Boolean(body?.allowsFraction),
+    notes: optionalText(body?.notes, 1000)
+  };
+}
+
+
+inventoryRouter.get(
+  '/location-balance-summary',
+  asyncHandler(async (_request, response) => {
+    const summary = await getInventoryLocationBalanceSummary();
+    return ok(response, summary, 200);
+  })
+);
+
+inventoryRouter.get(
+  '/location-balances',
+  asyncHandler(async (request, response) => {
+    const items = await listInventoryLocationBalances({
+      inventoryItemId: readSingle(request.query.inventoryItemId as string | string[] | undefined),
+      search: readSingle(request.query.search as string | string[] | undefined),
+      warehouseLocation: readSingle(request.query.warehouseLocation as string | string[] | undefined)
+    });
+
+    return ok(
+      response,
+      {
+        items,
+        total: items.length
+      },
+      200
+    );
+
+============================================================
+FILE HEAD: src\modules\batches\repository.ts
+============================================================
+
+export type BatchStatus =
+  | 'available'
+  | 'blocked'
+  | 'quarantine'
+  | 'expired'
+  | 'consumed';
+
+export interface BatchRecord {
+  id: string;
+  inventoryItemId: string;
+  batchNumber: string;
+  lotNumber: string;
+  supplierLotNumber: string;
+  manufactureDate: string | null;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  supplierName: string;
+  purchaseOrderNo: string;
+  goodsReceivedNoteNo: string;
+  unitCost: number;
+  currency: string;
+  receivedQty: number;
+  availableQty: number;
+  reservedQty: number;
+  blockedQty: number;
+  qaHoldQty: number;
+  batchStatus: BatchStatus;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface BatchStatusHistoryRecord {
+  id: string;
+  batchId: string;
+  inventoryItemId: string;
+  batchNumber: string;
+  previousStatus: BatchStatus;
+  nextStatus: BatchStatus;
+  notes: string;
+  changedAt: string;
+}
+
+export interface StockIssueAllocationRecord {
+  batchId: string;
+  batchNumber: string;
+  inventoryItemId: string;
+  availableQtyBefore: number;
+  issuedQty: number;
+  availableQtyAfter: number;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  unitCost: number;
+  currency: string;
+}
+
+export interface StockIssueRecord {
+  id: string;
+  issueNo: string;
+  inventoryItemId: string;
+  requestedQty: number;
+  issuedQty: number;
+  reason: string;
+  issueDate: string;
+  allocations: StockIssueAllocationRecord[];
+}
+
+export interface CreateBatchInput {
+  inventoryItemId: string;
+  batchNumber: string;
+  lotNumber: string;
+  supplierLotNumber: string;
+  manufactureDate: string | null;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  supplierName: string;
+  purchaseOrderNo: string;
+  goodsReceivedNoteNo: string;
+  unitCost: number;
+  currency: string;
+  receivedQty: number;
+  availableQty: number;
+  reservedQty: number;
+  blockedQty: number;
+  qaHoldQty: number;
+  batchStatus: BatchStatus;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  notes: string;
+}
+
+let batchStore: BatchRecord[] = [
+  {
+    id: 'bat-001',
+    inventoryItemId: 'inv-001',
+    batchNumber: 'BATCH-STEEL-001',
+    lotNumber: 'LOT-STEEL-001',
+    supplierLotNumber: 'SUP-LOT-STEEL-001',
+    manufactureDate: null,
+    expiryDate: null,
+    receivedDate: '2026-05-20',
+    supplierName: 'Prime Steel Supply',
+    purchaseOrderNo: 'PO-2026-001',
+    goodsReceivedNoteNo: 'GRN-2026-001',
+    unitCost: 52.08,
+    currency: 'USD',
+    receivedQty: 240,
+    availableQty: 220,
+    reservedQty: 20,
+    blockedQty: 0,
+    qaHoldQty: 0,
+    batchStatus: 'available',
+    warehouseLocation: 'A-01-01',
+    zone: 'A',
+    aisle: '01',
+    levelCode: '01',
+    bin: '01',
+    notes: 'Seeded batch record',
+    updatedAt: '2026-05-21T14:30:00.000Z'
+  },
+  {
+    id: 'bat-002',
+    inventoryItemId: 'inv-003',
+    batchNumber: 'BATCH-VALVE-001',
+    lotNumber: 'LOT-VALVE-001',
+    supplierLotNumber: 'SUP-LOT-VALVE-001',
+    manufactureDate: '2026-04-15',
+    expiryDate: '2027-04-15',
+    receivedDate: '2026-05-18',
+    supplierName: 'ValveCore Manufacturing',
+    purchaseOrderNo: 'PO-2026-003',
+    goodsReceivedNoteNo: 'GRN-2026-002',
+    unitCost: 110.71,
+    currency: 'USD',
+    receivedQty: 30,
+    availableQty: 0,
+    reservedQty: 0,
+    blockedQty: 0,
+    qaHoldQty: 30,
+    batchStatus: 'quarantine',
+    warehouseLocation: 'C-03-02',
+    zone: 'C',
+    aisle: '03',
+    levelCode: '02',
+    bin: '02',
+    notes: 'Seeded batch record',
+    updatedAt: '2026-05-21T15:10:00.000Z'
+  }
+];
+
+let batchStatusHistoryStore: BatchStatusHistoryRecord[] = [
+  {
+    id: 'bsh-001',
+    batchId: 'bat-001',
+    inventoryItemId: 'inv-001',
+    batchNumber: 'BATCH-STEEL-001',
+    previousStatus: 'available',
+    nextStatus: 'available',
+    notes: 'Seeded initial status',
+    changedAt: '2026-05-21T14:30:00.000Z'
+  },
+  {
+    id: 'bsh-002',
+    batchId: 'bat-002',
+    inventoryItemId: 'inv-003',
+    batchNumber: 'BATCH-VALVE-001',
+    previousStatus: 'available',
+    nextStatus: 'quarantine',
+    notes: 'Seeded initial quarantine status',
+    changedAt: '2026-05-21T15:10:00.000Z'
+  }
+];
+
+let stockIssueStore: StockIssueRecord[] = [];
+
+function matchesSearch(values: string[], search?: string) {
+  const normalized = String(search ?? '').trim().toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return values.some((value) => value.toLowerCase().includes(normalized));
+}
+
+function nextIssueNumber() {
+  return `ISS-${new Date().getFullYear()}-${String(stockIssueStore.length + 1).padStart(3, '0')}`;
+}
+
+function sortBatchesForFefo(items: BatchRecord[]) {
+  return [...items].sort((a, b) => {
+    const aExpiry = a.expiryDate ? new Date(a.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const bExpiry = b.expiryDate ? new Date(b.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (aExpiry !== bExpiry) {
+      return aExpiry - bExpiry;
+    }
+
+    const aReceived = a.receivedDate ? new Date(a.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const bReceived = b.receivedDate ? new Date(b.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (aReceived !== bReceived) {
+      return aReceived - bReceived;
+    }
+
+    return a.batchNumber.localeCompare(b.batchNumber);
+  });
+}
+
+export function __setBatchStore(items: BatchRecord[]) {
+  batchStore = items;
+}
+
+export function getBatchPersistenceMode() {
+  return 'memory';
+}
+
+export async function listBatches(filters?: {
+  inventoryItemId?: string;
+  status?: string;
+  search?: string;
+}) {
+  return batchStore.filter((item) => {
+    const inventoryItemId = String(filters?.inventoryItemId ?? '').trim();
+    const status = String(filters?.status ?? '').trim();
+
+    const okInventory = !inventoryItemId || item.inventoryItemId === inventoryItemId;
+    const okStatus = !status || status === 'all' || item.batchStatus === status;
+
+    const okSearch = matchesSearch(
+      [
+        item.batchNumber,
+        item.lotNumber,
+        item.supplierLotNumber,
+        item.supplierName,
+        item.purchaseOrderNo,
+        item.goodsReceivedNoteNo,
+        item.batchStatus,
+        item.inventoryItemId
+      ],
+      filters?.search
+    );
+
+    return okInventory && okStatus && okSearch;
+  });
+}
+
+export async function getBatchById(id: string) {
+
+============================================================
+FILE HEAD: src\modules\batches\types.ts
+============================================================
+
+FILE NOT FOUND
+
+============================================================
+FILE MATCHES: src\modules\batches\repository.ts
+============================================================
+
+--- pattern: expiryDate ---
+Line 15:   expiryDate: string | null;
+Line 55:   expiryDate: string | null;
+Line 83:   expiryDate: string | null;
+Line 112:     expiryDate: null,
+Line 140:     expiryDate: '2027-04-15',
+Line 204:     const aExpiry = a.expiryDate ? new Date(a.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+Line 205:     const bExpiry = b.expiryDate ? new Date(b.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+Line 282:     expiryDate: input.expiryDate,
+Line 391:         expiryDate: batch.expiryDate,
+
+--- pattern: receivedDate ---
+Line 16:   receivedDate: string | null;
+Line 56:   receivedDate: string | null;
+Line 84:   receivedDate: string | null;
+Line 113:     receivedDate: '2026-05-20',
+Line 141:     receivedDate: '2026-05-18',
+Line 211:     const aReceived = a.receivedDate ? new Date(a.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+Line 212:     const bReceived = b.receivedDate ? new Date(b.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+Line 283:     receivedDate: input.receivedDate,
+Line 392:         receivedDate: batch.receivedDate,
+
+--- pattern: availableQty ---
+Line 23:   availableQty: number;
+Line 52:   availableQtyBefore: number;
+Line 54:   availableQtyAfter: number;
+Line 91:   availableQty: number;
+Line 120:     availableQty: 220,
+Line 148:     availableQty: 0,
+Line 290:     availableQty: input.availableQty,
+Line 372:         item.availableQty > 0
+Line 381:       const issueQty = Math.min(batch.availableQty, remaining);
+Line 388:         availableQtyBefore: batch.availableQty,
+Line 390:         availableQtyAfter: batch.availableQty - issueQty,
+Line 406:     totalAvailableQty: candidates.reduce((sum, item) => sum + item.availableQty, 0),
+Line 431:     const nextAvailableQty = allocation.availableQtyAfter;
+Line 435:       availableQty: nextAvailableQty,
+Line 437:         nextAvailableQty <= 0 && batch.reservedQty <= 0 && batch.blockedQty <= 0 && batch.qaHoldQty <= 0
+
+--- pattern: inventoryItemId ---
+Line 10:   inventoryItemId: string;
+Line 40:   inventoryItemId: string;
+Line 51:   inventoryItemId: string;
+Line 69:   inventoryItemId: string;
+Line 78:   inventoryItemId: string;
+Line 107:     inventoryItemId: 'inv-001',
+Line 135:     inventoryItemId: 'inv-003',
+Line 167:     inventoryItemId: 'inv-001',
+Line 177:     inventoryItemId: 'inv-003',
+Line 231:   inventoryItemId?: string;
+Line 236:     const inventoryItemId = String(filters?.inventoryItemId ?? '').trim();
+Line 239:     const okInventory = !inventoryItemId || item.inventoryItemId === inventoryItemId;
+Line 251:         item.inventoryItemId
+Line 277:     inventoryItemId: input.inventoryItemId,
+Line 310:       inventoryItemId: record.inventoryItemId,
+Line 353:       inventoryItemId: updated.inventoryItemId,
+Line 366: export async function previewIssueAllocation(inventoryItemId: string, requestedQty: number) {
+Line 370:         item.inventoryItemId === inventoryItemId &&
+Line 387:         inventoryItemId: batch.inventoryItemId,
+Line 414:   inventoryItemId: string;
+Line 418:   const preview = await previewIssueAllocation(input.inventoryItemId, input.requestedQty);
+Line 449:     inventoryItemId: input.inventoryItemId,
+
+--- pattern: warehouseLocation ---
+Line 28:   warehouseLocation: string;
+Line 57:   warehouseLocation: string;
+Line 96:   warehouseLocation: string;
+Line 125:     warehouseLocation: 'A-01-01',
+Line 153:     warehouseLocation: 'C-03-02',
+Line 295:     warehouseLocation: input.warehouseLocation,
+Line 393:         warehouseLocation: batch.warehouseLocation,
+
+--- pattern: batchStatus ---
+Line 1: export type BatchStatus =
+Line 27:   batchStatus: BatchStatus;
+Line 37: export interface BatchStatusHistoryRecord {
+Line 42:   previousStatus: BatchStatus;
+Line 43:   nextStatus: BatchStatus;
+Line 95:   batchStatus: BatchStatus;
+Line 124:     batchStatus: 'available',
+Line 152:     batchStatus: 'quarantine',
+Line 163: let batchStatusHistoryStore: BatchStatusHistoryRecord[] = [
+Line 240:     const okStatus = !status || status === 'all' || item.batchStatus === status;
+Line 250:         item.batchStatus,
+Line 264: export function listBatchStatusHistory(batchId: string) {
+Line 265:   return [...batchStatusHistoryStore]
+Line 294:     batchStatus: input.batchStatus,
+Line 306:   batchStatusHistoryStore = [
+Line 312:       previousStatus: record.batchStatus,
+Line 313:       nextStatus: record.batchStatus,
+Line 317:     ...batchStatusHistoryStore
+Line 323: export async function updateBatchStatus(
+Line 325:   nextStatus: BatchStatus,
+Line 342:     batchStatus: nextStatus,
+Line 349:   batchStatusHistoryStore = [
+Line 355:       previousStatus: current.batchStatus,
+Line 360:     ...batchStatusHistoryStore
+Line 371:         item.batchStatus === 'available' &&
+Line 436:       batchStatus:
+Line 439:           : batch.batchStatus,
+
+
+============================================================
+FILE MATCHES: src\modules\inventory\location-balance-store.ts
+============================================================
+
+--- pattern: availableSourceBalance ---
+Line 260:   const availableSourceBalance =
+Line 264:   if (!availableSourceBalance) {
+Line 268:   if (availableSourceBalance.availableQty < quantity) {
+Line 282:     availableSourceBalance
+Line 290:   const sourceBalance = draft.availableSourceBalance;
+
+--- pattern: destinationBalance ---
+Line 295:   const destinationBalance =
+Line 306:   const updatedDestination: InventoryLocationBalanceRecord = destinationBalance
+Line 308:         ...destinationBalance,
+Line 309:         onHandQty: destinationBalance.onHandQty + draft.quantity,
+Line 310:         availableQty: destinationBalance.availableQty + draft.quantity,
+Line 347:     destinationBalance: updatedDestination
+
+--- pattern: commitInventoryTransfer ---
+Line 33: export interface CommitInventoryTransferInput {
+Line 286: export async function commitInventoryTransfer(input: CommitInventoryTransferInput) {
+
+--- pattern: listInventoryTransfers ---
+Line 190: export function listInventoryTransfers(filters?: {
+
+--- pattern: getInventoryLocationBalanceByLocation ---
+Line 176: export async function getInventoryLocationBalanceByLocation(
+Line 261:     (await getInventoryLocationBalanceByLocation(input.inventoryItemId, fromWarehouseLocation)) ??
+Line 296:     (await getInventoryLocationBalanceByLocation(input.inventoryItemId, input.toWarehouseLocation)) ??
+

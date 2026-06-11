@@ -1,0 +1,1193 @@
+﻿I1 Step 2 - Focused Inventory Transfer Inspection
+Generated At: 2026-06-08 23:36:54
+
+IMPORTANT:
+- No code was changed
+- Paste the output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+
+============================================================
+FILE HEAD: src\app\inventory\page.tsx
+============================================================
+
+import { ProtectedLayout } from '@/components/layout/ProtectedLayout';
+import { InventoryListScreen } from '@/features/inventory/screens/InventoryListScreen';
+import { PERMISSIONS } from '@/types/permissions';
+
+export default function InventoryPage() {
+  return (
+    <ProtectedLayout permissions={[PERMISSIONS.INVENTORY_VIEW]}>
+      <InventoryListScreen />
+    </ProtectedLayout>
+  );
+}
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryListScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useState } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { useInventoryList } from '../hooks/useInventoryList';
+import { useInventoryActiveToggle } from '../hooks/useInventoryActiveToggle';
+import type { InventoryItem } from '../types';
+
+function getStatusColor(status: string) {
+  if (status === 'in_stock') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'low_stock') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+function getActiveStyle(isActive: boolean) {
+  if (isActive) {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+export function InventoryListScreen() {
+  const {
+    items,
+    filters,
+    isLoading,
+    error,
+    totalItems,
+    lowStockCount,
+    outOfStockCount,
+    updateSearch,
+    updateStatus,
+    refresh
+  } = useInventoryList();
+
+  const { toggleInventory } = useInventoryActiveToggle();
+  const [rowActionError, setRowActionError] = useState<string | null>(null);
+
+  async function handleToggle(item: InventoryItem) {
+    try {
+      setRowActionError(null);
+      await toggleInventory(item);
+      await refresh();
+    } catch (err: any) {
+      setRowActionError(err?.message || 'Failed to update item active status');
+    }
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Inventory
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Inventory master now supports governance actions such as edit and activate/deactivate.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              href={ROUTES.dashboard}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Back to dashboard
+            </Link>
+
+            <Link
+              href={ROUTES.inventoryCreate}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#0f766e',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Create item
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+
+============================================================
+FILE HEAD: src\features\inventory\hooks\useInventoryList.ts
+============================================================
+
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { inventoryApi } from '../api';
+import type { InventoryItem, InventoryListFilters } from '../types';
+
+const initialFilters: InventoryListFilters = {
+  search: '',
+  status: 'all'
+};
+
+export function useInventoryList() {
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [filters, setFilters] = useState<InventoryListFilters>(initialFilters);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadInventory(nextFilters: InventoryListFilters) {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await inventoryApi.getInventoryList(nextFilters);
+      setItems(response.items);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load inventory');
+      setItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadInventory(filters);
+  }, [filters]);
+
+  const totalItems = useMemo(() => items.length, [items]);
+  const lowStockCount = useMemo(
+    () => items.filter((item) => item.status === 'low_stock').length,
+    [items]
+  );
+  const outOfStockCount = useMemo(
+    () => items.filter((item) => item.status === 'out_of_stock').length,
+    [items]
+  );
+
+  function updateSearch(value: string) {
+    setFilters((current) => ({
+      ...current,
+      search: value
+    }));
+  }
+
+  function updateStatus(value: InventoryListFilters['status']) {
+    setFilters((current) => ({
+      ...current,
+      status: value
+    }));
+  }
+
+  async function refresh() {
+    await loadInventory(filters);
+  }
+
+  return {
+    items,
+    filters,
+    isLoading,
+    error,
+    totalItems,
+    lowStockCount,
+    outOfStockCount,
+    updateSearch,
+    updateStatus,
+    refresh
+  };
+}
+
+============================================================
+FILE MATCHES: src\features\inventory\types.ts
+============================================================
+
+--- pattern: quantity ---
+Line 25:   quantity: number;
+Line 66:   quantity: number;
+Line 108:   quantity: string;
+
+--- pattern: warehouseLocation ---
+Line 30:   warehouseLocation: string;
+Line 71:   warehouseLocation: string;
+Line 113:   warehouseLocation: string;
+
+--- pattern: unit ---
+Line 29:   unit: string;
+Line 70:   unit: string;
+Line 112:   unit: string;
+
+--- pattern: status ---
+Line 1: export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+Line 31:   status: InventoryStatus;
+Line 32:   statusLabel: string;
+Line 72:   status: InventoryStatus;
+Line 92:   status?: 'all' | InventoryStatus;
+Line 114:   status: InventoryStatus;
+Line 142:   batchStatus: string;
+
+
+============================================================
+FILE MATCHES: src\services\api\endpoints.ts
+============================================================
+
+--- pattern: inventory ---
+Line 11:   inventory: {
+Line 12:     list: '/inventory',
+Line 13:     detail: (id: string) => `/inventory/${id}`,
+Line 14:     create: '/inventory',
+Line 15:     update: (id: string) => `/inventory/${id}`,
+Line 16:     toggleActive: (id: string) => `/inventory/${id}/active`
+Line 28:     createDraftPurchaseOrderFromSuggestion: (inventoryItemId: string) =>
+Line 29:       `/stock-control/reorder-suggestions/${inventoryItemId}/create-po-draft`,
+Line 31:     movementsByInventory: (inventoryItemId: string) =>
+Line 32:       `/stock-control/movements/inventory/${inventoryItemId}`,
+
+--- pattern: stock-control ---
+Line 24:     summary: '/stock-control/summary',
+Line 25:     alerts: '/stock-control/alerts',
+Line 26:     reorderSuggestions: '/stock-control/reorder-suggestions',
+Line 27:     procurementActions: '/stock-control/procurement-actions',
+Line 29:       `/stock-control/reorder-suggestions/${inventoryItemId}/create-po-draft`,
+Line 30:     movements: '/stock-control/movements',
+Line 32:       `/stock-control/movements/inventory/${inventoryItemId}`,
+Line 33:     movementsByBatch: (batchId: string) => `/stock-control/movements/batch/${batchId}`,
+Line 34:     issuePreview: '/stock-control/issue-preview',
+Line 35:     createIssue: '/stock-control/issues'
+
+--- pattern: movements ---
+Line 30:     movements: '/stock-control/movements',
+Line 31:     movementsByInventory: (inventoryItemId: string) =>
+Line 32:       `/stock-control/movements/inventory/${inventoryItemId}`,
+Line 33:     movementsByBatch: (batchId: string) => `/stock-control/movements/batch/${batchId}`,
+
+--- pattern: warehouse ---
+Line 37:   warehouse: {
+Line 38:     summary: '/warehouse/summary',
+Line 39:     locations: '/warehouse/locations',
+Line 40:     locationDetail: (id: string) => `/warehouse/locations/${id}`,
+Line 41:     createLocation: '/warehouse/locations',
+Line 42:     updateLocation: (id: string) => `/warehouse/locations/${id}`,
+Line 43:     toggleLocationActive: (id: string) => `/warehouse/locations/${id}/active`,
+Line 44:     importCsv: '/warehouse/locations/import-csv',
+Line 45:     exportCsv: '/warehouse/locations/export-csv'
+
+
+============================================================
+FILE HEAD: src\modules\inventory\repository.ts
+============================================================
+
+import { execute, isPostgresEnabled, queryRows } from '../../infrastructure/db/postgres';
+
+export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+export type InventoryItemType =
+  | 'raw_material'
+  | 'finished_goods'
+  | 'packaging'
+  | 'spare_part'
+  | 'consumable';
+
+export interface InventoryRecord {
+  id: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface CreateInventoryInput {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export interface UpdateInventoryInput extends CreateInventoryInput {
+  id: string;
+}
+
+let initialized = false;
+
+let memoryInventoryStore: InventoryRecord[] = [
+  {
+    id: 'inv-001',
+    sku: 'RM-STEEL-001',
+    barcode: '9555000000011',
+    name: 'Steel Sheet A',
+    description: 'Primary steel sheet material for fabrication use.',
+    category: 'Raw Material',
+    itemType: 'raw_material',
+    brand: 'PrimeSteel',
+    model: 'Sheet-A',
+    preferredSupplierName: 'Prime Steel Supply',
+    standardCost: 15.5,
+    averageCost: 15.2,
+    currency: 'USD',
+    quantity: 240,
+    reorderLevel: 80,
+    minimumStockLevel: 60,
+    maximumStockLevel: 500,
+    unit: 'pcs',
+    warehouseLocation: 'A-01-01',
+    status: 'in_stock',
+    isActive: true,
+    isBatchTracked: true,
+    isExpiryTracked: false,
+    isSerialTracked: false,
+    baseUomCode: 'PCS',
+    purchaseUomCode: 'CTN',
+    salesUomCode: 'PCS',
+    issueUomCode: 'PCS',
+    uomConversionGroupCode: 'PK_STD_001',
+    allowsFraction: false,
+    notes: 'Standard steel receiving profile.',
+    updatedAt: '2026-05-20T08:30:00.000Z'
+  },
+  {
+    id: 'inv-002',
+    sku: 'PK-BOX-010',
+    barcode: '9555000000028',
+    name: 'Carton Box Medium',
+    description: 'Medium-size packaging carton for outbound packing.',
+    category: 'Packaging',
+    itemType: 'packaging',
+    brand: 'PackRight',
+    model: 'Medium-Box',
+    preferredSupplierName: 'PackRight Industries',
+    standardCost: 2.1,
+    averageCost: 2.0,
+    currency: 'USD',
+    quantity: 35,
+    reorderLevel: 50,
+    minimumStockLevel: 40,
+    maximumStockLevel: 300,
+    unit: 'box',
+    warehouseLocation: 'B-02-04',
+    status: 'low_stock',
+    isActive: true,
+    isBatchTracked: false,
+    isExpiryTracked: false,
+    isSerialTracked: false,
+    baseUomCode: 'BOX',
+    purchaseUomCode: 'CTN',
+    salesUomCode: 'BOX',
+    issueUomCode: 'BOX',
+    uomConversionGroupCode: 'PK_STD_001',
+    allowsFraction: false,
+    notes: 'Packaging material.',
+    updatedAt: '2026-05-20T09:00:00.000Z'
+  },
+  {
+    id: 'inv-003',
+    sku: 'FG-VALVE-221',
+    barcode: '9555000000035',
+    name: 'Control Valve X',
+    description: 'Finished control valve item for industrial order fulfillment.',
+    category: 'Finished Goods',
+    itemType: 'finished_goods',
+    brand: 'ValveCore',
+    model: 'X221',
+    preferredSupplierName: 'ValveCore Manufacturing',
+    standardCost: 110,
+    averageCost: 108,
+    currency: 'USD',
+    quantity: 0,
+    reorderLevel: 20,
+    minimumStockLevel: 15,
+    maximumStockLevel: 120,
+    unit: 'pcs',
+    warehouseLocation: 'C-03-02',
+    status: 'out_of_stock',
+    isActive: true,
+    isBatchTracked: true,
+    isExpiryTracked: true,
+    isSerialTracked: false,
+    baseUomCode: 'PCS',
+    purchaseUomCode: 'BOX',
+    salesUomCode: 'PCS',
+    issueUomCode: 'PCS',
+    uomConversionGroupCode: 'PK_STD_001',
+    allowsFraction: false,
+    notes: 'Requires traceability through batch/expiry flow.',
+    updatedAt: '2026-05-20T10:15:00.000Z'
+  }
+];
+
+const INVENTORY_MASTER_BACKFILL = memoryInventoryStore.map((item) => ({
+  id: item.id,
+  itemType: item.itemType,
+  brand: item.brand,
+  model: item.model,
+  preferredSupplierName: item.preferredSupplierName,
+  standardCost: item.standardCost,
+  averageCost: item.averageCost,
+  currency: item.currency
+}));
+
+function matchesSearch(values: string[], search?: string) {
+  const normalized = String(search ?? '').trim().toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return values.some((value) => value.toLowerCase().includes(normalized));
+}
+
+function mapRow(row: any): InventoryRecord {
+  return {
+    id: String(row.id),
+    sku: String(row.sku),
+    barcode: String(row.barcode ?? ''),
+    name: String(row.name),
+    description: String(row.description ?? ''),
+    category: String(row.category),
+    itemType: String(row.item_type ?? 'raw_material') as InventoryItemType,
+    brand: String(row.brand ?? ''),
+
+============================================================
+FILE HEAD: src\modules\inventory\store.ts
+============================================================
+
+export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+
+export interface InventoryRecord {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  quantity: number;
+  reorderLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  updatedAt: string;
+}
+
+export interface CreateInventoryInput {
+  sku: string;
+  name: string;
+  category: string;
+  quantity: number;
+  reorderLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+}
+
+let inventoryStore: InventoryRecord[] = [
+  {
+    id: 'inv-001',
+    sku: 'RM-STEEL-001',
+    name: 'Steel Sheet A',
+    category: 'Raw Material',
+    quantity: 240,
+    reorderLevel: 80,
+    unit: 'pcs',
+    warehouseLocation: 'A-01-01',
+    status: 'in_stock',
+    updatedAt: '2026-05-20T08:30:00.000Z'
+  },
+  {
+    id: 'inv-002',
+    sku: 'PK-BOX-010',
+    name: 'Carton Box Medium',
+    category: 'Packaging',
+    quantity: 35,
+    reorderLevel: 50,
+    unit: 'box',
+    warehouseLocation: 'B-02-04',
+    status: 'low_stock',
+    updatedAt: '2026-05-20T09:00:00.000Z'
+  },
+  {
+    id: 'inv-003',
+    sku: 'FG-VALVE-221',
+    name: 'Control Valve X',
+    category: 'Finished Goods',
+    quantity: 0,
+    reorderLevel: 20,
+    unit: 'pcs',
+    warehouseLocation: 'C-03-02',
+    status: 'out_of_stock',
+    updatedAt: '2026-05-20T10:15:00.000Z'
+  }
+];
+
+export function listInventory(filters?: { search?: string; status?: string }) {
+  const search = String(filters?.search ?? '').trim().toLowerCase();
+  const status = String(filters?.status ?? '').trim();
+
+  return inventoryStore.filter((item) => {
+    const matchesSearch =
+      !search ||
+      item.name.toLowerCase().includes(search) ||
+      item.sku.toLowerCase().includes(search) ||
+      item.category.toLowerCase().includes(search);
+
+    const matchesStatus = !status || status === 'all' || item.status === status;
+
+    return matchesSearch && matchesStatus;
+  });
+}
+
+export function getInventoryById(id: string) {
+  return inventoryStore.find((item) => item.id === id) ?? null;
+}
+
+export function createInventory(input: CreateInventoryInput) {
+  const nextRecord: InventoryRecord = {
+    id: 'inv-' + Date.now(),
+    sku: input.sku,
+    name: input.name,
+    category: input.category,
+    quantity: input.quantity,
+    reorderLevel: input.reorderLevel,
+    unit: input.unit,
+    warehouseLocation: input.warehouseLocation,
+    status: input.status,
+    updatedAt: new Date().toISOString()
+  };
+
+  inventoryStore = [nextRecord, ...inventoryStore];
+
+  return nextRecord;
+}
+
+============================================================
+FILE HEAD: src\modules\stock-control\movement-service.ts
+============================================================
+
+import { listBatches, listBatchStatusHistory } from '../batches/repository';
+import { listInventory } from '../inventory/repository';
+
+export type StockMovementType = 'receipt' | 'status_change';
+export type StockMovementReferenceType = 'grn' | 'po' | 'batch';
+
+export interface StockMovementRecord {
+  id: string;
+  movementType: StockMovementType;
+  inventoryItemId: string;
+  itemCode: string;
+  barcode: string;
+  itemName: string;
+  batchId: string;
+  batchNumber: string;
+  lotNumber: string;
+  supplierLotNumber: string;
+  supplierName: string;
+  qtyIn: number;
+  qtyOut: number;
+  netQty: number;
+  availableQty: number;
+  reservedQty: number;
+  blockedQty: number;
+  qaHoldQty: number;
+  unitCost: number;
+  currency: string;
+  batchStatus: string;
+  previousStatus?: string;
+  nextStatus?: string;
+  purchaseOrderNo: string;
+  goodsReceivedNoteNo: string;
+  referenceType: StockMovementReferenceType;
+  referenceNo: string;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  manufactureDate: string | null;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  occurredAt: string;
+  notes: string;
+}
+
+function sortByOccurredAtDesc(items: StockMovementRecord[]) {
+  return [...items].sort((a, b) => {
+    return new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime();
+  });
+}
+
+export async function getStockMovements(): Promise<StockMovementRecord[]> {
+  const [inventoryRows, batchRows] = await Promise.all([
+    listInventory({ search: '', status: 'all' }),
+    listBatches({ search: '', status: 'all' })
+  ]);
+
+  const inventoryMap = inventoryRows.reduce<Record<string, (typeof inventoryRows)[number]>>(
+    (acc, item) => {
+      acc[item.id] = item;
+      return acc;
+    },
+    {}
+  );
+
+  const batchMap = batchRows.reduce<Record<string, (typeof batchRows)[number]>>((acc, batch) => {
+    acc[batch.id] = batch;
+    return acc;
+  }, {});
+
+  const receiptMovements: StockMovementRecord[] = batchRows.map((batch) => {
+    const inventory = inventoryMap[batch.inventoryItemId];
+
+    const referenceType: StockMovementReferenceType = batch.goodsReceivedNoteNo
+      ? 'grn'
+      : batch.purchaseOrderNo
+        ? 'po'
+        : 'batch';
+
+    const referenceNo = batch.goodsReceivedNoteNo || batch.purchaseOrderNo || batch.batchNumber;
+
+    return {
+      id: `mov-receipt-${batch.id}`,
+      movementType: 'receipt',
+      inventoryItemId: batch.inventoryItemId,
+      itemCode: inventory?.sku || '',
+      barcode: inventory?.barcode || '',
+      itemName: inventory?.name || '',
+      batchId: batch.id,
+      batchNumber: batch.batchNumber,
+      lotNumber: batch.lotNumber,
+      supplierLotNumber: batch.supplierLotNumber,
+      supplierName: batch.supplierName,
+      qtyIn: Number(batch.receivedQty || 0),
+      qtyOut: 0,
+      netQty: Number(batch.receivedQty || 0),
+      availableQty: Number(batch.availableQty || 0),
+      reservedQty: Number(batch.reservedQty || 0),
+      blockedQty: Number(batch.blockedQty || 0),
+      qaHoldQty: Number(batch.qaHoldQty || 0),
+      unitCost: Number(batch.unitCost || 0),
+      currency: batch.currency || 'USD',
+      batchStatus: batch.batchStatus,
+      previousStatus: undefined,
+      nextStatus: undefined,
+      purchaseOrderNo: batch.purchaseOrderNo || '',
+      goodsReceivedNoteNo: batch.goodsReceivedNoteNo || '',
+      referenceType,
+      referenceNo,
+      warehouseLocation: batch.warehouseLocation || '',
+      zone: batch.zone || '',
+      aisle: batch.aisle || '',
+      levelCode: batch.levelCode || '',
+      bin: batch.bin || '',
+      manufactureDate: batch.manufactureDate || null,
+      expiryDate: batch.expiryDate || null,
+      receivedDate: batch.receivedDate || null,
+      occurredAt: batch.receivedDate || batch.updatedAt,
+      notes: batch.notes || ''
+    };
+  });
+
+  const statusHistoryRows = batchRows.flatMap((batch) => {
+    const history = listBatchStatusHistory(batch.id);
+    const inventory = inventoryMap[batch.inventoryItemId];
+    const currentBatch = batchMap[batch.id];
+
+    return history.map((row) => ({
+      id: `mov-status-${row.id}`,
+      movementType: 'status_change' as StockMovementType,
+      inventoryItemId: row.inventoryItemId,
+      itemCode: inventory?.sku || '',
+      barcode: inventory?.barcode || '',
+      itemName: inventory?.name || '',
+      batchId: row.batchId,
+      batchNumber: row.batchNumber,
+      lotNumber: currentBatch?.lotNumber || '',
+      supplierLotNumber: currentBatch?.supplierLotNumber || '',
+      supplierName: currentBatch?.supplierName || '',
+      qtyIn: 0,
+      qtyOut: 0,
+      netQty: 0,
+      availableQty: Number(currentBatch?.availableQty || 0),
+      reservedQty: Number(currentBatch?.reservedQty || 0),
+      blockedQty: Number(currentBatch?.blockedQty || 0),
+      qaHoldQty: Number(currentBatch?.qaHoldQty || 0),
+      unitCost: Number(currentBatch?.unitCost || 0),
+      currency: currentBatch?.currency || 'USD',
+      batchStatus: row.nextStatus,
+      previousStatus: row.previousStatus,
+      nextStatus: row.nextStatus,
+      purchaseOrderNo: currentBatch?.purchaseOrderNo || '',
+      goodsReceivedNoteNo: currentBatch?.goodsReceivedNoteNo || '',
+      referenceType: 'batch' as StockMovementReferenceType,
+      referenceNo: row.batchNumber,
+      warehouseLocation: currentBatch?.warehouseLocation || '',
+      zone: currentBatch?.zone || '',
+      aisle: currentBatch?.aisle || '',
+      levelCode: currentBatch?.levelCode || '',
+      bin: currentBatch?.bin || '',
+      manufactureDate: currentBatch?.manufactureDate || null,
+      expiryDate: currentBatch?.expiryDate || null,
+      receivedDate: currentBatch?.receivedDate || null,
+      occurredAt: row.changedAt,
+      notes: row.notes || ''
+    }));
+  });
+
+  return sortByOccurredAtDesc([...receiptMovements, ...statusHistoryRows]);
+}
+
+export async function getInventoryStockMovements(inventoryItemId: string) {
+  const items = await getStockMovements();
+  return items.filter((item) => item.inventoryItemId === inventoryItemId);
+}
+
+export async function getBatchStockMovements(batchId: string) {
+  const items = await getStockMovements();
+  return items.filter((item) => item.batchId === batchId);
+}
+
+============================================================
+FILE HEAD: src\modules\stock-control\routes.ts
+============================================================
+
+import { Router } from 'express';
+import { created, ok } from '../../common/http/api-response';
+import { asyncHandler } from '../../common/utils/async-handler';
+import { AppError } from '../../common/errors/app-error';
+import {
+  createDraftPurchaseOrderFromSuggestion,
+  getProcurementActionQueue,
+  getReorderSuggestions,
+  getStockControlAlerts,
+  getStockControlSummary
+} from './service';
+import {
+  getBatchStockMovements,
+  getInventoryStockMovements,
+  getStockMovements
+} from './movement-service';
+import { commitIssueAllocation, previewIssueAllocation } from '../batches/repository';
+
+export const stockControlRouter = Router();
+
+function readSingle(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+
+  return value ?? '';
+}
+
+stockControlRouter.get(
+  '/summary',
+  asyncHandler(async (_request, response) => {
+    const summary = await getStockControlSummary();
+    return ok(response, summary, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/alerts',
+  asyncHandler(async (_request, response) => {
+    const alerts = await getStockControlAlerts();
+    return ok(response, alerts, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/reorder-suggestions',
+  asyncHandler(async (_request, response) => {
+    const suggestions = await getReorderSuggestions();
+    return ok(response, suggestions, 200);
+  })
+);
+
+stockControlRouter.post(
+  '/reorder-suggestions/:inventoryItemId/create-po-draft',
+  asyncHandler(async (request, response) => {
+    const inventoryItemId = readSingle(
+      request.params.inventoryItemId as string | string[] | undefined
+    );
+
+    const result = await createDraftPurchaseOrderFromSuggestion(inventoryItemId);
+
+    if (!result) {
+      throw new AppError({
+        status: 404,
+        code: 'REORDER_SUGGESTION_NOT_FOUND',
+        message: 'Reorder suggestion not found for the given inventory item'
+      });
+    }
+
+    return created(response, result);
+  })
+);
+
+stockControlRouter.get(
+  '/procurement-actions',
+  asyncHandler(async (_request, response) => {
+    const actions = await getProcurementActionQueue();
+    return ok(response, actions, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/movements',
+  asyncHandler(async (_request, response) => {
+    const items = await getStockMovements();
+    return ok(response, items, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/movements/inventory/:inventoryItemId',
+  asyncHandler(async (request, response) => {
+    const inventoryItemId = readSingle(
+      request.params.inventoryItemId as string | string[] | undefined
+    );
+
+    const items = await getInventoryStockMovements(inventoryItemId);
+    return ok(response, items, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/movements/batch/:batchId',
+  asyncHandler(async (request, response) => {
+    const batchId = readSingle(request.params.batchId as string | string[] | undefined);
+    const items = await getBatchStockMovements(batchId);
+    return ok(response, items, 200);
+  })
+);
+
+stockControlRouter.get(
+  '/issue-preview',
+  asyncHandler(async (request, response) => {
+    const inventoryItemId = readSingle(request.query.inventoryItemId as string | string[] | undefined);
+    const requestedQty = Number(readSingle(request.query.requestedQty as string | string[] | undefined));
+
+    if (!inventoryItemId) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'inventoryItemId is required'
+      });
+    }
+
+    if (Number.isNaN(requestedQty) || requestedQty <= 0) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'requestedQty must be greater than 0'
+      });
+    }
+
+    const result = await previewIssueAllocation(inventoryItemId, requestedQty);
+    return ok(response, result, 200);
+  })
+);
+
+stockControlRouter.post(
+  '/issues',
+  asyncHandler(async (request, response) => {
+    const inventoryItemId = String(request.body?.inventoryItemId ?? '').trim();
+    const requestedQty = Number(request.body?.requestedQty);
+    const reason = String(request.body?.reason ?? '').trim();
+
+    if (!inventoryItemId) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'inventoryItemId is required'
+      });
+    }
+
+    if (Number.isNaN(requestedQty) || requestedQty <= 0) {
+      throw new AppError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'requestedQty must be greater than 0'
+      });
+    }
+
+    const result = await commitIssueAllocation({
+      inventoryItemId,
+      requestedQty,
+      reason
+    });
+
+    if (!result) {
+      throw new AppError({
+        status: 400,
+        code: 'NO_AVAILABLE_BATCH_STOCK',
+        message: 'No available batch stock found for issue allocation'
+      });
+    }
+
+    return created(response, result);
+  })
+);
+
+============================================================
+FILE MATCHES: src\modules\inventory\repository.ts
+============================================================
+
+--- pattern: quantity ---
+Line 25:   quantity: number;
+Line 59:   quantity: number;
+Line 100:     quantity: 240,
+Line 134:     quantity: 35,
+Line 168:     quantity: 0,
+Line 226:     quantity: Number(row.quantity),
+Line 305:       quantity NUMERIC NOT NULL,
+Line 359:           quantity,
+Line 397:           item.quantity,
+Line 472:       quantity,
+Line 552:       quantity,
+Line 600:     quantity: input.quantity,
+Line 644:       quantity,
+Line 682:       record.quantity,
+Line 722:     quantity: input.quantity,
+Line 772:       quantity = $14,
+Line 807:       updated.quantity,
+
+--- pattern: update ---
+Line 43:   updatedAt: string;
+Line 79: export interface UpdateInventoryInput extends CreateInventoryInput {
+Line 118:     updatedAt: '2026-05-20T08:30:00.000Z'
+Line 152:     updatedAt: '2026-05-20T09:00:00.000Z'
+Line 186:     updatedAt: '2026-05-20T10:15:00.000Z'
+Line 244:     updatedAt: new Date(row.updated_at).toISOString()
+Line 256:       UPDATE inventory_items
+Line 265:         updated_at = NOW()
+Line 323:       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+Line 377:           updated_at
+Line 415:           item.updatedAt
+Line 490:       updated_at
+Line 523:   query += ' ORDER BY updated_at DESC';
+Line 570:       updated_at
+Line 618:     updatedAt: new Date().toISOString()
+Line 662:       updated_at
+Line 700:       record.updatedAt
+Line 707: export async function updateInventory(input: UpdateInventoryInput) {
+Line 708:   const updated: InventoryRecord = {
+Line 740:     updatedAt: new Date().toISOString()
+Line 750:     memoryInventoryStore[index] = updated;
+Line 751:     return updated;
+Line 758:     UPDATE inventory_items
+Line 790:       updated_at = $32
+Line 794:       updated.id,
+Line 795:       updated.sku,
+Line 796:       updated.barcode,
+Line 797:       updated.name,
+Line 798:       updated.description,
+Line 799:       updated.category,
+Line 800:       updated.itemType,
+Line 801:       updated.brand,
+Line 802:       updated.model,
+Line 803:       updated.preferredSupplierName,
+Line 804:       updated.standardCost,
+Line 805:       updated.averageCost,
+Line 806:       updated.currency,
+Line 807:       updated.quantity,
+Line 808:       updated.reorderLevel,
+Line 809:       updated.minimumStockLevel,
+Line 810:       updated.maximumStockLevel,
+Line 811:       updated.unit,
+Line 812:       updated.warehouseLocation,
+Line 813:       updated.status,
+Line 814:       updated.isActive,
+Line 815:       updated.isBatchTracked,
+Line 816:       updated.isExpiryTracked,
+Line 817:       updated.isSerialTracked,
+Line 818:       updated.baseUomCode,
+Line 819:       updated.purchaseUomCode,
+Line 820:       updated.salesUomCode,
+Line 821:       updated.issueUomCode,
+Line 822:       updated.uomConversionGroupCode,
+Line 823:       updated.allowsFraction,
+Line 824:       updated.notes,
+Line 825:       updated.updatedAt
+Line 829:   return updated;
+Line 843:       updatedAt: new Date().toISOString()
+Line 853:     UPDATE inventory_items
+Line 854:     SET is_active = $2, updated_at = $3
+
+--- pattern: find ---
+Line 531:     return memoryInventoryStore.find((item) => item.id === id) ?? null;
+Line 744:     const index = memoryInventoryStore.findIndex((item) => item.id === input.id);
+Line 834:     const index = memoryInventoryStore.findIndex((item) => item.id === id);
+
+--- pattern: location ---
+Line 30:   warehouseLocation: string;
+Line 64:   warehouseLocation: string;
+Line 105:     warehouseLocation: 'A-01-01',
+Line 139:     warehouseLocation: 'B-02-04',
+Line 173:     warehouseLocation: 'C-03-02',
+Line 231:     warehouseLocation: String(row.warehouse_location),
+Line 310:       warehouse_location TEXT NOT NULL,
+Line 364:           warehouse_location,
+Line 402:           item.warehouseLocation,
+Line 477:       warehouse_location,
+Line 557:       warehouse_location,
+Line 605:     warehouseLocation: input.warehouseLocation,
+Line 649:       warehouse_location,
+Line 687:       record.warehouseLocation,
+Line 727:     warehouseLocation: input.warehouseLocation,
+Line 777:       warehouse_location = $19,
+Line 812:       updated.warehouseLocation,
+
+--- pattern: warehouseLocation ---
+Line 30:   warehouseLocation: string;
+Line 64:   warehouseLocation: string;
+Line 105:     warehouseLocation: 'A-01-01',
+Line 139:     warehouseLocation: 'B-02-04',
+Line 173:     warehouseLocation: 'C-03-02',
+Line 231:     warehouseLocation: String(row.warehouse_location),
+Line 402:           item.warehouseLocation,
+Line 605:     warehouseLocation: input.warehouseLocation,
+Line 687:       record.warehouseLocation,
+Line 727:     warehouseLocation: input.warehouseLocation,
+Line 812:       updated.warehouseLocation,
+
+
+============================================================
+FILE MATCHES: src\modules\stock-control\movement-service.ts
+============================================================
+
+--- pattern: movement ---
+Line 4: export type StockMovementType = 'receipt' | 'status_change';
+Line 5: export type StockMovementReferenceType = 'grn' | 'po' | 'batch';
+Line 7: export interface StockMovementRecord {
+Line 9:   movementType: StockMovementType;
+Line 33:   referenceType: StockMovementReferenceType;
+Line 47: function sortByOccurredAtDesc(items: StockMovementRecord[]) {
+Line 53: export async function getStockMovements(): Promise<StockMovementRecord[]> {
+Line 72:   const receiptMovements: StockMovementRecord[] = batchRows.map((batch) => {
+Line 75:     const referenceType: StockMovementReferenceType = batch.goodsReceivedNoteNo
+Line 85:       movementType: 'receipt',
+Line 131:       movementType: 'status_change' as StockMovementType,
+Line 155:       referenceType: 'batch' as StockMovementReferenceType,
+Line 170:   return sortByOccurredAtDesc([...receiptMovements, ...statusHistoryRows]);
+Line 173: export async function getInventoryStockMovements(inventoryItemId: string) {
+Line 174:   const items = await getStockMovements();
+Line 178: export async function getBatchStockMovements(batchId: string) {
+Line 179:   const items = await getStockMovements();
+
+--- pattern: issue ---
+no match
+
+--- pattern: transfer ---
+no match
+
+--- pattern: location ---
+Line 35:   warehouseLocation: string;
+Line 111:       warehouseLocation: batch.warehouseLocation || '',
+Line 157:       warehouseLocation: currentBatch?.warehouseLocation || '',
+
+--- pattern: warehouse ---
+Line 35:   warehouseLocation: string;
+Line 111:       warehouseLocation: batch.warehouseLocation || '',
+Line 157:       warehouseLocation: currentBatch?.warehouseLocation || '',
+

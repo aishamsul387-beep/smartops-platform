@@ -1,0 +1,874 @@
+﻿T1 Step 6 - Standalone Transfer Screen Inspection
+Generated At: 2026-06-10 11:08:47
+
+IMPORTANT:
+- No code was changed
+- Paste the generated output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+============================================================
+FRONTEND INVENTORY TRANSFER TREE
+============================================================
+
+
+FullName                                                                                                                       
+--------                                                                                                                       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\create                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\transfers                               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]                                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\page.tsx                                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\create\page.tsx                         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\transfers\page.tsx                      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\edit                               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\page.tsx                           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\edit\page.tsx                      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks                              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens                            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\api.ts                             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\mapper.ts                          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\schema.ts                          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\types.ts                           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useCreateInventory.ts        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryActiveToggle.ts  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryDetail.ts        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryList.ts          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryMasterOptions.ts 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryTransferDraft.ts 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useUpdateInventory.ts        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryCreateScreen.tsx  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryDetailScreen.tsx  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryEditScreen.tsx    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryListScreen.tsx    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryTransferScreen.tsx
+
+
+
+
+============================================================
+FILE HEAD: src\app\inventory\transfers\page.tsx
+============================================================
+
+import { ProtectedLayout } from '@/components/layout/ProtectedLayout';
+import { InventoryTransferScreen } from '@/features/inventory/screens/InventoryTransferScreen';
+import { PERMISSIONS } from '@/types/permissions';
+
+export default function InventoryTransfersPage() {
+  return (
+    <ProtectedLayout permissions={[PERMISSIONS.INVENTORY_VIEW]}>
+      <InventoryTransferScreen />
+    </ProtectedLayout>
+  );
+}
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryTransferScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useState, type FormEvent } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { useInventoryTransferDraft } from '../hooks/useInventoryTransferDraft';
+
+export function InventoryTransferScreen() {
+  const {
+    draft,
+    isLoading,
+    error,
+    previewTransfer,
+    clearDraft
+  } = useInventoryTransferDraft();
+
+  const [inventoryItemId, setInventoryItemId] = useState('');
+  const [fromWarehouseLocation, setFromWarehouseLocation] = useState('');
+  const [toWarehouseLocation, setToWarehouseLocation] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [reason, setReason] = useState('inventory_transfer');
+  const [notes, setNotes] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  async function handlePreviewTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const qty = Number(quantity);
+
+    if (!inventoryItemId.trim()) {
+      setFormError('Inventory Item ID is required');
+      return;
+    }
+
+    if (!fromWarehouseLocation.trim()) {
+      setFormError('From Location is required');
+      return;
+    }
+
+    if (!toWarehouseLocation.trim()) {
+      setFormError('To Location is required');
+      return;
+    }
+
+    if (!reason.trim()) {
+      setFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setFormError(null);
+
+    try {
+      await previewTransfer({
+        inventoryItemId: inventoryItemId.trim(),
+        fromWarehouseLocation: fromWarehouseLocation.trim(),
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: reason.trim(),
+        notes: notes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleClearPreview() {
+    clearDraft();
+    setFormError(null);
+    setInventoryItemId('');
+    setFromWarehouseLocation('');
+    setToWarehouseLocation('');
+    setQuantity('1');
+    setReason('inventory_transfer');
+    setNotes('');
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Stock Transfer Preview
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Preview location-to-location or plant-to-plant stock transfer before final posting is introduced.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              href={ROUTES.inventory}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Back to inventory
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>
+          Transfer Request
+        </div>
+        <div style={{ color: '#475569', lineHeight: 1.7, marginBottom: '16px' }}>
+          This is a blank transfer foundation for same-plant and inter-plant movement. Final posting will come in a later step.
+        </div>
+
+        <form onSubmit={handlePreviewTransfer}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '16px',
+              marginBottom: '16px'
+            }}
+          >
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Inventory Item ID
+              </label>
+              <input
+                value={inventoryItemId}
+                onChange={(e) => setInventoryItemId(e.target.value)}
+                placeholder="Example: inv-001"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                From Location
+              </label>
+              <input
+                value={fromWarehouseLocation}
+                onChange={(e) => setFromWarehouseLocation(e.target.value)}
+                placeholder="Example: A-01-01"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                To Location
+              </label>
+              <input
+                value={toWarehouseLocation}
+                onChange={(e) => setToWarehouseLocation(e.target.value)}
+                placeholder="Example: B-02-01 or TRANSIT-01"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Quantity
+              </label>
+              <input
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="1"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Reason
+              </label>
+              <input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="inventory_transfer"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1'
+                }}
+              />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                Notes
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder="Optional transfer note"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid #cbd5e1',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+          </div>
+
+          {formError ? (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {formError}
+            </div>
+          ) : null}
+
+          {error ? (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '12px',
+                borderRadius: '10px',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca'
+              }}
+            >
+              {error}
+            </div>
+          ) : null}
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isLoading ? '#94a3b8' : '#0f172a',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              {isLoading ? 'Previewing...' : 'Preview Transfer'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClearPreview}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#334155',
+                fontWeight: 600
+              }}
+            >
+              Clear Preview
+            </button>
+          </div>
+        </form>
+
+============================================================
+FILE HEAD: src\features\inventory\hooks\useInventoryTransferDraft.ts
+============================================================
+
+'use client';
+
+import { useState } from 'react';
+import { inventoryApi } from '../api';
+import type {
+  CreateInventoryTransferDraftRequest,
+  InventoryTransferDraft
+} from '../types';
+
+export function useInventoryTransferDraft() {
+  const [draft, setDraft] = useState<InventoryTransferDraft | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function previewTransfer(payload: CreateInventoryTransferDraftRequest) {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await inventoryApi.createTransferDraft(payload);
+      setDraft(result);
+
+      return result;
+    } catch (err: any) {
+      setDraft(null);
+      setError(err?.message || 'Failed to preview inventory transfer');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function clearDraft() {
+    setDraft(null);
+    setError(null);
+  }
+
+  return {
+    draft,
+    isLoading,
+    error,
+    previewTransfer,
+    clearDraft
+  };
+}
+
+============================================================
+FILE HEAD: src\features\inventory\api.ts
+============================================================
+
+import { apiClient } from '@/services/api/client';
+import { ENDPOINTS } from '@/services/api/endpoints';
+import { mapInventoryItem, mapInventoryListResponse } from './mapper';
+import type {
+  CreateInventoryRequest,
+  CreateInventoryTransferDraftRequest,
+  InventoryDetailResponse,
+  InventoryItemDto,
+  InventoryListFilters,
+  InventoryListResponse,
+  InventoryLocationBalanceListResponse,
+  InventoryLocationBalanceRecord,
+  InventoryLocationBalanceSummary,
+  InventoryTransferDraft,
+  UpdateInventoryRequest
+} from './types';
+
+function buildInventoryListUrl(filters: InventoryListFilters = {}) {
+  const query = new URLSearchParams();
+
+  if (filters.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters.status && filters.status !== 'all') {
+    query.set('status', filters.status);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `${ENDPOINTS.inventory.list}?${queryString}` : ENDPOINTS.inventory.list;
+}
+
+function buildInventoryLocationBalancesUrl(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const query = new URLSearchParams();
+
+  if (filters?.inventoryItemId && filters.inventoryItemId.trim()) {
+    query.set('inventoryItemId', filters.inventoryItemId.trim());
+  }
+
+  if (filters?.search && filters.search.trim()) {
+    query.set('search', filters.search.trim());
+  }
+
+  if (filters?.warehouseLocation && filters.warehouseLocation.trim()) {
+    query.set('warehouseLocation', filters.warehouseLocation.trim());
+  }
+
+  const queryString = query.toString();
+  return queryString
+    ? '/inventory/location-balances?' + queryString
+    : '/inventory/location-balances';
+}
+
+function mapInventoryLocationBalanceListResponse(data: any): InventoryLocationBalanceListResponse {
+  const payload = data?.data ?? data ?? {};
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+
+  const items: InventoryLocationBalanceRecord[] = rawItems.map((item: any) => ({
+    id: String(item?.id ?? '').trim(),
+    inventoryItemId: String(item?.inventoryItemId ?? '').trim(),
+    sku: String(item?.sku ?? '').trim(),
+    itemName: String(item?.itemName ?? '').trim(),
+    warehouseLocation: String(item?.warehouseLocation ?? '').trim(),
+    onHandQty: Number(item?.onHandQty ?? 0),
+    reservedQty: Number(item?.reservedQty ?? 0),
+    availableQty: Number(item?.availableQty ?? 0),
+    unit: String(item?.unit ?? '').trim(),
+    updatedAt: String(item?.updatedAt ?? '').trim()
+  }));
+
+  const total = Number.isFinite(Number(payload.total)) ? Number(payload.total) : items.length;
+
+  return {
+    items,
+    total
+  };
+}
+
+function mapInventoryLocationBalanceSummary(data: any): InventoryLocationBalanceSummary {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    totalLines: Number(payload?.totalLines ?? 0),
+    totalOnHandQty: Number(payload?.totalOnHandQty ?? 0),
+    totalAvailableQty: Number(payload?.totalAvailableQty ?? 0)
+  };
+}
+
+function mapInventoryTransferDraft(data: any): InventoryTransferDraft {
+  const payload = data?.data ?? data ?? {};
+
+  return {
+    inventoryItemId: String(payload?.inventoryItemId ?? '').trim(),
+    sku: String(payload?.sku ?? '').trim(),
+    itemName: String(payload?.itemName ?? '').trim(),
+    unit: String(payload?.unit ?? '').trim(),
+    quantity: Number(payload?.quantity ?? 0),
+    fromWarehouseLocation: String(payload?.fromWarehouseLocation ?? '').trim(),
+    toWarehouseLocation: String(payload?.toWarehouseLocation ?? '').trim(),
+    reason: String(payload?.reason ?? '').trim(),
+    notes: String(payload?.notes ?? '').trim(),
+    availableSourceBalance: payload?.availableSourceBalance
+      ? {
+          id: String(payload.availableSourceBalance.id ?? '').trim(),
+          inventoryItemId: String(payload.availableSourceBalance.inventoryItemId ?? '').trim(),
+          sku: String(payload.availableSourceBalance.sku ?? '').trim(),
+          itemName: String(payload.availableSourceBalance.itemName ?? '').trim(),
+          warehouseLocation: String(payload.availableSourceBalance.warehouseLocation ?? '').trim(),
+          onHandQty: Number(payload.availableSourceBalance.onHandQty ?? 0),
+          reservedQty: Number(payload.availableSourceBalance.reservedQty ?? 0),
+          availableQty: Number(payload.availableSourceBalance.availableQty ?? 0),
+          unit: String(payload.availableSourceBalance.unit ?? '').trim(),
+          updatedAt: String(payload.availableSourceBalance.updatedAt ?? '').trim()
+        }
+      : null
+  };
+}
+
+export const inventoryApi = {
+  async getInventoryList(filters: InventoryListFilters = {}): Promise<InventoryListResponse> {
+    const response = await apiClient.get<any>(buildInventoryListUrl(filters));
+    return mapInventoryListResponse(response.data);
+  },
+
+  async getInventoryById(id: string): Promise<InventoryDetailResponse> {
+    const response = await apiClient.get<any>(ENDPOINTS.inventory.detail(id));
+    return mapInventoryItem(response.data);
+  },
+
+  async getInventoryDetail(id: string): Promise<InventoryDetailResponse> {
+    return this.getInventoryById(id);
+  },
+
+  async createInventory(payload: CreateInventoryRequest): Promise<InventoryItemDto> {
+    const response = await apiClient.post<any>(ENDPOINTS.inventory.create, payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async updateInventory(
+    id: string,
+    payload: Omit<UpdateInventoryRequest, 'id'>
+  ): Promise<InventoryItemDto> {
+    const response = await apiClient.put<any>(ENDPOINTS.inventory.update(id), payload);
+    return mapInventoryItem(response.data);
+  },
+
+  async toggleActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    const response = await apiClient.patch<any>(ENDPOINTS.inventory.toggleActive(id), {
+      isActive
+    });
+    return mapInventoryItem(response.data);
+  },
+
+  async setInventoryActive(id: string, isActive: boolean): Promise<InventoryItemDto> {
+    return this.toggleActive(id, isActive);
+  },
+
+  async getLocationBalanceSummary(): Promise<InventoryLocationBalanceSummary> {
+    const response = await apiClient.get<any>('/inventory/location-balance-summary');
+    return mapInventoryLocationBalanceSummary(response.data);
+  },
+
+  async getLocationBalances(filters?: {
+    inventoryItemId?: string;
+    search?: string;
+    warehouseLocation?: string;
+  }): Promise<InventoryLocationBalanceListResponse> {
+    const response = await apiClient.get<any>(buildInventoryLocationBalancesUrl(filters));
+    return mapInventoryLocationBalanceListResponse(response.data);
+  },
+
+  async getLocationBalancesByInventoryItem(
+    inventoryItemId: string
+  ): Promise<InventoryLocationBalanceListResponse> {
+    const response = await apiClient.get<any>(`/inventory/location-balances/${encodeURIComponent(inventoryItemId)}`);
+    return mapInventoryLocationBalanceListResponse(response.data);
+  },
+
+  async createTransferDraft(
+    payload: CreateInventoryTransferDraftRequest
+  ): Promise<InventoryTransferDraft> {
+    const response = await apiClient.post<any>('/inventory/transfers/draft', payload);
+    return mapInventoryTransferDraft(response.data);
+  }
+};
+
+============================================================
+FILE HEAD: src\features\inventory\types.ts
+============================================================
+
+export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+export type InventoryItemType =
+  | 'raw_material'
+  | 'finished_goods'
+  | 'packaging'
+  | 'spare_part'
+  | 'consumable';
+
+export type InventoryPersistenceMode = 'memory' | 'postgres' | string;
+
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  statusLabel: string;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface InventoryListResponse {
+  items: InventoryItem[];
+  total: number;
+  persistenceMode?: InventoryPersistenceMode;
+}
+
+export interface CreateInventoryRequest {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType: InventoryItemType;
+  brand: string;
+  model: string;
+  preferredSupplierName: string;
+  standardCost: number;
+  averageCost: number;
+  currency: string;
+  quantity: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export interface UpdateInventoryRequest extends CreateInventoryRequest {
+  id: string;
+}
+
+export interface InventoryListFilters {
+  search?: string;
+  status?: 'all' | InventoryStatus;
+}
+
+export interface InventoryFormValues {
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  category: string;
+  itemType?: InventoryItemType;
+  brand?: string;
+  model?: string;
+  preferredSupplierName?: string;
+  standardCost?: string;
+  averageCost?: string;
+  currency?: string;
+  quantity: string;
+  reorderLevel: string;
+  minimumStockLevel: string;
+  maximumStockLevel: string;
+  unit: string;
+  warehouseLocation: string;
+  status: InventoryStatus;
+  isActive: boolean;
+  isBatchTracked: boolean;
+  isExpiryTracked: boolean;
+  isSerialTracked: boolean;
+  baseUomCode: string;
+  purchaseUomCode: string;
+  salesUomCode: string;
+  issueUomCode: string;
+  uomConversionGroupCode: string;
+  allowsFraction: boolean;
+  notes: string;
+}
+
+export type InventoryFormErrors = Partial<Record<keyof InventoryFormValues, string>>;
+
+export type InventoryTrackingFlag = 'batch' | 'expiry' | 'serial';
+
+export interface InventoryDetailResponse extends InventoryItem {
+  trackingFlags: InventoryTrackingFlag[];
+}
+
+export interface InventoryItemDto extends InventoryItem {}
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryLocationBalanceListResponse {
+  items: InventoryLocationBalanceRecord[];
+  total: number;
+}
+
+export interface InventoryLocationBalanceSummary {
+  totalLines: number;
+  totalOnHandQty: number;
+  totalAvailableQty: number;
+}
+
+export interface InventoryTransferDraft {
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  unit: string;
+  quantity: number;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  reason: string;
+  notes: string;
+  availableSourceBalance: InventoryLocationBalanceRecord | null;
+}
+
+export interface CreateInventoryTransferDraftRequest {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+============================================================
+FILE MATCHES: src\features\inventory\screens\InventoryTransferScreen.tsx
+============================================================
+
+--- pattern: Inventory Item ID ---
+Line 31:       setFormError('Inventory Item ID is required');
+Line 156:                 Inventory Item ID
+
+--- pattern: From Location ---
+Line 36:       setFormError('From Location is required');
+Line 173:                 From Location
+
+--- pattern: To Location ---
+Line 41:       setFormError('To Location is required');
+Line 190:                 To Location
+
+--- pattern: Quantity ---
+Line 20:   const [quantity, setQuantity] = useState('1');
+Line 28:     const qty = Number(quantity);
+Line 51:       setFormError('Transfer quantity must be greater than 0');
+Line 62:         quantity: qty,
+Line 77:     setQuantity('1');
+Line 207:                 Quantity
+Line 210:                 value={quantity}
+Line 211:                 onChange={(e) => setQuantity(e.target.value)}
+Line 338:             <div><strong>Quantity:</strong> {draft.quantity} {draft.unit}</div>
+
+--- pattern: Reason ---
+Line 21:   const [reason, setReason] = useState('inventory_transfer');
+Line 45:     if (!reason.trim()) {
+Line 46:       setFormError('Reason is required');
+Line 63:         reason: reason.trim(),
+Line 78:     setReason('inventory_transfer');
+Line 224:                 Reason
+Line 227:                 value={reason}
+Line 228:                 onChange={(e) => setReason(e.target.value)}
+Line 339:             <div><strong>Reason:</strong> {draft.reason}</div>
+
+--- pattern: Notes ---
+Line 22:   const [notes, setNotes] = useState('');
+Line 64:         notes: notes.trim()
+Line 79:     setNotes('');
+Line 241:                 Notes
+Line 244:                 value={notes}
+Line 245:                 onChange={(e) => setNotes(e.target.value)}
+Line 340:             <div><strong>Notes:</strong> {draft.notes || '-'}</div>
+
+--- pattern: Preview Transfer ---
+Line 302:               {isLoading ? 'Previewing...' : 'Preview Transfer'}
+
+--- pattern: availableSourceBalance ---
+Line 343:               {draft.availableSourceBalance
+Line 344:                 ? `${draft.availableSourceBalance.availableQty} ${draft.availableSourceBalance.unit} available at ${draft.availableSourceBalance.warehouseLocation}`
+

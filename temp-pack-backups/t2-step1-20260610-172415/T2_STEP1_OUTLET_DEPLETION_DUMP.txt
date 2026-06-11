@@ -1,0 +1,1884 @@
+﻿T2 Step 1 - Outlet Confirmed Sales Depletion Inspection
+Generated At: 2026-06-10 17:24:15
+
+IMPORTANT:
+- No code was changed
+- Paste the generated output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+============================================================
+FRONTEND GIT STATUS
+============================================================
+
+ M src/components/layout/PageShell.tsx
+ M src/components/layout/Sidebar.tsx
+ M src/components/layout/Topbar.tsx
+ M src/features/inventory/api.ts
+ M src/features/inventory/screens/InventoryDetailScreen.tsx
+ M src/features/inventory/screens/InventoryListScreen.tsx
+ M src/features/inventory/types.ts
+ M src/features/warehouse/screens/WarehouseLocationMasterScreen.tsx
+ M src/features/warehouse/screens/WarehouseScreen.tsx
+ M src/lib/routes.ts
+?? H11B_EASY_SANDBOX_NOTES.txt
+?? src/app/inventory/transfers/
+?? src/app/stock-issues-h11b/
+?? src/app/stock-issues/[issueId]/
+?? src/app/stock-issues/history/
+?? src/features/inventory/components/
+?? src/features/inventory/hooks/useInventoryLocationBalances.ts
+?? src/features/inventory/hooks/useInventoryTransferCommit.ts
+?? src/features/inventory/hooks/useInventoryTransferDraft.ts
+?? src/features/inventory/hooks/useInventoryTransferSuggestion.ts
+?? src/features/inventory/hooks/useInventoryTransfers.ts
+?? src/features/inventory/screens/InventoryTransferScreen.tsx
+?? src/features/stock-issue-h11b/
+?? src/features/stock-issue/api.ts
+?? src/features/stock-issue/components/
+?? src/features/stock-issue/hooks/useStockIssueContext.ts
+?? src/features/stock-issue/hooks/useStockIssueDetail.ts
+?? src/features/stock-issue/hooks/useStockIssueHistory.ts
+?? src/features/stock-issue/screens/StockIssueDetailScreen.tsx
+?? src/features/stock-issue/screens/StockIssueHistoryScreen.tsx
+?? src/features/stock-issue/screens/StockIssuePrintScreen.tsx
+?? src/features/stock-issue/types.ts
+?? temp-pack-backups/
+?? temp-run-pack.ps1
+?? w22-files/
+
+
+============================================================
+FRONTEND STOCK ISSUE / STOCK CONTROL / INVENTORY TREE
+============================================================
+
+
+FullName                                                                                                                                  
+--------                                                                                                                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory                                               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control                                           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue                                             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b                                        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse                                               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\batches\hooks\useBatchInventorySummary.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\components                                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks                                         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens                                       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\api.ts                                        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\mapper.ts                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\schema.ts                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\types.ts                                      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\components\InventoryTransferHistorySection.tsx
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useCreateInventory.ts                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryActiveToggle.ts             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryDetail.ts                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryList.ts                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryLocationBalances.ts         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryMasterOptions.ts            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryTransferCommit.ts           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryTransferDraft.ts            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryTransfers.ts                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useInventoryTransferSuggestion.ts       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\hooks\useUpdateInventory.ts                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryCreateScreen.tsx             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryDetailScreen.tsx             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryEditScreen.tsx               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryListScreen.tsx               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\inventory\screens\InventoryTransferScreen.tsx           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\orders\hooks\useGRNInventorySummary.ts                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\orders\hooks\usePurchaseOrderLineInventorySummary.ts    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control\hooks                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control\screens                                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control\api.ts                                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control\types.ts                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control\hooks\useStockControl.ts                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control\hooks\useStockMovements.ts                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control\screens\StockControlScreen.tsx            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-control\screens\StockMovementsScreen.tsx          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\components                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks                                       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\api.ts                                      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\types.ts                                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\components\StockIssueAllocationTable.tsx    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\components\StockIssueHistoryTable.tsx       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\components\StockIssueSummaryCard.tsx        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks\useStockIssue.ts                      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks\useStockIssueContext.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks\useStockIssueDetail.ts                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\hooks\useStockIssueHistory.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens\StockIssueDetailScreen.tsx          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens\StockIssueHistoryScreen.tsx         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens\StockIssuePrintScreen.tsx           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue\screens\StockIssueScreen.tsx                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\hooks                                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\screens                                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\api.ts                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\types.ts                               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\hooks\useStockIssueH11BContext.ts      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\hooks\useStockIssueH11BDetail.ts       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\hooks\useStockIssueH11BForm.ts         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\hooks\useStockIssueH11BHistory.ts      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\screens\StockIssueH11BDetailScreen.tsx 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\screens\StockIssueH11BHistoryScreen.tsx
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\screens\StockIssueH11BPrintScreen.tsx  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\stock-issue-h11b\screens\StockIssueH11BScreen.tsx       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks                                         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens                                       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\api.ts                                        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\mapper.ts                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\schema.ts                                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\types.ts                                      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useCreateWarehouseLocation.ts           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useToggleWarehouseLocationActive.ts     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseAlerts.ts                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseAlertThresholds.ts          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseDrilldown.ts                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseLocations.ts                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseSites.ts                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\hooks\useWarehouseSummary.ts                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseLocationMasterScreen.tsx     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseLocationsScreen.tsx          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\features\warehouse\screens\WarehouseScreen.tsx                   
+
+
+
+
+============================================================
+FRONTEND APP STOCK ISSUE TREE
+============================================================
+
+
+FullName                                                                                                               
+--------                                                                                                               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-control                             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues                              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues-h11b                         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\create                          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\transfers                       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]                            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\page.tsx                        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\create\page.tsx                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\transfers\page.tsx              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\edit                       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\page.tsx                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\edit\page.tsx              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-control\page.tsx                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\history                      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\[issueId]                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\page.tsx                     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\history\page.tsx             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\[issueId]\print              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\[issueId]\page.tsx           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues\[issueId]\print\page.tsx     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues-h11b\history                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues-h11b\[issueId]               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues-h11b\page.tsx                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues-h11b\history\page.tsx        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues-h11b\[issueId]\print         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues-h11b\[issueId]\page.tsx      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\stock-issues-h11b\[issueId]\print\page.tsx
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\locations                       
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\tasks                           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\page.tsx                        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\locations\page.tsx              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\tasks\[id]                      
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\tasks\page.tsx                  
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\warehouse\tasks\[id]\page.tsx             
+
+
+
+
+============================================================
+FILE HEAD: src\features\stock-control\api.ts
+============================================================
+
+import { apiClient } from '@/services/api/client';
+import { ENDPOINTS } from '@/services/api/endpoints';
+import type {
+  DraftPurchaseOrderResult,
+  ProcurementQueueItem,
+  ReorderSuggestion,
+  StockControlAlert,
+  StockControlSummary,
+  StockIssuePreviewResult,
+  StockIssueResult,
+  StockMovementRecord
+} from './types';
+
+export const stockControlApi = {
+  async getSummary(): Promise<StockControlSummary> {
+    const response = await apiClient.get<StockControlSummary>(ENDPOINTS.stockControl.summary);
+    return response.data;
+  },
+
+  async getAlerts(): Promise<StockControlAlert[]> {
+    const response = await apiClient.get<StockControlAlert[]>(ENDPOINTS.stockControl.alerts);
+    return response.data || [];
+  },
+
+  async getReorderSuggestions(): Promise<ReorderSuggestion[]> {
+    const response = await apiClient.get<ReorderSuggestion[]>(
+      ENDPOINTS.stockControl.reorderSuggestions
+    );
+
+    return response.data || [];
+  },
+
+  async getProcurementActions(): Promise<ProcurementQueueItem[]> {
+    const response = await apiClient.get<ProcurementQueueItem[]>(
+      ENDPOINTS.stockControl.procurementActions
+    );
+
+    return response.data || [];
+  },
+
+  async createDraftPurchaseOrderFromSuggestion(
+    inventoryItemId: string
+  ): Promise<DraftPurchaseOrderResult> {
+    const response = await apiClient.post<DraftPurchaseOrderResult>(
+      ENDPOINTS.stockControl.createDraftPurchaseOrderFromSuggestion(inventoryItemId),
+      {}
+    );
+
+    return response.data;
+  },
+
+  async getStockMovements(): Promise<StockMovementRecord[]> {
+    const response = await apiClient.get<StockMovementRecord[]>(ENDPOINTS.stockControl.movements);
+    return response.data || [];
+  },
+
+  async getInventoryStockMovements(inventoryItemId: string): Promise<StockMovementRecord[]> {
+    const response = await apiClient.get<StockMovementRecord[]>(
+      ENDPOINTS.stockControl.movementsByInventory(inventoryItemId)
+    );
+    return response.data || [];
+  },
+
+  async getBatchStockMovements(batchId: string): Promise<StockMovementRecord[]> {
+    const response = await apiClient.get<StockMovementRecord[]>(
+      ENDPOINTS.stockControl.movementsByBatch(batchId)
+    );
+    return response.data || [];
+  },
+
+  async getIssuePreview(
+    inventoryItemId: string,
+    requestedQty: number
+  ): Promise<StockIssuePreviewResult> {
+    const query = new URLSearchParams({
+      inventoryItemId,
+      requestedQty: String(requestedQty)
+    }).toString();
+
+    const response = await apiClient.get<StockIssuePreviewResult>(
+      `${ENDPOINTS.stockControl.issuePreview}?${query}`
+    );
+    return response.data;
+  },
+
+  async createIssue(payload: {
+    inventoryItemId: string;
+    requestedQty: number;
+    reason: string;
+  }): Promise<StockIssueResult> {
+    const response = await apiClient.post<StockIssueResult>(
+      ENDPOINTS.stockControl.createIssue,
+      payload
+    );
+    return response.data;
+  }
+};
+
+============================================================
+FILE HEAD: src\features\stock-control\types.ts
+============================================================
+
+export type StockAlertType =
+  | 'low_stock'
+  | 'out_of_stock'
+  | 'overstock'
+  | 'expiring_soon'
+  | 'expired_batch';
+
+export type StockAlertSeverity = 'high' | 'medium' | 'low';
+export type ReorderPriority = 'critical' | 'high' | 'medium' | 'low';
+export type DemandTrend = 'rising' | 'stable' | 'falling';
+export type ProcurementAction = 'order_now' | 'order_this_week' | 'monitor';
+export type ProcurementQueueStatus = 'immediate' | 'this_week' | 'monitor';
+export type SupplierSource = 'inventory_master' | 'batch_history' | 'unassigned';
+export type StockMovementType = 'receipt' | 'status_change' | 'issue';
+export type StockMovementReferenceType = 'grn' | 'po' | 'batch' | 'issue';
+
+export interface StockControlSummary {
+  totalItems: number;
+  totalOnHandQty: number;
+  lowStockItems: number;
+  outOfStockItems: number;
+  overstockItems: number;
+  expiringSoonBatches: number;
+  expiredBatches: number;
+  reorderCandidates: number;
+  criticalReorderCount: number;
+  highReorderCount: number;
+  mediumReorderCount: number;
+  risingDemandItems: number;
+  stableDemandItems: number;
+  fallingDemandItems: number;
+  procurementDueToday: number;
+  procurementDueThisWeek: number;
+  plannedProcurementValue: number;
+  urgentProcurementValue: number;
+  planningCurrency: string;
+}
+
+export interface StockControlAlert {
+  id: string;
+  alertType: StockAlertType;
+  severity: StockAlertSeverity;
+  referenceType: 'inventory' | 'batch';
+  referenceId: string;
+  title: string;
+  message: string;
+  itemCode?: string;
+  batchNumber?: string;
+  dueDate?: string | null;
+}
+
+export interface ReorderSuggestion {
+  id: string;
+  inventoryItemId: string;
+  itemCode: string;
+  itemName: string;
+  category: string;
+  itemType: string;
+  currentQty: number;
+  reorderLevel: number;
+  minimumStockLevel: number;
+  maximumStockLevel: number;
+  suggestedOrderQty: number;
+  estimatedDailyUsage: number;
+  estimatedDaysOfCover: number;
+  priority: ReorderPriority;
+  reason: string;
+  preferredSupplierName: string;
+  supplierSource: SupplierSource;
+  supplierScore: number;
+  leadTimeDays: number;
+  reorderByDate: string;
+  riskNote: string;
+  demandTrend: DemandTrend;
+  monthlyUsageEstimate: number;
+  forecastDemand30d: number;
+  forecastDemand60d: number;
+  forecastDemand90d: number;
+  procurementAction: ProcurementAction;
+  standardCost: number;
+  currency: string;
+  estimatedReorderValue: number;
+}
+
+export interface ProcurementQueueItem {
+  id: string;
+  inventoryItemId: string;
+  itemCode: string;
+  itemName: string;
+  itemType: string;
+  preferredSupplierName: string;
+  supplierSource: SupplierSource;
+  suggestedOrderQty: number;
+  reorderByDate: string;
+  leadTimeDays: number;
+  priority: ReorderPriority;
+  supplierScore: number;
+  procurementAction: ProcurementAction;
+  queueStatus: ProcurementQueueStatus;
+  riskNote: string;
+  standardCost: number;
+  currency: string;
+  estimatedOrderValue: number;
+}
+
+export interface DraftPurchaseOrderResult {
+  purchaseOrder: {
+    id: string;
+    poNo: string;
+    supplierName: string;
+    itemCount: number;
+    totalAmount: number;
+    currency: string;
+    status: string;
+    expectedDate: string;
+    createdAt: string;
+  };
+  sourceSuggestion: {
+    inventoryItemId: string;
+    itemCode: string;
+    itemName: string;
+    suggestedOrderQty: number;
+    estimatedReorderValue: number;
+    preferredSupplierName: string;
+    supplierSource: SupplierSource;
+    standardCost: number;
+    currency: string;
+    reorderByDate: string;
+  };
+}
+
+export interface StockMovementRecord {
+  id: string;
+  movementType: StockMovementType;
+  inventoryItemId: string;
+  itemCode: string;
+  barcode: string;
+  itemName: string;
+  batchId: string;
+  batchNumber: string;
+  lotNumber: string;
+  supplierLotNumber: string;
+  supplierName: string;
+  qtyIn: number;
+  qtyOut: number;
+  netQty: number;
+  availableQty: number;
+  reservedQty: number;
+  blockedQty: number;
+  qaHoldQty: number;
+  unitCost: number;
+  currency: string;
+  batchStatus: string;
+  previousStatus?: string;
+  nextStatus?: string;
+  purchaseOrderNo: string;
+  goodsReceivedNoteNo: string;
+  referenceType: StockMovementReferenceType;
+  referenceNo: string;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  manufactureDate: string | null;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  occurredAt: string;
+  notes: string;
+}
+
+export interface StockIssueAllocationRecord {
+  batchId: string;
+  batchNumber: string;
+  inventoryItemId: string;
+  availableQtyBefore: number;
+  issuedQty: number;
+  availableQtyAfter: number;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  warehouseLocation: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  unitCost: number;
+  currency: string;
+}
+
+export interface StockIssuePreviewResult {
+  requestedQty: number;
+  totalAvailableQty: number;
+  allocatedQty: number;
+  remainingUnallocatedQty: number;
+  allocations: StockIssueAllocationRecord[];
+}
+
+export interface StockIssueResult {
+  issue: {
+    id: string;
+    issueNo: string;
+    inventoryItemId: string;
+    requestedQty: number;
+    issuedQty: number;
+    reason: string;
+    issueDate: string;
+    allocations: StockIssueAllocationRecord[];
+  };
+  preview: StockIssuePreviewResult;
+}
+
+============================================================
+FILE HEAD: src\features\stock-control\screens\StockControlScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { stockControlApi } from '../api';
+import { useStockControl } from '../hooks/useStockControl';
+
+function getSeverityStyle(severity: string) {
+  if (severity === 'high') {
+    return {
+      background: '#fee2e2',
+      color: '#991b1b',
+      border: '1px solid #fecaca'
+    };
+  }
+
+  if (severity === 'medium') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  return {
+    background: '#dcfce7',
+    color: '#166534',
+    border: '1px solid #bbf7d0'
+  };
+}
+
+function getPriorityStyle(priority: string) {
+  if (priority === 'critical') {
+    return {
+      background: '#991b1b',
+      color: '#ffffff'
+    };
+  }
+
+  if (priority === 'high') {
+    return {
+      background: '#dc2626',
+      color: '#ffffff'
+    };
+  }
+
+  if (priority === 'medium') {
+    return {
+      background: '#f59e0b',
+      color: '#111827'
+    };
+  }
+
+  return {
+    background: '#10b981',
+    color: '#ffffff'
+  };
+}
+
+function getTrendStyle(trend: string) {
+  if (trend === 'rising') {
+    return { color: '#dc2626', fontWeight: 700 };
+  }
+
+  if (trend === 'falling') {
+    return { color: '#2563eb', fontWeight: 700 };
+  }
+
+  return { color: '#166534', fontWeight: 700 };
+}
+
+function getQueueStatusStyle(status: string) {
+  if (status === 'immediate') {
+    return {
+      background: '#991b1b',
+      color: '#ffffff'
+    };
+  }
+
+  if (status === 'this_week') {
+    return {
+      background: '#f59e0b',
+      color: '#111827'
+    };
+  }
+
+  return {
+    background: '#10b981',
+    color: '#ffffff'
+  };
+}
+
+function getSupplierSourceLabel(source: string) {
+  if (source === 'inventory_master') return 'Inventory Master';
+  if (source === 'batch_history') return 'Batch History';
+  return 'Unassigned';
+}
+
+function getItemTypeLabel(value: string) {
+  if (value === 'raw_material') return 'Raw Material';
+  if (value === 'finished_goods') return 'Finished Goods';
+  if (value === 'packaging') return 'Packaging';
+  if (value === 'spare_part') return 'Spare Part';
+  if (value === 'consumable') return 'Consumable';
+  return value || '-';
+}
+
+function formatMoney(value: number, currency: string) {
+  return `${currency || 'USD'} ${Number(value || 0).toFixed(2)}`;
+}
+
+export function StockControlScreen() {
+  const router = useRouter();
+  const { summary, alerts, reorderSuggestions, procurementActions, isLoading, error, refresh } =
+    useStockControl();
+
+  const [creatingPoFor, setCreatingPoFor] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function handleCreateDraftPo(inventoryItemId: string) {
+    try {
+      setCreatingPoFor(inventoryItemId);
+      setActionError(null);
+
+      const result = await stockControlApi.createDraftPurchaseOrderFromSuggestion(inventoryItemId);
+      router.push(`/orders/purchase-orders/${result.purchaseOrder.id}`);
+      router.refresh();
+    } catch (err: any) {
+      setActionError(err?.message || 'Failed to create draft purchase order');
+    } finally {
+      setCreatingPoFor(null);
+    }
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Stock Control / Forecasting
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Planning now supports draft PO creation directly from procurement actions using
+              supplier, quantity, and cost data from Inventory Master and planning logic.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: 'none',
+              background: '#0f172a',
+              color: '#ffffff',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Refresh
+          </button>
+
+          <Link
+            href="/stock-movements"
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              background: '#ffffff',
+              fontWeight: 600
+            }}
+          >
+            Open Movement Ledger
+          </Link>
+        </div>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div style={{ color: '#64748b' }}>Loading stock control summary...</div>
+      ) : error ? (
+        <div style={{ color: '#b91c1c' }}>{error}</div>
+      ) : (
+        <>
+          <div
+            style={{
+              display: 'grid',
+              gap: '16px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ color: '#64748b', marginBottom: '8px' }}>Total Items</div>
+              <div style={{ fontSize: '28px', fontWeight: 700 }}>{summary.totalItems}</div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryTransferScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { InventoryTransferHistorySection } from '../components/InventoryTransferHistorySection';
+import { useInventoryList } from '../hooks/useInventoryList';
+import { useInventoryLocationBalances } from '../hooks/useInventoryLocationBalances';
+import { useInventoryTransferCommit } from '../hooks/useInventoryTransferCommit';
+import { useInventoryTransferDraft } from '../hooks/useInventoryTransferDraft';
+
+export function InventoryTransferScreen() {
+  const {
+    items: inventoryItems,
+    isLoading: isInventoryLoading,
+    error: inventoryLoadError
+  } = useInventoryList();
+
+  const {
+    draft,
+    isLoading: isPreviewLoading,
+    error: transferPreviewError,
+    previewTransfer,
+    clearDraft
+  } = useInventoryTransferDraft();
+
+  const {
+    result: commitResult,
+    isLoading: isCommitLoading,
+    error: transferCommitError,
+    commitTransfer,
+    clearResult
+  } = useInventoryTransferCommit();
+
+  const [inventoryItemId, setInventoryItemId] = useState('');
+  const [fromWarehouseLocation, setFromWarehouseLocation] = useState('');
+  const [toWarehouseLocation, setToWarehouseLocation] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [reason, setReason] = useState('inventory_transfer');
+  const [notes, setNotes] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const {
+    items: locationBalances,
+    summary: locationBalanceSummary,
+    isLoading: isBalanceLoading,
+    error: locationBalanceError,
+    refresh: refreshBalances,
+    getBalanceByLocation
+  } = useInventoryLocationBalances(inventoryItemId || undefined);
+
+  const selectedItem = useMemo(() => {
+    if (!inventoryItemId) {
+      return null;
+    }
+
+    return inventoryItems.find((item) => item.id === inventoryItemId) ?? null;
+  }, [inventoryItems, inventoryItemId]);
+
+  const sourceBalance = useMemo(() => {
+    return fromWarehouseLocation ? getBalanceByLocation(fromWarehouseLocation) : null;
+  }, [fromWarehouseLocation, getBalanceByLocation]);
+
+  const destinationBalance = useMemo(() => {
+    return toWarehouseLocation ? getBalanceByLocation(toWarehouseLocation) : null;
+  }, [toWarehouseLocation, getBalanceByLocation]);
+
+  useEffect(() => {
+    if (!selectedItem) {
+      return;
+    }
+
+    setFromWarehouseLocation(selectedItem.warehouseLocation || '');
+    setQuantity(selectedItem.quantity > 0 ? '1' : '0');
+  }, [selectedItem]);
+
+  async function handleSuggestSource() {
+    const qty = Number(quantity);
+
+    if (!inventoryItemId.trim()) {
+      setFormError('Inventory item is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setFormError(null);
+
+    try {
+      const result = await suggestSource({
+        inventoryItemId: inventoryItemId.trim(),
+        quantity: qty
+      });
+
+      if (result?.recommendedFromWarehouseLocation) {
+        setFromWarehouseLocation(result.recommendedFromWarehouseLocation);
+      }
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  async function handlePreviewTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const qty = Number(quantity);
+
+    if (!inventoryItemId.trim()) {
+      setFormError('Inventory item is required');
+      return;
+    }
+
+    if (!fromWarehouseLocation.trim()) {
+      setFormError('From Location is required');
+      return;
+    }
+
+    if (!toWarehouseLocation.trim()) {
+      setFormError('To Location is required');
+      return;
+    }
+
+    if (!reason.trim()) {
+      setFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setFormError(null);
+    clearResult();
+
+    try {
+      await previewTransfer({
+        inventoryItemId: inventoryItemId.trim(),
+        fromWarehouseLocation: fromWarehouseLocation.trim(),
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: reason.trim(),
+        notes: notes.trim()
+      });
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  async function handlePostTransfer() {
+    const qty = Number(quantity);
+
+    if (!inventoryItemId.trim()) {
+      setFormError('Inventory item is required');
+      return;
+    }
+
+    if (!fromWarehouseLocation.trim()) {
+      setFormError('From Location is required');
+      return;
+    }
+
+    if (!toWarehouseLocation.trim()) {
+      setFormError('To Location is required');
+      return;
+    }
+
+    if (!reason.trim()) {
+      setFormError('Reason is required');
+      return;
+    }
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setFormError('Transfer quantity must be greater than 0');
+      return;
+    }
+
+    setFormError(null);
+
+    try {
+      await commitTransfer({
+        inventoryItemId: inventoryItemId.trim(),
+        fromWarehouseLocation: fromWarehouseLocation.trim(),
+        toWarehouseLocation: toWarehouseLocation.trim(),
+        quantity: qty,
+        reason: reason.trim(),
+        notes: notes.trim()
+      });
+
+      await refreshBalances();
+    } catch {
+      // hook error shown on screen
+    }
+  }
+
+  function handleClearPreview() {
+    clearDraft();
+    clearResult();
+    setFormError(null);
+    setInventoryItemId('');
+    setFromWarehouseLocation('');
+    setToWarehouseLocation('');
+    setQuantity('1');
+    setReason('inventory_transfer');
+    setNotes('');
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Stock Transfer Preview
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Preview and then post location-to-location or plant-to-plant stock transfer.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              href={ROUTES.inventory}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Back to inventory
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+
+============================================================
+FILE MATCHES: src\services\api\endpoints.ts
+============================================================
+
+--- pattern: createIssue ---
+Line 35:     createIssue: '/stock-control/issues'
+
+--- pattern: issuePreview ---
+Line 34:     issuePreview: '/stock-control/issue-preview',
+
+--- pattern: inventory ---
+Line 11:   inventory: {
+Line 12:     list: '/inventory',
+Line 13:     detail: (id: string) => `/inventory/${id}`,
+Line 14:     create: '/inventory',
+Line 15:     update: (id: string) => `/inventory/${id}`,
+Line 16:     toggleActive: (id: string) => `/inventory/${id}/active`
+Line 28:     createDraftPurchaseOrderFromSuggestion: (inventoryItemId: string) =>
+Line 29:       `/stock-control/reorder-suggestions/${inventoryItemId}/create-po-draft`,
+Line 31:     movementsByInventory: (inventoryItemId: string) =>
+Line 32:       `/stock-control/movements/inventory/${inventoryItemId}`,
+
+--- pattern: warehouse ---
+Line 37:   warehouse: {
+Line 38:     summary: '/warehouse/summary',
+Line 39:     locations: '/warehouse/locations',
+Line 40:     locationDetail: (id: string) => `/warehouse/locations/${id}`,
+Line 41:     createLocation: '/warehouse/locations',
+Line 42:     updateLocation: (id: string) => `/warehouse/locations/${id}`,
+Line 43:     toggleLocationActive: (id: string) => `/warehouse/locations/${id}/active`,
+Line 44:     importCsv: '/warehouse/locations/import-csv',
+Line 45:     exportCsv: '/warehouse/locations/export-csv'
+
+
+============================================================
+BACKEND GIT STATUS
+============================================================
+
+ M src/modules/inventory/routes.ts
+?? H11B_MANUAL_PATCH_backend.txt
+?? data/
+?? src/modules/inventory/location-balance-store.ts
+?? src/modules/stock-control/h11b-issue-repository.ts
+?? src/modules/stock-control/h11b-issue-service.ts
+?? src/modules/stock-control/h11b-types.ts
+?? src/modules/stock-control/issue-repository.ts
+?? src/modules/stock-control/issue-service.ts
+?? src/modules/stock-control/types.ts
+?? temp-pack-backups/
+
+
+============================================================
+BACKEND STOCK CONTROL / INVENTORY / WAREHOUSE TREE
+============================================================
+
+
+FullName                                                                                                                         
+--------                                                                                                                         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory                             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control                         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\warehouse                             
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory\location-balance-store.ts   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory\repository.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory\routes.ts                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\inventory\store.ts                    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\h11b-issue-repository.ts
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\h11b-issue-routes.ts    
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\h11b-issue-service.ts   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\h11b-types.ts           
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\issue-repository.ts     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\issue-service.ts        
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\movement-service.ts     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\routes.ts               
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\service.ts              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\stock-control\types.ts                
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\warehouse\routes.ts                   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-supply-web\backend\src\modules\warehouse\store.ts                    
+
+
+
+
+============================================================
+FILE HEAD: src\modules\stock-control\issue-service.ts
+============================================================
+
+
+============================================================
+FILE HEAD: src\modules\stock-control\issue-repository.ts
+============================================================
+
+
+============================================================
+FILE HEAD: src\modules\stock-control\types.ts
+============================================================
+
+
+============================================================
+FILE HEAD: src\modules\inventory\location-balance-store.ts
+============================================================
+
+import {
+  getInventoryById,
+  listInventory,
+  type InventoryRecord
+} from './repository';
+import { listBatches, type BatchRecord } from '../batches/repository';
+
+export interface InventoryLocationBalanceRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  warehouseLocation: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  unit: string;
+  updatedAt: string;
+}
+
+export interface InventoryTransferRecord {
+  id: string;
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface CommitInventoryTransferInput {
+  inventoryItemId: string;
+  fromWarehouseLocation: string;
+  toWarehouseLocation: string;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+export interface InventoryTransferSourceSuggestion {
+  strategy: 'fefo' | 'fifo';
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  unit: string;
+  recommendedFromWarehouseLocation: string;
+  availableQty: number;
+  referenceType: 'batch' | 'location';
+  referenceNo: string;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  notes: string;
+}
+
+let inventoryTransferStore: InventoryTransferRecord[] = [];
+let inventoryLocationBalanceOverrides: InventoryLocationBalanceRecord[] = [];
+
+function toLocationBalanceRecord(item: InventoryRecord): InventoryLocationBalanceRecord {
+  const onHandQty = Number(item.quantity ?? 0);
+  const reservedQty = 0;
+  const availableQty = Math.max(0, onHandQty - reservedQty);
+
+  return {
+    id: `bal-${item.id}-${String(item.warehouseLocation ?? '').trim().toUpperCase()}`,
+    inventoryItemId: item.id,
+    sku: String(item.sku ?? '').trim(),
+    itemName: String(item.name ?? '').trim(),
+    warehouseLocation: String(item.warehouseLocation ?? '').trim(),
+    onHandQty,
+    reservedQty,
+    availableQty,
+    unit: String(item.unit ?? '').trim(),
+    updatedAt: String(item.updatedAt ?? new Date().toISOString())
+  };
+}
+
+function sortBalances(items: InventoryLocationBalanceRecord[]) {
+  return [...items].sort((a, b) => {
+    if (a.sku !== b.sku) {
+      return a.sku.localeCompare(b.sku);
+    }
+
+    return a.warehouseLocation.localeCompare(b.warehouseLocation);
+  });
+}
+
+function sortTransfers(items: InventoryTransferRecord[]) {
+  return [...items].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
+function normalizeLocation(value: string) {
+  return String(value ?? '').trim();
+}
+
+function makeBalanceId(inventoryItemId: string, warehouseLocation: string) {
+  return `bal-${inventoryItemId}-${normalizeLocation(warehouseLocation).toUpperCase()}`;
+}
+
+function recalculateAvailableQty(balance: InventoryLocationBalanceRecord) {
+  return Math.max(0, balance.onHandQty - balance.reservedQty);
+}
+
+async function buildBaseBalances(): Promise<InventoryLocationBalanceRecord[]> {
+  const inventoryItems = await listInventory({
+    search: '',
+    status: 'all'
+  });
+
+  return inventoryItems.map(toLocationBalanceRecord);
+}
+
+async function getEffectiveBalances(): Promise<InventoryLocationBalanceRecord[]> {
+  const baseBalances = await buildBaseBalances();
+  const effective = [...baseBalances];
+
+  for (const override of inventoryLocationBalanceOverrides) {
+    const index = effective.findIndex((item) => item.id === override.id);
+
+    if (index >= 0) {
+      effective[index] = { ...override };
+    } else {
+      effective.push({ ...override });
+    }
+  }
+
+  return effective;
+}
+
+function saveBalanceOverride(balance: InventoryLocationBalanceRecord) {
+  const index = inventoryLocationBalanceOverrides.findIndex((item) => item.id === balance.id);
+
+  if (index >= 0) {
+    inventoryLocationBalanceOverrides[index] = { ...balance };
+  } else {
+    inventoryLocationBalanceOverrides.push({ ...balance });
+  }
+}
+
+export async function listInventoryLocationBalances(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const balances = await getEffectiveBalances();
+
+  const normalizedSearch = String(filters?.search ?? '').trim().toLowerCase();
+  const normalizedLocation = String(filters?.warehouseLocation ?? '').trim().toLowerCase();
+
+  const filtered = balances.filter((item) => {
+    const matchesInventoryItem =
+      !filters?.inventoryItemId || item.inventoryItemId === filters.inventoryItemId;
+
+    const matchesSearch =
+      !normalizedSearch ||
+      item.sku.toLowerCase().includes(normalizedSearch) ||
+      item.itemName.toLowerCase().includes(normalizedSearch) ||
+      item.warehouseLocation.toLowerCase().includes(normalizedSearch);
+
+    const matchesLocation =
+      !normalizedLocation ||
+      item.warehouseLocation.toLowerCase().includes(normalizedLocation);
+
+    return matchesInventoryItem && matchesSearch && matchesLocation;
+  });
+
+  return sortBalances(filtered);
+}
+
+export async function getInventoryLocationBalancesByItem(inventoryItemId: string) {
+  return listInventoryLocationBalances({ inventoryItemId });
+}
+
+export async function getInventoryLocationBalanceSummary() {
+  const balances = await listInventoryLocationBalances();
+
+  const totalLines = balances.length;
+  const totalOnHandQty = balances.reduce((sum, item) => sum + item.onHandQty, 0);
+  const totalAvailableQty = balances.reduce((sum, item) => sum + item.availableQty, 0);
+
+  return {
+    totalLines,
+    totalOnHandQty,
+    totalAvailableQty
+  };
+}
+
+export async function getInventoryLocationBalanceByLocation(
+  inventoryItemId: string,
+  warehouseLocation: string
+) {
+  const normalizedLocation = normalizeLocation(warehouseLocation).toLowerCase();
+  const balances = await getInventoryLocationBalancesByItem(inventoryItemId);
+
+  return (
+    balances.find(
+      (item) => item.warehouseLocation.trim().toLowerCase() === normalizedLocation
+    ) ?? null
+  );
+}
+
+export function listInventoryTransfers(filters?: {
+  inventoryItemId?: string;
+  search?: string;
+  warehouseLocation?: string;
+}) {
+  const normalizedSearch = String(filters?.search ?? '').trim().toLowerCase();
+  const normalizedLocation = String(filters?.warehouseLocation ?? '').trim().toLowerCase();
+
+  const items = inventoryTransferStore.filter((item) => {
+    const matchesInventoryItem =
+      !filters?.inventoryItemId || item.inventoryItemId === filters.inventoryItemId;
+
+    const matchesSearch =
+      !normalizedSearch ||
+      item.sku.toLowerCase().includes(normalizedSearch) ||
+      item.itemName.toLowerCase().includes(normalizedSearch) ||
+      item.fromWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+      item.toWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+      item.reason.toLowerCase().includes(normalizedSearch);
+
+    const matchesLocation =
+      !normalizedLocation ||
+      item.fromWarehouseLocation.toLowerCase().includes(normalizedLocation) ||
+      item.toWarehouseLocation.toLowerCase().includes(normalizedLocation);
+
+    return matchesInventoryItem && matchesSearch && matchesLocation;
+  });
+
+  return sortTransfers(items);
+}
+
+export function getInventoryTransferById(id: string) {
+  return inventoryTransferStore.find((item) => item.id === id) ?? null;
+}
+
+function sortBatchCandidatesForFefo(items: BatchRecord[]) {
+  return [...items].sort((a, b) => {
+    const aExpiry = a.expiryDate ? new Date(a.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const bExpiry = b.expiryDate ? new Date(b.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (aExpiry !== bExpiry) {
+      return aExpiry - bExpiry;
+    }
+
+    const aReceived = a.receivedDate ? new Date(a.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const bReceived = b.receivedDate ? new Date(b.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (aReceived !== bReceived) {
+      return aReceived - bReceived;
+    }
+
+    return a.batchNumber.localeCompare(b.batchNumber);
+  });
+}
+
+function sortBatchCandidatesForFifo(items: BatchRecord[]) {
+  return [...items].sort((a, b) => {
+    const aReceived = a.receivedDate ? new Date(a.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const bReceived = b.receivedDate ? new Date(b.receivedDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (aReceived !== bReceived) {
+      return aReceived - bReceived;
+    }
+
+    const aExpiry = a.expiryDate ? new Date(a.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const bExpiry = b.expiryDate ? new Date(b.expiryDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (aExpiry !== bExpiry) {
+      return aExpiry - bExpiry;
+    }
+
+    return a.batchNumber.localeCompare(b.batchNumber);
+  });
+}
+
+export interface InventoryTransferSourceSuggestion {
+  strategy: 'fefo' | 'fifo';
+  inventoryItemId: string;
+  sku: string;
+  itemName: string;
+  unit: string;
+  recommendedFromWarehouseLocation: string;
+  availableQty: number;
+  referenceType: 'batch' | 'location';
+  referenceNo: string;
+  expiryDate: string | null;
+  receivedDate: string | null;
+  notes: string;
+}
+
+export async function suggestInventoryTransferSource(input: {
+  inventoryItemId: string;
+  quantity: number;
+}): Promise<InventoryTransferSourceSuggestion | null> {
+  const inventoryItem = await getInventoryById(input.inventoryItemId);
+
+  if (!inventoryItem) {
+    throw new Error('Inventory item not found');
+  }
+
+  const quantity = Number(input.quantity);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new Error('quantity must be greater than 0');
+  }
+
+  if (inventoryItem.isExpiryTracked) {
+    const batches = await listBatches({
+      inventoryItemId: input.inventoryItemId,
+      status: 'available',
+      search: ''
+    });
+
+    const candidates = sortBatchCandidatesForFefo(batches).filter(
+      (batch) => Number(batch.availableQty ?? 0) >= quantity
+
+============================================================
+FILE HEAD: src\modules\warehouse\store.ts
+============================================================
+
+export type WarehouseLocationStatus = 'empty' | 'occupied' | 'blocked';
+export type WarehouseLocationType =
+  | 'rack'
+  | 'floor'
+  | 'bulk'
+  | 'staging'
+  | 'quarantine'
+  | 'shelves'
+  | 'island';
+
+export type WarehouseCapacityUom = 'pallet' | 'pcs' | 'carton';
+export type WarehouseSiteScope = 'all' | 'warehouse' | 'outlet';
+export type WarehouseSiteType = 'warehouse' | 'outlet';
+export type WarehouseAlertSeverity = 'near_full' | 'full';
+export type WarehouseAlertThresholdSource = 'site_override' | 'site_type_default' | 'global_default' | 'request_override';
+
+export interface WarehouseSiteRecord {
+  siteCode: string;
+  siteName: string;
+  siteType: WarehouseSiteType;
+}
+
+export interface WarehouseAlertThresholdRecord {
+  siteCode: string | null;
+  siteName: string;
+  siteType: WarehouseSiteType | 'all';
+  thresholdPct: number;
+  source: WarehouseAlertThresholdSource;
+}
+
+export interface WarehouseLocationRecord {
+  id: string;
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  capacityUom: WarehouseCapacityUom;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
+  updatedAt: string;
+}
+
+export interface CreateWarehouseLocationInput {
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  status: WarehouseLocationStatus;
+  capacityUom: WarehouseCapacityUom;
+  palletCapacity: number;
+  usedPalletCapacity: number;
+  cubicCapacityM3: number;
+  usedCubicCapacityM3: number;
+  isActive: boolean;
+  notes: string;
+}
+
+export interface UpdateWarehouseLocationInput extends CreateWarehouseLocationInput {
+  id: string;
+}
+
+export interface WarehouseLocationImportResult {
+  inserted: number;
+  updated: number;
+  skipped: number;
+  errors: Array<{
+    rowNumber: number;
+    message: string;
+  }>;
+}
+
+export interface WarehouseUtilizationSummary {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  totalLocations: number;
+  activeLocations: number;
+  inactiveLocations: number;
+  emptyLocations: number;
+  occupiedLocations: number;
+  blockedLocations: number;
+  fullLocations: number;
+  fullLocationPct: number;
+  palletCapacityTotal: number;
+  palletCapacityUsed: number;
+  palletUtilizationPct: number;
+  pcsCapacityTotal: number;
+  pcsCapacityUsed: number;
+  pcsUtilizationPct: number;
+  cartonCapacityTotal: number;
+  cartonCapacityUsed: number;
+  cartonUtilizationPct: number;
+  updatedAt: string;
+}
+
+export interface WarehouseUtilizationDrilldownBucket {
+  key: string;
+  label: string;
+  totalLocations: number;
+  activeLocations: number;
+  inactiveLocations: number;
+  emptyLocations: number;
+  occupiedLocations: number;
+  blockedLocations: number;
+  fullLocations: number;
+  fullLocationPct: number;
+  palletCapacityTotal: number;
+  palletCapacityUsed: number;
+  palletUtilizationPct: number;
+  pcsCapacityTotal: number;
+  pcsCapacityUsed: number;
+  pcsUtilizationPct: number;
+  cartonCapacityTotal: number;
+  cartonCapacityUsed: number;
+  cartonUtilizationPct: number;
+}
+
+export interface WarehouseUtilizationDrilldown {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  byLocationType: WarehouseUtilizationDrilldownBucket[];
+  byZone: WarehouseUtilizationDrilldownBucket[];
+  updatedAt: string;
+}
+
+export interface WarehouseLocationAlertRecord {
+  id: string;
+  severity: WarehouseAlertSeverity;
+  utilizationPct: number;
+  thresholdPctApplied: number;
+  siteCode: string;
+  siteName: string;
+  siteType: WarehouseSiteType;
+  warehouseCode: string;
+  warehouseName: string;
+  locationCode: string;
+  zone: string;
+  aisle: string;
+  levelCode: string;
+  bin: string;
+  locationType: WarehouseLocationType;
+  capacityUom: WarehouseCapacityUom;
+  capacityTotal: number;
+  capacityUsed: number;
+  remainingCapacity: number;
+  status: WarehouseLocationStatus;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+export interface WarehouseLocationAlertSummary {
+  siteScope: WarehouseSiteScope;
+  warehouseCode: string | null;
+  thresholdPct: number;
+  totalAlertLocations: number;
+  nearFullLocations: number;
+  fullLocations: number;
+  appliedThresholds: WarehouseAlertThresholdRecord[];
+  items: WarehouseLocationAlertRecord[];
+  updatedAt: string;
+}
+
+const DEFAULT_ALERT_THRESHOLD_PCT = 80;
+const DEFAULT_ALERT_THRESHOLD_BY_SITE_TYPE: Record<WarehouseSiteType, number> = {
+  warehouse: 90,
+  outlet: 80
+};
+
+let warehouseAlertThresholdOverrides: Record<string, number> = {};
+
+let warehouseLocationStore: WarehouseLocationRecord[] = [
+  {
+    id: 'loc-001',
+    warehouseCode: 'WH-001',
+    warehouseName: 'Main Warehouse',
+    locationCode: 'A-01-01-01',
+    zone: 'A',
+    aisle: '01',
+    levelCode: '01',
+    bin: '01',
+    locationType: 'rack',
+    status: 'occupied',
+    capacityUom: 'pallet',
+    palletCapacity: 4,
+    usedPalletCapacity: 2,
+    cubicCapacityM3: 12,
+    usedCubicCapacityM3: 6,
+    isActive: true,
+    notes: 'Primary raw material rack',
+    updatedAt: '2026-05-28T08:00:00.000Z'
+  },
+  {
+    id: 'loc-002',
+    warehouseCode: 'WH-001',
+    warehouseName: 'Main Warehouse',
+    locationCode: 'B-02-04-02',
+    zone: 'B',
+    aisle: '02',
+    levelCode: '04',
+    bin: '02',
+    locationType: 'shelves',
+    status: 'empty',
+    capacityUom: 'pcs',
+    palletCapacity: 240,
+    usedPalletCapacity: 0,
+    cubicCapacityM3: 18,
+    usedCubicCapacityM3: 0,
+    isActive: true,
+    notes: 'Packaging reserve location',
+    updatedAt: '2026-05-28T08:10:00.000Z'
+  },
+  {
+    id: 'loc-003',
+    warehouseCode: 'OTL-001',
+    warehouseName: 'Outlet 1',
+    locationCode: 'IS-01-01-01',
+    zone: 'IS',
+    aisle: '01',
+    levelCode: '01',
+    bin: '01',
+    locationType: 'island',
+    status: 'blocked',
+    capacityUom: 'pcs',
+    palletCapacity: 80,
+    usedPalletCapacity: 24,
+    cubicCapacityM3: 5,
+    usedCubicCapacityM3: 2,
+    isActive: true,
+    notes: 'Outlet display island',
+    updatedAt: '2026-05-28T08:20:00.000Z'
+  },
+  {
+    id: 'loc-004',
+    warehouseCode: 'OTL-001',
+    warehouseName: 'Outlet 1',
+    locationCode: 'BF-01-01-01',
+    zone: 'BF',
+    aisle: '01',
+    levelCode: '01',
+    bin: '01',
+    locationType: 'floor',
+    status: 'empty',
+    capacityUom: 'carton',
+    palletCapacity: 24,
+    usedPalletCapacity: 6,
+    cubicCapacityM3: 10,
+    usedCubicCapacityM3: 2,
+    isActive: true,
+
+============================================================
+FILE MATCHES: src\modules\stock-control\issue-service.ts
+============================================================
+
+--- pattern: outlet ---
+no match
+
+--- pattern: issue ---
+no match
+
+--- pattern: confirmed ---
+no match
+
+--- pattern: sales ---
+no match
+
+--- pattern: allocation ---
+no match
+
+--- pattern: commit ---
+no match
+
+
+============================================================
+FILE MATCHES: src\modules\stock-control\issue-repository.ts
+============================================================
+
+--- pattern: warehouseLocation ---
+no match
+
+--- pattern: location ---
+no match
+
+--- pattern: qty ---
+no match
+
+--- pattern: issue ---
+no match
+
+--- pattern: allocation ---
+no match
+
+
+============================================================
+FILE MATCHES: src\modules\warehouse\store.ts
+============================================================
+
+--- pattern: depleted ---
+no match
+
+--- pattern: sales ---
+no match
+
+--- pattern: ecommerce ---
+no match
+
+--- pattern: locationCode ---
+Line 35:   locationCode: string;
+Line 55:   locationCode: string;
+Line 148:   locationCode: string;
+Line 188:     locationCode: 'A-01-01-01',
+Line 208:     locationCode: 'B-02-04-02',
+Line 228:     locationCode: 'IS-01-01-01',
+Line 248:     locationCode: 'BF-01-01-01',
+Line 406: function getLocationCompositeKey(siteCode: string, locationCode: string) {
+Line 407:   return `${siteCode.trim().toUpperCase()}::${locationCode.trim().toUpperCase()}`;
+Line 416:   return getLocationCompositeKey(site.siteCode, item.locationCode);
+Line 664:   locationCode?: string;
+Line 673:   const locationCodeFilter = String(filters?.locationCode ?? '').trim().toLowerCase();
+Line 680:     const matchesLocationCode =
+Line 681:       !locationCodeFilter || item.locationCode.toLowerCase().includes(locationCodeFilter);
+Line 687:         item.locationCode,
+Line 715:       matchesLocationCode &&
+Line 726:   locationCode?: string;
+Line 785:   locationCode?: string;
+Line 815:   locationCode?: string;
+Line 860:         locationCode: item.locationCode,
+Line 909:   locationCode?: string;
+Line 937:     locationCode: input.locationCode,
+Line 974:     locationCode: input.locationCode,
+Line 1011:     'locationCode',
+Line 1033:       csvEscape(item.locationCode),
+Line 1068:     'locationCode',
+Line 1087:     'locationCode',
+Line 1137:       let locationCode = '';
+Line 1156:           locationCode,
+Line 1175:           locationCode,
+Line 1191:       if (!warehouseCode || !warehouseName || !locationCode || !zone || !aisle || !levelCode || !bin) {
+Line 1207:         locationCode,
+Line 1223:       const incomingKey = getLocationCompositeKey(payload.warehouseCode, payload.locationCode);
+
+--- pattern: warehouseCode ---
+Line 33:   warehouseCode: string;
+Line 53:   warehouseCode: string;
+Line 87:   warehouseCode: string | null;
+Line 132:   warehouseCode: string | null;
+Line 146:   warehouseCode: string;
+Line 165:   warehouseCode: string | null;
+Line 186:     warehouseCode: 'WH-001',
+Line 206:     warehouseCode: 'WH-001',
+Line 226:     warehouseCode: 'OTL-001',
+Line 246:     warehouseCode: 'OTL-001',
+Line 332: function normalizeWarehouseCodeFilter(value?: string) {
+Line 371:   warehouseCode: string;
+Line 374:   const siteCode = normalizeSiteCode(input.warehouseCode);
+Line 390:       warehouseCode: item.warehouseCode,
+Line 402: function getSiteScopeForWarehouseCode(warehouseCode: string): Exclude<WarehouseSiteScope, 'all'> {
+Line 403:   return inferSiteTypeFromCode(warehouseCode);
+Line 412:     warehouseCode: item.warehouseCode,
+Line 514:     warehouseCode: item.warehouseCode,
+Line 520:     warehouseCode: site.siteCode,
+Line 668:   warehouseCode?: string;
+Line 672:   const warehouseCode = normalizeWarehouseCodeFilter(filters?.warehouseCode);
+Line 676:     const itemSiteScope = getSiteScopeForWarehouseCode(item.warehouseCode);
+Line 678:     const matchesWarehouseCode = !warehouseCode || item.warehouseCode.toUpperCase() === warehouseCode;
+Line 685:         item.warehouseCode,
+Line 714:       matchesWarehouseCode &&
+Line 730:   warehouseCode?: string;
+Line 737:   const warehouseCode = normalizeWarehouseCodeFilter(filters?.warehouseCode);
+Line 761:     warehouseCode: warehouseCode || null,
+Line 789:   warehouseCode?: string;
+Line 796:   const warehouseCode = normalizeWarehouseCodeFilter(filters?.warehouseCode);
+Line 806:     warehouseCode: warehouseCode || null,
+Line 819:   warehouseCode?: string;
+Line 826:   const warehouseCode = normalizeWarehouseCodeFilter(filters?.warehouseCode);
+Line 835:         warehouseCode: item.warehouseCode,
+Line 858:         warehouseCode: item.warehouseCode,
+Line 894:     warehouseCode: warehouseCode || null,
+Line 913:   warehouseCode?: string;
+Line 929:     warehouseCode: input.warehouseCode,
+Line 935:     warehouseCode: site.siteCode,
+Line 966:     warehouseCode: input.warehouseCode,
+Line 972:     warehouseCode: site.siteCode,
+Line 1009:     'warehouseCode',
+Line 1031:       csvEscape(item.warehouseCode),
+Line 1066:     'warehouseCode',
+Line 1085:     'warehouseCode',
+Line 1135:       let warehouseCode = '';
+Line 1154:           warehouseCode,
+Line 1173:           warehouseCode,
+Line 1191:       if (!warehouseCode || !warehouseName || !locationCode || !zone || !aisle || !levelCode || !bin) {
+Line 1200:         warehouseCode,
+Line 1205:         warehouseCode: site.siteCode,
+Line 1223:       const incomingKey = getLocationCompositeKey(payload.warehouseCode, payload.locationCode);
+
+
+============================================================
+FILE MATCHES: src\modules\inventory\location-balance-store.ts
+============================================================
+
+--- pattern: commitInventoryTransfer ---
+Line 34: export interface CommitInventoryTransferInput {
+Line 476: export async function commitInventoryTransfer(input: CommitInventoryTransferInput) {
+
+--- pattern: toWarehouseLocation ---
+Line 27:   toWarehouseLocation: string;
+Line 37:   toWarehouseLocation: string;
+Line 223:       item.toWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+Line 229:       item.toWarehouseLocation.toLowerCase().includes(normalizedLocation);
+Line 418:   toWarehouseLocation: string;
+Line 436:   const toWarehouseLocation = normalizeLocation(input.toWarehouseLocation);
+Line 442:   if (!toWarehouseLocation) {
+Line 443:     throw new Error('toWarehouseLocation is required');
+Line 446:   if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+Line 447:     throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+Line 469:     toWarehouseLocation,
+Line 486:     (await getInventoryLocationBalanceByLocation(input.inventoryItemId, input.toWarehouseLocation)) ??
+Line 504:         id: makeBalanceId(input.inventoryItemId, input.toWarehouseLocation),
+Line 508:         warehouseLocation: normalizeLocation(input.toWarehouseLocation),
+Line 525:     toWarehouseLocation: draft.toWarehouseLocation,
+
+--- pattern: fromWarehouseLocation ---
+Line 26:   fromWarehouseLocation: string;
+Line 36:   fromWarehouseLocation: string;
+Line 49:   recommendedFromWarehouseLocation: string;
+Line 222:       item.fromWarehouseLocation.toLowerCase().includes(normalizedSearch) ||
+Line 228:       item.fromWarehouseLocation.toLowerCase().includes(normalizedLocation) ||
+Line 287:   recommendedFromWarehouseLocation: string;
+Line 335:       recommendedFromWarehouseLocation: chosen.warehouseLocation,
+Line 368:       recommendedFromWarehouseLocation: chosen.warehouseLocation,
+Line 405:     recommendedFromWarehouseLocation: chosen.warehouseLocation,
+Line 417:   fromWarehouseLocation: string;
+Line 435:   const fromWarehouseLocation = normalizeLocation(input.fromWarehouseLocation);
+Line 438:   if (!fromWarehouseLocation) {
+Line 439:     throw new Error('fromWarehouseLocation is required');
+Line 446:   if (fromWarehouseLocation.toLowerCase() === toWarehouseLocation.toLowerCase()) {
+Line 447:     throw new Error('fromWarehouseLocation and toWarehouseLocation must be different');
+Line 451:     (await getInventoryLocationBalanceByLocation(input.inventoryItemId, fromWarehouseLocation)) ??
+Line 468:     fromWarehouseLocation,
+Line 524:     fromWarehouseLocation: draft.fromWarehouseLocation,
+
+--- pattern: InventoryTransferRecord ---
+Line 21: export interface InventoryTransferRecord {
+Line 58: let inventoryTransferStore: InventoryTransferRecord[] = [];
+Line 90: function sortTransfers(items: InventoryTransferRecord[]) {
+Line 519:   const transferRecord: InventoryTransferRecord = {
+

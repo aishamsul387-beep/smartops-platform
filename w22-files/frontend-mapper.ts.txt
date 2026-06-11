@@ -1,0 +1,97 @@
+import type {
+  WarehouseCapacityUom,
+  WarehouseLocationListResponse,
+  WarehouseLocationRecord,
+  WarehouseLocationStatus,
+  WarehouseLocationType
+} from './types';
+
+const allowedStatuses: WarehouseLocationStatus[] = ['empty', 'occupied', 'blocked'];
+const allowedTypes: WarehouseLocationType[] = [
+  'rack',
+  'floor',
+  'bulk',
+  'staging',
+  'quarantine',
+  'shelves',
+  'island'
+];
+const allowedCapacityUom: WarehouseCapacityUom[] = ['pallet', 'pcs'];
+
+function extractPayload<T = any>(value: any): T {
+  if (value && typeof value === 'object' && 'data' in value && value.data !== undefined) {
+    return value.data as T;
+  }
+
+  return value as T;
+}
+
+function normalizeText(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function normalizeNumber(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeBoolean(value: unknown) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  const normalized = String(value ?? '').trim().toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'active';
+}
+
+function normalizeStatus(value: unknown): WarehouseLocationStatus {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseLocationStatus;
+  return allowedStatuses.includes(normalized) ? normalized : 'empty';
+}
+
+function normalizeType(value: unknown): WarehouseLocationType {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseLocationType;
+  return allowedTypes.includes(normalized) ? normalized : 'rack';
+}
+
+function normalizeCapacityUom(value: unknown): WarehouseCapacityUom {
+  const normalized = String(value ?? '').trim().toLowerCase() as WarehouseCapacityUom;
+  return allowedCapacityUom.includes(normalized) ? normalized : 'pallet';
+}
+
+export function mapWarehouseLocation(data: any): WarehouseLocationRecord {
+  const source = extractPayload<any>(data) ?? {};
+
+  return {
+    id: normalizeText(source.id),
+    warehouseCode: normalizeText(source.warehouseCode),
+    warehouseName: normalizeText(source.warehouseName),
+    locationCode: normalizeText(source.locationCode),
+    zone: normalizeText(source.zone),
+    aisle: normalizeText(source.aisle),
+    levelCode: normalizeText(source.levelCode),
+    bin: normalizeText(source.bin),
+    locationType: normalizeType(source.locationType),
+    status: normalizeStatus(source.status),
+    capacityUom: normalizeCapacityUom(source.capacityUom),
+    palletCapacity: normalizeNumber(source.palletCapacity),
+    usedPalletCapacity: normalizeNumber(source.usedPalletCapacity),
+    cubicCapacityM3: normalizeNumber(source.cubicCapacityM3),
+    usedCubicCapacityM3: normalizeNumber(source.usedCubicCapacityM3),
+    isActive: normalizeBoolean(source.isActive),
+    notes: normalizeText(source.notes),
+    updatedAt: normalizeText(source.updatedAt)
+  };
+}
+
+export function mapWarehouseLocationListResponse(data: any): WarehouseLocationListResponse {
+  const source = extractPayload<any>(data) ?? {};
+  const rawItems = Array.isArray(source.items) ? source.items : [];
+  const items = rawItems.map(mapWarehouseLocation);
+  const total = Number.isFinite(Number(source.total)) ? Number(source.total) : items.length;
+
+  return {
+    items,
+    total
+  };
+}

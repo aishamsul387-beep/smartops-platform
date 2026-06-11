@@ -1,0 +1,40 @@
+﻿I1 Step 1 - Inventory Transfer Small Inspection
+Generated At: 2026-06-08 23:04:03
+
+IMPORTANT:
+- No code was changed
+- Paste only the generated output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+
+============================================================
+FRONTEND GIT STATUS
+============================================================
+
+ M src/components/layout/PageShell.tsx
+ M src/features/warehouse/screens/WarehouseLocationMasterScreen.tsx
+ M src/features/warehouse/screens/WarehouseScreen.tsx
+?? H11B_EASY_SANDBOX_NOTES.txt
+?? src/app/stock-issues-h11b/
+?? src/app/stock-issues/[issueId]/
+?? src/app/stock-issues/history/
+?? src/features/stock-issue-h11b/
+?? src/features/stock-issue/api.ts
+?? src/features/stock-issue/components/
+?? src/features/stock-issue/hooks/useStockIssueContext.ts
+?? src/features/stock-issue/hooks/useStockIssueDetail.ts
+?? src/features/stock-issue/hooks/useStockIssueHistory.ts
+?? src/features/stock-issue/screens/StockIssueDetailScreen.tsx
+?? src/features/stock-issue/screens/StockIssueHistoryScreen.tsx
+?? src/features/stock-issue/screens/StockIssuePrintScreen.tsx
+?? src/features/stock-issue/types.ts
+?? temp-pack-backups/
+?? temp-run-pack.ps1
+?? w22-files/
+
+============================================================
+FRONTEND INVENTORY / WAREHOUSE / STOCK-CONTROL TREE
+============================================================
+

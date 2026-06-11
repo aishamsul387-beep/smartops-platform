@@ -1,0 +1,766 @@
+﻿I1 Step 7 - Inventory UI Entry Inspection
+Generated At: 2026-06-08 23:56:50
+
+IMPORTANT:
+- No code was changed
+- Paste only the generated output back here
+- Do NOT stage temp-run-pack.ps1
+- Do NOT stage temp-pack-backups/
+- Do NOT use git add .
+
+
+============================================================
+FRONTEND INVENTORY APP TREE
+============================================================
+
+
+FullName                                                                                                 
+--------                                                                                                 
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\create            
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]              
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\page.tsx          
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\create\page.tsx   
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\edit         
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\page.tsx     
+C:\Users\HP\OneDrive\Desktop\SmartOpsAI\mobile-app\smartops-platform\src\app\inventory\[id]\edit\page.tsx
+
+============================================================
+FILE HEAD: src\app\inventory\page.tsx
+============================================================
+
+import { ProtectedLayout } from '@/components/layout/ProtectedLayout';
+import { InventoryListScreen } from '@/features/inventory/screens/InventoryListScreen';
+import { PERMISSIONS } from '@/types/permissions';
+
+export default function InventoryPage() {
+  return (
+    <ProtectedLayout permissions={[PERMISSIONS.INVENTORY_VIEW]}>
+      <InventoryListScreen />
+    </ProtectedLayout>
+  );
+}
+
+============================================================
+FILE HEAD: src\app\inventory\[id]\page.tsx
+============================================================
+
+FILE NOT FOUND
+
+============================================================
+FILE HEAD: src\app\inventory\[id]\edit\page.tsx
+============================================================
+
+FILE NOT FOUND
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryListScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useState } from 'react';
+import { ROUTES } from '@/lib/routes';
+import { useInventoryList } from '../hooks/useInventoryList';
+import { useInventoryActiveToggle } from '../hooks/useInventoryActiveToggle';
+import type { InventoryItem } from '../types';
+
+function getStatusColor(status: string) {
+  if (status === 'in_stock') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'low_stock') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+function getActiveStyle(isActive: boolean) {
+  if (isActive) {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+export function InventoryListScreen() {
+  const {
+    items,
+    filters,
+    isLoading,
+    error,
+    totalItems,
+    lowStockCount,
+    outOfStockCount,
+    updateSearch,
+    updateStatus,
+    refresh
+  } = useInventoryList();
+
+  const { toggleInventory } = useInventoryActiveToggle();
+  const [rowActionError, setRowActionError] = useState<string | null>(null);
+
+  async function handleToggle(item: InventoryItem) {
+    try {
+      setRowActionError(null);
+      await toggleInventory(item);
+      await refresh();
+    } catch (err: any) {
+      setRowActionError(err?.message || 'Failed to update item active status');
+    }
+  }
+
+  return (
+    <div className="container">
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              Inventory
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Inventory master now supports governance actions such as edit and activate/deactivate.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              href={ROUTES.dashboard}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Back to dashboard
+            </Link>
+
+            <Link
+              href={ROUTES.inventoryCreate}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#0f766e',
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            >
+              Create item
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#0f172a',
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {rowActionError ? (
+        <div
+          style={{
+            marginBottom: '16px',
+            padding: '12px',
+            borderRadius: '10px',
+            background: '#fef2f2',
+            color: '#b91c1c',
+            border: '1px solid #fecaca'
+          }}
+        >
+          {rowActionError}
+        </div>
+      ) : null}
+
+      <div
+        style={{
+          display: 'grid',
+          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          marginBottom: '24px'
+        }}
+      >
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Total items</div>
+          <div style={{ fontSize: '28px', fontWeight: 700 }}>{totalItems}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Low stock</div>
+          <div style={{ fontSize: '28px', fontWeight: 700 }}>{lowStockCount}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Out of stock</div>
+          <div style={{ fontSize: '28px', fontWeight: 700 }}>{outOfStockCount}</div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '20px',
+          marginBottom: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px'
+          }}
+        >
+          <div>
+            <label htmlFor="inventory-search" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Search
+            </label>
+            <input
+              id="inventory-search"
+              type="text"
+              value={filters.search || ''}
+              onChange={(event) => updateSearch(event.target.value)}
+              placeholder="Search by SKU, barcode, name or category"
+              style={{
+                width: '100%',
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryDetailScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { ROUTES } from '@/lib/routes';
+import { useInventoryDetail } from '../hooks/useInventoryDetail';
+import { useBatchList } from '@/features/batches/hooks/useBatchList';
+
+function getStatusColor(status: string) {
+  if (status === 'in_stock') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'low_stock') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  return {
+    background: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  };
+}
+
+function getBatchStatusStyle(status: string) {
+  if (status === 'available') {
+    return {
+      background: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    };
+  }
+
+  if (status === 'quarantine') {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+      border: '1px solid #fde68a'
+    };
+  }
+
+  if (status === 'blocked') {
+    return {
+      background: '#fee2e2',
+      color: '#991b1b',
+      border: '1px solid #fecaca'
+    };
+  }
+
+  if (status === 'expired') {
+    return {
+      background: '#e0e7ff',
+      color: '#3730a3',
+      border: '1px solid #c7d2fe'
+    };
+  }
+
+  return {
+    background: '#e2e8f0',
+    color: '#334155',
+    border: '1px solid #cbd5e1'
+  };
+}
+
+export function InventoryDetailScreen({ id }: { id: string }) {
+  const { item, isLoading, error, refresh } = useInventoryDetail(id);
+  const {
+    items: batches,
+    total: batchTotal,
+    persistenceMode: batchPersistenceMode,
+    isLoading: isBatchLoading,
+    error: batchError
+  } = useBatchList({ inventoryItemId: id, status: 'all', search: '' });
+
+  if (isLoading) {
+    return (
+      <div className="container">
+        <div style={{ padding: '24px', color: '#64748b' }}>Loading inventory item...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+          <div style={{ color: '#b91c1c', marginBottom: '16px' }}>{error}</div>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f172a', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!item) {
+    return (
+      <div className="container">
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>
+            Inventory item not found
+          </div>
+          <div style={{ color: '#475569', marginBottom: '16px' }}>
+            The requested inventory item could not be found.
+          </div>
+          <Link href={ROUTES.inventory} style={{ color: '#2563eb', fontWeight: 600 }}>
+            Back to inventory
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container">
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '30px', fontWeight: 700, marginBottom: '8px' }}>
+              {item.name}
+            </div>
+            <div style={{ color: '#475569', lineHeight: 1.6 }}>
+              Inventory master detail now includes UOM policy, tracking flags, stock thresholds, and related batches.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link href={ROUTES.inventory} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', fontWeight: 600 }}>
+              Back to inventory
+            </Link>
+            <Link href={ROUTES.batches} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: '#ffffff', fontWeight: 600 }}>
+              Open batches
+            </Link>
+            <Link href={ROUTES.inventoryCreate} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f766e', color: '#ffffff', fontWeight: 600 }}>
+              Create another
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: '24px' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>SKU</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.sku}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Barcode</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.barcode || '-'}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Category</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.category}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Quantity</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.quantity} {item.unit}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Reorder / Min / Max</div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            {item.reorderLevel} / {item.minimumStockLevel} / {item.maximumStockLevel}
+          </div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Warehouse Location</div>
+          <div style={{ fontSize: '22px', fontWeight: 700 }}>{item.warehouseLocation}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>UOM Group</div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>{item.uomConversionGroupCode || '-'}</div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ color: '#64748b', marginBottom: '8px' }}>Status</div>
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '6px 10px',
+              borderRadius: '999px',
+              fontSize: '12px',
+              fontWeight: 700,
+              ...getStatusColor(item.status)
+            }}
+          >
+            {item.statusLabel}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginBottom: '24px' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Tracking Policy</div>
+          <div style={{ color: '#475569', lineHeight: 1.8 }}>
+            Active: <strong>{item.isActive ? 'Yes' : 'No'}</strong><br />
+            Batch Tracked: <strong>{item.isBatchTracked ? 'Yes' : 'No'}</strong><br />
+            Expiry Tracked: <strong>{item.isExpiryTracked ? 'Yes' : 'No'}</strong><br />
+            Serial Tracked: <strong>{item.isSerialTracked ? 'Yes' : 'No'}</strong><br />
+            Allows Fraction: <strong>{item.allowsFraction ? 'Yes' : 'No'}</strong>
+          </div>
+        </div>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>UOM Policy</div>
+
+============================================================
+FILE HEAD: src\features\inventory\screens\InventoryEditScreen.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/lib/routes';
+import { useInventoryDetail } from '../hooks/useInventoryDetail';
+import { useInventoryMasterOptions } from '../hooks/useInventoryMasterOptions';
+import { useUpdateInventory } from '../hooks/useUpdateInventory';
+import {
+  mapInventoryFormToCreateRequest,
+  validateInventoryForm,
+  type InventoryFormErrors,
+  type InventoryFormValues
+} from '../schema';
+
+export function InventoryEditScreen({ id }: { id: string }) {
+  const router = useRouter();
+  const { item, isLoading, error, refresh } = useInventoryDetail(id);
+  const { uoms, conversionGroups, isLoading: isOptionsLoading } = useInventoryMasterOptions();
+  const { updateInventory, isSubmitting, error: submitError } = useUpdateInventory();
+
+  const [values, setValues] = useState<InventoryFormValues | null>(null);
+  const [errors, setErrors] = useState<InventoryFormErrors>({});
+
+  useEffect(() => {
+    if (!item) {
+      return;
+    }
+
+    setValues({
+      sku: item.sku,
+      barcode: item.barcode,
+      name: item.name,
+      description: item.description,
+      category: item.category,
+      quantity: String(item.quantity),
+      reorderLevel: String(item.reorderLevel),
+      minimumStockLevel: String(item.minimumStockLevel),
+      maximumStockLevel: String(item.maximumStockLevel),
+      unit: item.unit,
+      warehouseLocation: item.warehouseLocation,
+      status: item.status,
+      isActive: item.isActive,
+      isBatchTracked: item.isBatchTracked,
+      isExpiryTracked: item.isExpiryTracked,
+      isSerialTracked: item.isSerialTracked,
+      baseUomCode: item.baseUomCode,
+      purchaseUomCode: item.purchaseUomCode,
+      salesUomCode: item.salesUomCode,
+      issueUomCode: item.issueUomCode,
+      uomConversionGroupCode: item.uomConversionGroupCode,
+      allowsFraction: item.allowsFraction,
+      notes: item.notes
+    });
+  }, [item]);
+
+  function updateField<K extends keyof InventoryFormValues>(
+    field: K,
+    value: InventoryFormValues[K]
+  ) {
+    setValues((current) =>
+      current
+        ? {
+            ...current,
+            [field]: value
+          }
+        : current
+    );
+
+    setErrors((current) => ({
+      ...current,
+      [field]: undefined
+    }));
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!values) {
+      return;
+    }
+
+    const result = validateInventoryForm(values);
+    setErrors(result.errors);
+
+    if (!result.isValid) {
+      return;
+    }
+
+    try {
+      await updateInventory({
+        id,
+        ...mapInventoryFormToCreateRequest(values)
+      });
+
+      router.replace(`/inventory/${id}`);
+      router.refresh();
+    } catch {
+      // error shown on screen
+    }
+  }
+
+  if (isLoading || !values) {
+    return (
+      <div className="container">
+        <div style={{ padding: '24px', color: '#64748b' }}>Loading inventory item...</div>
+      </div>
+    );
+  }
+
+  if (error || !item) {
+    return (
+      <div className="container">
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+          <div style={{ color: '#b91c1c', marginBottom: '16px' }}>{error || 'Inventory item not found'}</div>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f172a', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container">
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
+        <div style={{ marginBottom: '8px', fontSize: '30px', fontWeight: 700 }}>
+          Edit Inventory Item
+        </div>
+        <div style={{ color: '#475569', lineHeight: 1.6 }}>
+          Update inventory master governance fields, UOM policy, tracking flags, thresholds, and notes.
+        </div>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px'
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '16px'
+          }}
+        >
+          <div>
+            <label htmlFor="sku" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>SKU</label>
+            <input id="sku" value={values.sku} onChange={(e) => updateField('sku', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            {errors.sku ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.sku}</div> : null}
+          </div>
+
+          <div>
+            <label htmlFor="barcode" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Barcode</label>
+            <input id="barcode" value={values.barcode} onChange={(e) => updateField('barcode', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+          </div>
+
+          <div>
+            <label htmlFor="name" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Name</label>
+            <input id="name" value={values.name} onChange={(e) => updateField('name', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            {errors.name ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.name}</div> : null}
+          </div>
+
+          <div>
+            <label htmlFor="category" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Category</label>
+            <input id="category" value={values.category} onChange={(e) => updateField('category', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} />
+            {errors.category ? <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '14px' }}>{errors.category}</div> : null}
+          </div>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label htmlFor="description" style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Description</label>
+
+============================================================
+FILE MATCHES: src\features\inventory\screens\InventoryListScreen.tsx
+============================================================
+
+--- pattern: Actions ---
+Line 103:               Inventory master now supports governance actions such as edit and activate/deactivate.
+Line 283:                   <th style={{ padding: '14px', borderBottom: '1px solid #e2e8f0' }}>Actions</th>
+
+--- pattern: Edit ---
+Line 103:               Inventory master now supports governance actions such as edit and activate/deactivate.
+Line 341:                           href={`/inventory/${item.id}/edit`}
+Line 350:                           Edit
+
+--- pattern: Deactivate ---
+Line 103:               Inventory master now supports governance actions such as edit and activate/deactivate.
+Line 366:                           {item.isActive ? 'Deactivate' : 'Activate'}
+
+--- pattern: Refresh ---
+Line 61:     refresh
+Line 71:       await refresh();
+Line 137:               onClick={() => void refresh()}
+Line 148:               Refresh
+
+--- pattern: Create item ---
+Line 132:               Create item
+
+
+============================================================
+FILE MATCHES: src\features\inventory\screens\InventoryDetailScreen.tsx
+============================================================
+
+--- pattern: Back ---
+Line 11:       background: '#dcfce7',
+Line 19:       background: '#fef3c7',
+Line 26:     background: '#fee2e2',
+Line 35:       background: '#dcfce7',
+Line 43:       background: '#fef3c7',
+Line 51:       background: '#fee2e2',
+Line 59:       background: '#e0e7ff',
+Line 66:     background: '#e2e8f0',
+Line 93:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+Line 98:             style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f172a', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}
+Line 110:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+Line 118:             Back to inventory
+Line 127:       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginTop: '24px', marginBottom: '24px' }}>
+Line 139:             <Link href={ROUTES.inventory} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', fontWeight: 600 }}>
+Line 140:               Back to inventory
+Line 142:             <Link href={ROUTES.batches} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: '#ffffff', fontWeight: 600 }}>
+Line 145:             <Link href={ROUTES.inventoryCreate} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: '#0f766e', color: '#ffffff', fontWeight: 600 }}>
+Line 153:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 158:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 163:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 168:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 173:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 180:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 185:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 190:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 208:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 219:         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+Line 230:       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
+Line 237:       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
+Line 255:                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+Line 298:       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+
+--- pattern: Edit ---
+no match
+
+--- pattern: Refresh ---
+Line 73:   const { item, isLoading, error, refresh } = useInventoryDetail(id);
+Line 97:             onClick={() => void refresh()}
+
+--- pattern: button ---
+Line 95:           <button
+Line 96:             type="button"
+Line 101:           </button>
+
+--- pattern: Inventory ---
